@@ -1,0 +1,162 @@
+@import url('https://fonts.googleapis.com/css2?family=Barlow:wght@500&family=Poppins:wght@400;500;600&display=swap');
+
+:root {
+  --neutral-7: #FFFFFF;
+  --neutral-6: #F4F4F4;
+  --neutral-5: #D7D7D7;
+  --neutral-3: #757575;
+  --neutral-1: #101820;
+  --blue-7: #F1F6FE;
+  --blue-3: #003594;
+  --accent-blue-4: #00A7E1;
+  --accent-gold-4: #FFB81B;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* Line clamp utilities */
+.line-clamp-2 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
+  font-family: 'Poppins', sans-serif;
+  background-color: var(--neutral-7);
+  color: var(--neutral-1);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Barlow', sans-serif;
+  font-weight: 500;
+}
+
+.adjustLetterSpacing {
+  letter-spacing: -0.02em;
+}
+
+/* Font styles */
+.heading-h1 {
+  font-family: 'Barlow', sans-serif;
+  font-size: 64px;
+  font-weight: 500;
+  line-height: 64px;
+  letter-spacing: -1.28px;
+}
+
+.heading-h2 {
+  font-family: 'Barlow', sans-serif;
+  font-size: 56px;
+  font-weight: 500;
+  line-height: 56px;
+  letter-spacing: -1.12px;
+}
+
+.heading-h3 {
+  font-family: 'Barlow', sans-serif;
+  font-size: 48px;
+  font-weight: 500;
+  line-height: 48px;
+  letter-spacing: -0.96px;
+}
+
+.heading-h4 {
+  font-family: 'Barlow', sans-serif;
+  font-size: 40px;
+  font-weight: 500;
+  line-height: 40px;
+  letter-spacing: -0.8px;
+}
+
+.heading-h5 {
+  font-family: 'Barlow', sans-serif;
+  font-size: 32px;
+  font-weight: 500;
+  line-height: 40px;
+  letter-spacing: -0.64px;
+}
+
+.heading-h6 {
+  font-family: 'Barlow', sans-serif;
+  font-size: 24px;
+  font-weight: 500;
+  line-height: 32px;
+  letter-spacing: -0.48px;
+}
+
+.heading-h7 {
+  font-family: 'Barlow', sans-serif;
+  font-size: 20px;
+  font-weight: 500;
+  line-height: 24px;
+  letter-spacing: -0.4px;
+}
+
+.body-16r {
+  font-family: 'Poppins', sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 24px;
+  letter-spacing: -0.32px;
+}
+
+.body-16m {
+  font-family: 'Poppins', sans-serif;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 24px;
+  letter-spacing: -0.32px;
+}
+
+.body-16sb {
+  font-family: 'Poppins', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 24px;
+  letter-spacing: -0.32px;
+}
+
+.body-14r {
+  font-family: 'Poppins', sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+  letter-spacing: -0.28px;
+}
+
+.body-14sb {
+  font-family: 'Poppins', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+  letter-spacing: -0.28px;
+}
+
+.body-12r {
+  font-family: 'Poppins', sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 16px;
+  letter-spacing: -0.24px;
+}
+
+/* Custom styles */
+.css-vtraam {
+  -webkit-line-clamp: 2;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+}
+
+/* Tailwind utilities */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;

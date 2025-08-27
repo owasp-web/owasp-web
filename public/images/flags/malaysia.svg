@@ -1,0 +1,15 @@
+<svg preserveAspectRatio="none" width="100%" height="100%" overflow="visible" style="display: block;" viewBox="0 0 46 34" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="contents">
+<path id="background" fill-rule="evenodd" clip-rule="evenodd" d="M4.06802e-05 0H45.3334V34H4.06802e-05V0Z" fill="var(--fill-0, #F7FCFF)"/>
+<g id="mark">
+<rect id="lines" x="0.0387776" y="7.08333" width="45.3333" height="4.10833" fill="var(--fill-0, #E31D1C)"/>
+<rect id="lines_2" x="0.0387776" y="14.45" width="45.3333" height="4.10833" fill="var(--fill-0, #E31D1C)"/>
+<rect id="lines_3" x="0.157756" y="21.5333" width="45.3333" height="3.54167" fill="var(--fill-0, #E31D1C)"/>
+<rect id="lines_4" x="0.157756" y="28.6167" width="45.3333" height="3.825" fill="var(--fill-0, #E31D1C)"/>
+<path id="lines_5" fill-rule="evenodd" clip-rule="evenodd" d="M4.06802e-05 0H45.3334V3.54167H4.06802e-05V0Z" fill="var(--fill-0, #E31D1C)"/>
+<path id="square" fill-rule="evenodd" clip-rule="evenodd" d="M4.06802e-05 0H22.6667V17H4.06802e-05V0Z" fill="var(--fill-0, #3D58DB)"/>
+<path id="Shape sp-1695-0" fill-rule="evenodd" clip-rule="evenodd" d="M5.09119 8.78648C5.09119 10.7361 6.0095 12.5798 7.87773 12.5798C10.6807 12.5798 11.226 11.9822 12.534 11.1577C12.8432 11.8523 11.8002 14.8246 7.83948 14.8246C4.67145 14.7608 2.11121 12.2157 2.11121 8.78648C2.11121 4.85025 5.00627 2.72447 7.75997 2.74854C10.191 2.74854 12.7694 4.12802 12.6904 5.88784C11.5449 4.7689 10.3012 4.7689 8.23074 4.7689C6.1603 4.7689 5.09119 6.83658 5.09119 8.78648Z" fill="var(--fill-0, #FECA00)"/>
+<path id="Star 15" fill-rule="evenodd" clip-rule="evenodd" d="M15.5834 10.3416L14.2701 12.2586L14.3343 9.93581L12.1451 10.7147L13.5624 8.87331L11.3334 8.21665L13.5624 7.55999L12.1451 5.71856L14.3343 6.49749L14.2701 4.17466L15.5834 6.09165L16.8967 4.17466L16.8324 6.49749L19.0217 5.71856L17.6044 7.55999L19.8334 8.21665L17.6044 8.87331L19.0217 10.7147L16.8324 9.93581L16.8967 12.2586L15.5834 10.3416Z" fill="var(--fill-0, #FECA00)"/>
+</g>
+</g>
+</svg>

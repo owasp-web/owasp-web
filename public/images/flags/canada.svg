@@ -1,0 +1,8 @@
+<svg preserveAspectRatio="none" width="100%" height="100%" overflow="visible" style="display: block;" viewBox="0 0 46 34" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="contents">
+<path id="middle" fill-rule="evenodd" clip-rule="evenodd" d="M11.3333 0H34V34H11.3333V0Z" fill="var(--fill-0, #F7FCFF)"/>
+<path id="Shape" fill-rule="evenodd" clip-rule="evenodd" d="M22.6332 9.91669L22.6667 26.9167H21.8174L22.3385 22.7097C18.5274 23.3954 16.7795 23.5653 17.0945 23.2194C17.4096 22.8735 17.6578 22.3833 17.8393 21.7488L12.75 18.3534C13.2852 18.3467 13.7705 18.2138 14.2059 17.9549C14.6413 17.6959 14.4236 16.7986 13.5528 15.2628L16.1223 15.6366L17.0945 14.5801L19.0332 16.6091H19.9046L19.0332 11.9615L20.5952 12.8341L22.6332 9.91669ZM22.6335 9.91667L24.7383 12.834L26.3004 11.9615L25.4289 16.6091H26.3004L28.239 14.5801L29.2112 15.6366L31.7808 15.2628C30.91 16.7985 30.6922 17.6959 31.1277 17.9549C31.5631 18.2138 32.0484 18.3466 32.5836 18.3534L27.4942 21.7488C27.6757 22.3833 27.924 22.8735 28.239 23.2194C28.5541 23.5653 26.8061 23.3954 22.9951 22.7096L23.5162 26.9167H22.6669L22.6335 9.91667Z" fill="var(--fill-0, #E31D1C)"/>
+<path id="right" fill-rule="evenodd" clip-rule="evenodd" d="M34 0H45.3333V34H34V0Z" fill="var(--fill-0, #E31D1C)"/>
+<path id="right_2" fill-rule="evenodd" clip-rule="evenodd" d="M0 0H11.3333V34H0V0Z" fill="var(--fill-0, #E31D1C)"/>
+</g>
+</svg>
