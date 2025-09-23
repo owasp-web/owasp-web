@@ -44,3 +44,19 @@ export const createServerComponentClient = () => {
   
   return createClient(url, key)
 } 
+
+// Server-side Supabase client that uses the caller's user token to enforce RLS
+export const createServerClientWithAuth = (token: string) => {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  if (!url || !anonKey) {
+    throw new Error('Missing Supabase environment variables for RLS client')
+  }
+  return createClient(url, anonKey, {
+    global: {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    }
+  })
+}

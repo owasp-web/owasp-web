@@ -81,6 +81,85 @@ export class AdminService {
     const { error } = await this.getSupabase().auth.signOut()
     if (error) throw error
   }
+
+  // Chapter admins management
+  async listChapterAdmins(chapterId: string) {
+    const supabase = this.getSupabase()
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) throw new Error('Not authenticated')
+    const res = await fetch(`/api/chapters/${chapterId}/admins`, {
+      headers: { Authorization: `Bearer ${session.access_token}` }
+    })
+    if (!res.ok) throw new Error((await res.json()).error || 'Failed to fetch admins')
+    return (await res.json()).admins as Array<{ id: string; email: string; user_id: string | null; created_at: string }>
+  }
+
+  async addChapterAdmin(chapterId: string, email: string) {
+    const supabase = this.getSupabase()
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) throw new Error('Not authenticated')
+    const res = await fetch(`/api/chapters/${chapterId}/admins`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+      body: JSON.stringify({ email })
+    })
+    if (!res.ok) throw new Error((await res.json()).error || 'Failed to add admin')
+    return (await res.json()).admin as { id: string; email: string; user_id: string | null; created_at: string }
+  }
+
+  async removeChapterAdmin(chapterId: string, identifier: { id?: string; email?: string }) {
+    const supabase = this.getSupabase()
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) throw new Error('Not authenticated')
+    const res = await fetch(`/api/chapters/${chapterId}/admins`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+      body: JSON.stringify(identifier)
+    })
+    if (!res.ok) throw new Error((await res.json()).error || 'Failed to remove admin')
+    return true
+  }
+
+  async sendPasswordReset(chapterId: string, email: string) {
+    const supabase = this.getSupabase()
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) throw new Error('Not authenticated')
+    const res = await fetch(`/api/chapters/${chapterId}/admins/reset`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+      body: JSON.stringify({ email })
+    })
+    if (!res.ok) throw new Error((await res.json()).error || 'Failed to send reset')
+    return (await res.json()).resetUrl as string | null
+  }
+
+  // Chapter content update (RLS enforced)
+  async updateChapter(chapterId: string, changes: Partial<any>) {
+    const supabase = this.getSupabase()
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) throw new Error('Not authenticated')
+    const res = await fetch(`/api/chapters/${chapterId}/update`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+      body: JSON.stringify(changes)
+    })
+    if (!res.ok) throw new Error((await res.json()).error || 'Failed to update chapter')
+    return (await res.json()).chapter
+  }
+
+  // Create event for a chapter (RLS enforced)
+  async createChapterEvent(chapterId: string, eventData: Partial<Event>) {
+    const supabase = this.getSupabase()
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) throw new Error('Not authenticated')
+    const res = await fetch(`/api/chapters/${chapterId}/events`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+      body: JSON.stringify(eventData)
+    })
+    if (!res.ok) throw new Error((await res.json()).error || 'Failed to create event')
+    return (await res.json()).event as Event
+  }
 }
 
 export const adminService = new AdminService() 

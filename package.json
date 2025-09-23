@@ -6,7 +6,11 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "migrate:db": "bash scripts/migrate-supabase-db.sh",
+    "migrate:storage": "ts-node --transpile-only scripts/migrate-supabase-storage.ts",
+    "create:admin": "ts-node --transpile-only scripts/create-admin-user.ts",
+    "grant:superadmin": "ts-node --transpile-only scripts/grant-super-admin.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.52.1",
@@ -29,6 +33,7 @@
     "eslint-config-next": "^14.1.0",
     "postcss": "^8.4.33",
     "tailwindcss": "^3.4.1",
+    "ts-node": "^10.9.2",
     "typescript": "^5.3.3"
   }
 }

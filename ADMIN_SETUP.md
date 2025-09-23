@@ -22,6 +22,10 @@ Set these environment variables in your Vercel dashboard:
    - Found in: Supabase Dashboard → Project Settings → API
    - ⚠️ **Important**: This is a secret key with admin privileges
 
+4. **NEXT_PUBLIC_SITE_URL**
+   - Value: Your site base URL, e.g., `https://owasp.org`
+   - Used for auth invite/recovery redirect links
+
 ## Database Setup
 
 1. **Go to your Supabase project SQL Editor**
@@ -53,6 +57,14 @@ Set these environment variables in your Vercel dashboard:
 - `/admin/events` - Events listing and management
 - `/admin/events/new` - Create new event
 - `/admin/events/[id]/edit` - Edit existing event
+
+### Chapter Admins Management
+- On the chapter edit page (`/admin/chapters/[id]/edit`) you can:
+  - Add chapter admins by email (sends invite if user does not exist)
+  - List/remove existing chapter admins
+  - Trigger password reset email for an admin
+
+Note: API routes require a valid session and use the bearer token automatically from the client.
 
 ## Security Notes
 

@@ -46,6 +46,12 @@ Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduc
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details.
-# Admin system with Supabase integration ready
-# Force new deployment to pick up env variables
-# Environment variables now in correct Vercel app
+
+## Supabase migration helpers
+
+Scripts to migrate from one Supabase project to another are provided:
+
+- Database: `scripts/migrate-supabase-db.sh`
+- Storage: `scripts/migrate-supabase-storage.ts`
+
+Fill environment variables as indicated in the scripts before running them.

@@ -1,12 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Image from 'next/image'
 
 // Force dynamic rendering for admin pages
 export const dynamic = 'force-dynamic'
 import { useRouter } from 'next/navigation'
 import { adminService } from '@/lib/admin'
+import { useSearchParams } from 'next/navigation'
 import type { EventFormData } from '@/lib/types'
 import EventForm from '@/components/EventForm'
 import Header from '@/components/Header'
@@ -16,13 +17,29 @@ export default function NewEventPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const chapterIdFromQuery = searchParams.get('chapterId')
+  const [initialData, setInitialData] = useState<Partial<EventFormData>>({})
+
+  useEffect(() => {
+    if (chapterIdFromQuery) {
+      setInitialData((d) => ({ ...d, // @ts-ignore include chapter_id if form supports it
+        chapter_id: chapterIdFromQuery
+      }))
+    }
+  }, [chapterIdFromQuery])
 
   const handleSubmit = async (data: EventFormData) => {
     setLoading(true)
     setError('')
 
     try {
-      await adminService.createEvent(data)
+      if (chapterIdFromQuery) {
+        // create within chapter scope (RLS)
+        await adminService.createChapterEvent(chapterIdFromQuery, data as any)
+      } else {
+        await adminService.createEvent(data)
+      }
       router.push('/admin/events')
     } catch (error: any) {
       setError(error.message || 'Failed to create event')
@@ -108,7 +125,7 @@ export default function NewEventPage() {
                     </div>
                   </div>
                   
-                  <EventForm onSubmit={handleSubmit} loading={loading} />
+                  <EventForm onSubmit={handleSubmit} loading={loading} initialData={initialData as any} />
                 </div>
               </div>
             </div>

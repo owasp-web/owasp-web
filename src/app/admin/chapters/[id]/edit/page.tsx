@@ -6,6 +6,7 @@ import { getChapterById } from '@/lib/chapters';
 import { Chapter } from '@/lib/types';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import { adminService } from '@/lib/admin';
 
 interface EditChapterPageProps {
   params: {
@@ -19,11 +20,16 @@ export default function EditChapterPage({ params }: EditChapterPageProps) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [admins, setAdmins] = useState<Array<{ id: string; email: string; user_id: string | null; created_at: string }>>([]);
+  const [newAdminEmail, setNewAdminEmail] = useState('');
+  const [adminsLoading, setAdminsLoading] = useState(true);
+  const [adminsError, setAdminsError] = useState<string | null>(null);
 
   const regions = ['Africa', 'Asia', 'Europe', 'North America', 'South America', 'Central America', 'Oceania'];
 
   useEffect(() => {
     fetchChapter();
+    fetchAdmins();
   }, [params.id]);
 
   const fetchChapter = async () => {
@@ -40,6 +46,49 @@ export default function EditChapterPage({ params }: EditChapterPageProps) {
       console.error(err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchAdmins = async () => {
+    try {
+      setAdminsLoading(true);
+      const list = await adminService.listChapterAdmins(params.id);
+      setAdmins(list);
+    } catch (err: any) {
+      setAdminsError(err?.message || 'Failed to load admins');
+    } finally {
+      setAdminsLoading(false);
+    }
+  };
+
+  const handleAddAdmin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newAdminEmail.trim()) return;
+    try {
+      await adminService.addChapterAdmin(params.id, newAdminEmail.trim());
+      setNewAdminEmail('');
+      fetchAdmins();
+    } catch (err: any) {
+      alert(err?.message || 'Failed to add admin');
+    }
+  };
+
+  const handleRemoveAdmin = async (adminId: string) => {
+    if (!confirm('Remove this chapter admin?')) return;
+    try {
+      await adminService.removeChapterAdmin(params.id, { id: adminId });
+      fetchAdmins();
+    } catch (err: any) {
+      alert(err?.message || 'Failed to remove admin');
+    }
+  };
+
+  const handleResetPassword = async (email: string) => {
+    try {
+      const link = await adminService.sendPasswordReset(params.id, email);
+      alert(link ? 'Password reset link generated and emailed.' : 'Password reset email sent.');
+    } catch (err: any) {
+      alert(err?.message || 'Failed to send password reset');
     }
   };
 
@@ -66,14 +115,8 @@ export default function EditChapterPage({ params }: EditChapterPageProps) {
 
     setSaving(true);
     try {
-      // TODO: Implement chapter update
-      console.log('Updating chapter:', chapter);
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      await adminService.updateChapter(params.id, chapter);
       alert('Chapter updated successfully!');
-      router.push('/admin/chapters');
     } catch (error) {
       console.error('Error updating chapter:', error);
       alert('Failed to update chapter');
@@ -129,7 +172,16 @@ export default function EditChapterPage({ params }: EditChapterPageProps) {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900">Edit Chapter</h1>
-            <p className="mt-2 text-gray-600">Edit {chapter.name}</p>
+            <div className="mt-2 flex items-center justify-between">
+              <p className="text-gray-600">Edit {chapter.name}</p>
+              <button
+                type="button"
+                onClick={() => router.push(`/admin/events/new?chapterId=${params.id}`)}
+                className="px-4 py-2 bg-[#00A7E1] text-white rounded-lg hover:bg-[#0c90c0] transition-colors"
+              >
+                Create Event for this Chapter
+              </button>
+            </div>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-8">
@@ -486,6 +538,61 @@ export default function EditChapterPage({ params }: EditChapterPageProps) {
                 </div>
               </div>
             </div>
+
+        {/* Chapter Admins Management */}
+        <div className="bg-white rounded-lg shadow p-6">
+          <h2 className="text-xl font-bold text-gray-900 mb-6">Chapter Admins</h2>
+
+          <form onSubmit={handleAddAdmin} className="flex gap-3 mb-6">
+            <input
+              type="email"
+              placeholder="Admin email"
+              value={newAdminEmail}
+              onChange={(e) => setNewAdminEmail(e.target.value)}
+              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#003594] focus:border-transparent"
+            />
+            <button
+              type="submit"
+              className="px-4 py-2 bg-[#003594] text-white rounded-lg hover:bg-[#002d7a] transition-colors"
+            >
+              Add
+            </button>
+          </form>
+
+          {adminsLoading ? (
+            <div className="text-gray-500">Loading admins...</div>
+          ) : adminsError ? (
+            <div className="text-red-600">{adminsError}</div>
+          ) : admins.length === 0 ? (
+            <div className="text-gray-500">No admins yet.</div>
+          ) : (
+            <ul className="divide-y divide-gray-200">
+              {admins.map((a) => (
+                <li key={a.id} className="py-3 flex items-center justify-between">
+                  <div>
+                    <div className="text-sm font-medium text-gray-900">{a.email}</div>
+                    <div className="text-xs text-gray-500">Added {new Date(a.created_at).toLocaleString()}</div>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleResetPassword(a.email)}
+                      className="px-3 py-1 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                    >
+                      Reset Password
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveAdmin(a.id)}
+                      className="px-3 py-1 border border-red-300 text-red-700 rounded-lg hover:bg-red-50"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                </li>) )}
+            </ul>
+          )}
+        </div>
 
             <div className="flex justify-end space-x-4">
               <button

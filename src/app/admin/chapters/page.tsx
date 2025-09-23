@@ -6,6 +6,7 @@ import { getChapters } from '@/lib/chapters';
 import { Chapter } from '@/lib/types';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import { createClientComponentClient } from '@/lib/supabase';
 
 export default function AdminChaptersPage() {
   const [chapters, setChapters] = useState<Chapter[]>([]);
@@ -15,17 +16,32 @@ export default function AdminChaptersPage() {
   const [regionFilter, setRegionFilter] = useState('');
 
   useEffect(() => {
-    fetchChapters();
+    const checkAuth = async () => {
+      const supabase = createClientComponentClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        window.location.href = '/admin';
+        return;
+      }
+      fetchChapters();
+    }
+    checkAuth();
   }, []);
 
   const fetchChapters = async () => {
     try {
       setLoading(true);
-      const response = await getChapters({
-        search: searchTerm,
-        region: regionFilter || undefined
+      const supabase = createClientComponentClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      const params = new URLSearchParams();
+      if (searchTerm) params.set('search', searchTerm);
+      if (regionFilter) params.set('region', regionFilter);
+      const res = await fetch(`/api/admin/chapters/list?${params.toString()}`, {
+        headers: { Authorization: `Bearer ${session?.access_token || ''}` }
       });
-      setChapters(response.chapters);
+      if (!res.ok) throw new Error('Failed');
+      const json = await res.json();
+      setChapters(json.chapters || []);
     } catch (err) {
       setError('Failed to fetch chapters');
       console.error(err);
