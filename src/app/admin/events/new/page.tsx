@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { Suspense, useState, useEffect } from 'react'
 import Image from 'next/image'
 
 // Force dynamic rendering for admin pages
@@ -13,7 +13,7 @@ import EventForm from '@/components/EventForm'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 
-export default function NewEventPage() {
+function NewEventPageInner() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
@@ -136,4 +136,20 @@ export default function NewEventPage() {
       <Footer />
     </div>
   )
-} 
+}
+
+export default function NewEventPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-white">
+        <Header />
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#003594]"></div>
+        </div>
+        <Footer />
+      </div>
+    }>
+      <NewEventPageInner />
+    </Suspense>
+  )
+}
