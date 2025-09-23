@@ -46,7 +46,7 @@ async function migrateBucket(bucketId: string, isPublic: boolean) {
     if (error) throw error
     for (const item of items ?? []) {
       if (item.name.endsWith('/')) continue
-      if ((item as any).id === undefined && item.type === 'folder') {
+      if ((item as any).id === undefined && (item as any).type === 'folder') {
         await walk(`${prefix ? prefix + '/' : ''}${item.name}`)
         continue
       }
