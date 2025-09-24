@@ -24,6 +24,8 @@ export default function EditChapterPage({ params }: EditChapterPageProps) {
   const [newAdminEmail, setNewAdminEmail] = useState('');
   const [adminsLoading, setAdminsLoading] = useState(true);
   const [adminsError, setAdminsError] = useState<string | null>(null);
+  const [tempPassword, setTempPassword] = useState<string | null>(null);
+  const [tempPasswordEmail, setTempPasswordEmail] = useState<string | null>(null);
 
   const regions = ['Africa', 'Asia', 'Europe', 'North America', 'South America', 'Central America', 'Oceania'];
 
@@ -66,15 +68,12 @@ export default function EditChapterPage({ params }: EditChapterPageProps) {
     if (!newAdminEmail.trim()) return;
     try {
       const result = await adminService.addChapterAdmin(params.id, newAdminEmail.trim());
-      if (result?.tempPassword) {
-        alert(`Admin added. Temporary password: ${result.tempPassword}`);
-      } else {
-        alert('Admin added. A reset link can be sent if needed.');
-      }
+      setTempPassword(result?.tempPassword || null);
+      setTempPasswordEmail(newAdminEmail.trim());
       setNewAdminEmail('');
       fetchAdmins();
     } catch (err: any) {
-      alert(err?.message || 'Failed to add admin');
+      setAdminsError(err?.message || 'Failed to add admin');
     }
   };
 
@@ -564,6 +563,44 @@ export default function EditChapterPage({ params }: EditChapterPageProps) {
               Add
             </button>
           </div>
+
+          {tempPassword && (
+            <div className="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4">
+              <div className="flex items-center justify-between gap-4 flex-wrap">
+                <div>
+                  <div className="text-sm text-blue-900">
+                    Temporary password for <span className="font-semibold">{tempPasswordEmail}</span>
+                  </div>
+                  <div className="mt-1 font-mono text-base font-semibold text-blue-900 break-all">
+                    {tempPassword}
+                  </div>
+                  <div className="mt-1 text-xs text-blue-800">
+                    Share this password securely. The user should change it after first login.
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      try {
+                        await navigator.clipboard.writeText(tempPassword!);
+                      } catch {}
+                    }}
+                    className="px-3 py-2 rounded-lg bg-white text-blue-700 border border-blue-300 hover:bg-blue-100"
+                  >
+                    Copy
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setTempPassword(null); setTempPasswordEmail(null); }}
+                    className="px-3 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
+                  >
+                    Dismiss
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {adminsLoading ? (
             <div className="text-gray-500">Loading admins...</div>
