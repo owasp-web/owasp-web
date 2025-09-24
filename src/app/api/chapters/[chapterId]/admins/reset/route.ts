@@ -28,22 +28,42 @@ export async function POST(req: NextRequest, context: { params: { chapterId: str
   }
 
   const supabase = createServerComponentClient()
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL || ''
-  const redirectTo = siteUrl ? `${siteUrl}/auth/callback` : undefined
 
-  const { data, error: linkError } = await supabase.auth.admin.generateLink({
-    type: 'recovery',
-    email,
-    options: { redirectTo }
-  } as any)
-
-  if (linkError) {
-    return NextResponse.json({ error: linkError.message }, { status: 500 })
+  // Find user id from chapter_admins or auth users
+  let userId: string | null = null
+  const { data: caRows } = await supabase
+    .from('chapter_admins')
+    .select('user_id')
+    .eq('email', email)
+    .limit(1)
+    .single()
+  if (caRows?.user_id) {
+    userId = caRows.user_id as string
+  }
+  if (!userId) {
+    const { data: list } = await (supabase as any).auth.admin.listUsers()
+    const match = list?.users?.find((u: any) => (u?.email || '').toLowerCase() === email)
+    if (match?.id) userId = match.id
   }
 
-  // Prefer the action_link; fallback to data properties that may be present
-  const resetUrl = (data as any)?.properties?.action_link || (data as any)?.action_link || null
-  return NextResponse.json({ resetUrl })
+  if (!userId) {
+    return NextResponse.json({ error: 'User not found for that email' }, { status: 404 })
+  }
+
+  // Generate strong temporary password and set it
+  const rand = Math.random().toString(36).slice(-10)
+  const rand2 = Math.random().toString(36).slice(-10)
+  const tempPassword = `Owasp!${rand}${rand2}`
+
+  const { error: updErr } = await (supabase as any).auth.admin.updateUserById(userId, {
+    password: tempPassword,
+    email_confirm: true
+  })
+  if (updErr) {
+    return NextResponse.json({ error: updErr.message }, { status: 500 })
+  }
+
+  return NextResponse.json({ tempPassword })
 }
 
 

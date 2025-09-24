@@ -132,8 +132,8 @@ export class AdminService {
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
       body: JSON.stringify({ email })
     })
-    if (!res.ok) throw new Error((await res.json()).error || 'Failed to send reset')
-    return (await res.json()).resetUrl as string | null
+    if (!res.ok) throw new Error((await res.json()).error || 'Failed to reset password')
+    return (await res.json()).tempPassword as string
   }
 
   // Chapter content update (RLS enforced)

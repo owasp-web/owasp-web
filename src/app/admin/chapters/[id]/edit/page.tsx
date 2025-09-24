@@ -89,10 +89,11 @@ export default function EditChapterPage({ params }: EditChapterPageProps) {
 
   const handleResetPassword = async (email: string) => {
     try {
-      const link = await adminService.sendPasswordReset(params.id, email);
-      alert(link ? 'Password reset link generated and emailed.' : 'Password reset email sent.');
+      const temp = await adminService.sendPasswordReset(params.id, email);
+      setTempPassword(temp);
+      setTempPasswordEmail(email);
     } catch (err: any) {
-      alert(err?.message || 'Failed to send password reset');
+      setAdminsError(err?.message || 'Failed to reset password');
     }
   };
 
