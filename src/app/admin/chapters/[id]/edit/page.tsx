@@ -61,11 +61,16 @@ export default function EditChapterPage({ params }: EditChapterPageProps) {
     }
   };
 
-  const handleAddAdmin = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleAddAdmin = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     if (!newAdminEmail.trim()) return;
     try {
-      await adminService.addChapterAdmin(params.id, newAdminEmail.trim());
+      const result = await adminService.addChapterAdmin(params.id, newAdminEmail.trim());
+      if (result?.tempPassword) {
+        alert(`Admin added. Temporary password: ${result.tempPassword}`);
+      } else {
+        alert('Admin added. A reset link can be sent if needed.');
+      }
       setNewAdminEmail('');
       fetchAdmins();
     } catch (err: any) {
@@ -543,7 +548,7 @@ export default function EditChapterPage({ params }: EditChapterPageProps) {
         <div className="bg-white rounded-lg shadow p-6">
           <h2 className="text-xl font-bold text-gray-900 mb-6">Chapter Admins</h2>
 
-          <form onSubmit={handleAddAdmin} className="flex gap-3 mb-6">
+          <div className="flex gap-3 mb-6">
             <input
               type="email"
               placeholder="Admin email"
@@ -552,12 +557,13 @@ export default function EditChapterPage({ params }: EditChapterPageProps) {
               className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#003594] focus:border-transparent"
             />
             <button
-              type="submit"
+              type="button"
+              onClick={() => handleAddAdmin()}
               className="px-4 py-2 bg-[#003594] text-white rounded-lg hover:bg-[#002d7a] transition-colors"
             >
               Add
             </button>
-          </form>
+          </div>
 
           {adminsLoading ? (
             <div className="text-gray-500">Loading admins...</div>

@@ -104,7 +104,10 @@ export class AdminService {
       body: JSON.stringify({ email })
     })
     if (!res.ok) throw new Error((await res.json()).error || 'Failed to add admin')
-    return (await res.json()).admin as { id: string; email: string; user_id: string | null; created_at: string }
+    return (await res.json()) as { 
+      admin: { id: string; email: string; user_id: string | null; created_at: string }
+      tempPassword?: string | null
+    }
   }
 
   async removeChapterAdmin(chapterId: string, identifier: { id?: string; email?: string }) {
