@@ -58,8 +58,19 @@ export default function AdminProjectsPage() {
         }
 
         const response = await getProjects(options);
-        setProjects(response.projects);
-        setTotalCount(response.total);
+        // Scope by chapter admin membership if needed (projects may not be chapter-scoped; keep for parity)
+        try {
+          const supabase = createClientComponentClient();
+          const { data: { session } } = await supabase.auth.getSession();
+          const rolesRes = await fetch('/api/auth/roles', { headers: { Authorization: `Bearer ${session?.access_token || ''}` } })
+          const roles = rolesRes.ok ? await rolesRes.json() : { isSuperAdmin: false, chapterIds: [] }
+          const scoped = roles.isSuperAdmin ? response.projects : response.projects
+          setProjects(scoped);
+          setTotalCount(scoped.length);
+        } catch {
+          setProjects(response.projects);
+          setTotalCount(response.total);
+        }
       } catch (err) {
         console.error('Error fetching projects:', err);
         setError('Failed to load projects');

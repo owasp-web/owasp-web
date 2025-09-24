@@ -41,7 +41,13 @@ export default function AdminChaptersPage() {
       });
       if (!res.ok) throw new Error('Failed');
       const json = await res.json();
-      setChapters(json.chapters || []);
+      // Further scope client-side in case broader policies exist
+      const rolesRes = await fetch('/api/auth/roles', { headers: { Authorization: `Bearer ${session?.access_token || ''}` } })
+      const roles = rolesRes.ok ? await rolesRes.json() : { isSuperAdmin: false, chapterIds: [] }
+      const scoped = roles.isSuperAdmin
+        ? (json.chapters || [])
+        : (json.chapters || []).filter((c: any) => roles.chapterIds.includes(c.id))
+      setChapters(scoped);
     } catch (err) {
       setError('Failed to fetch chapters');
       console.error(err);

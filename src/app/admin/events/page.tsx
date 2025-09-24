@@ -7,6 +7,7 @@ import Image from 'next/image'
 export const dynamic = 'force-dynamic'
 import { useRouter } from 'next/navigation'
 import { adminService } from '@/lib/admin'
+import { createClientComponentClient } from '@/lib/supabase'
 import type { Event } from '@/lib/types'
 import Button from '@/components/Button'
 import Header from '@/components/Header'
@@ -29,9 +30,16 @@ export default function AdminEventsPage() {
         router.push('/admin')
         return
       }
-      
-      const eventsData = await adminService.getEvents()
-      setEvents(eventsData)
+      // Scope events by chapter admin membership unless super admin
+      const supabase = createClientComponentClient()
+      const { data: { session } } = await supabase.auth.getSession()
+      const rolesRes = await fetch('/api/auth/roles', { headers: { Authorization: `Bearer ${session?.access_token || ''}` } })
+      const roles = rolesRes.ok ? await rolesRes.json() : { isSuperAdmin: false, chapterIds: [] }
+      const allEvents = await adminService.getEvents()
+      const scoped = roles.isSuperAdmin
+        ? allEvents
+        : allEvents.filter((e: any) => !e.chapter_id || roles.chapterIds.includes(e.chapter_id))
+      setEvents(scoped)
     } catch (error: any) {
       setError(error.message || 'Failed to load events')
     } finally {
