@@ -12,6 +12,8 @@ export interface Event {
   price?: string
   registration_url?: string
   description?: string
+  chapter_id?: string
+  video_url?: string
   is_featured: boolean
   status: 'draft' | 'published' | 'cancelled'
 }
