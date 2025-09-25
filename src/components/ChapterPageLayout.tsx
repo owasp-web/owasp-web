@@ -5,12 +5,41 @@ import Link from 'next/link';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Chapter } from '@/lib/types';
+import { useEffect, useState } from 'react';
+import { createClientComponentClient } from '@/lib/supabase';
+import type { Event } from '@/lib/types';
 
 interface ChapterPageLayoutProps {
   chapter: Chapter;
 }
 
 export default function ChapterPageLayout({ chapter }: ChapterPageLayoutProps) {
+  const [chapterEvents, setChapterEvents] = useState<Event[]>([]);
+  const [eventsLoading, setEventsLoading] = useState<boolean>(true);
+  const [eventsError, setEventsError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        setEventsLoading(true);
+        const supabase = createClientComponentClient();
+        const { data, error } = await supabase
+          .from('events')
+          .select('*')
+          .eq('status', 'published')
+          .eq('chapter_id', chapter.id)
+          .order('created_at', { ascending: false });
+        if (error) throw error;
+        setChapterEvents((data as unknown as Event[]) || []);
+      } catch (e: any) {
+        setEventsError(e?.message || 'Failed to load chapter events');
+      } finally {
+        setEventsLoading(false);
+      }
+    };
+    if (chapter?.id) fetchEvents();
+  }, [chapter?.id]);
+
   return (
     <>
       <Header />
@@ -198,34 +227,46 @@ export default function ChapterPageLayout({ chapter }: ChapterPageLayoutProps) {
             </section>
           )}
 
-          {/* Events */}
-          {chapter.events && chapter.events.length > 0 && (
-            <section className="mb-16">
-              <h2 className="text-3xl font-bold text-[#003594] mb-8">Recent Events</h2>
-              <div className="space-y-6">
-                {chapter.events.slice(0, 3).map((event, index) => (
-                  <div key={index} className="bg-white border border-gray-200 rounded-lg p-6">
-                    <h3 className="text-xl font-semibold text-[#003594] mb-2">{event.title}</h3>
-                    <p className="text-gray-600 mb-2">{event.date} {event.time && `at ${event.time}`}</p>
-                    {event.description && (
-                      <p className="text-gray-700 mb-3">{event.description}</p>
-                    )}
-                    {event.speaker && (
-                      <p className="text-gray-700"><strong>Speaker:</strong> {event.speaker}</p>
-                    )}
-                    {event.speaker_bio && (
-                      <p className="text-sm text-gray-600 mt-2">{event.speaker_bio}</p>
-                    )}
-                    {event.video_url && (
-                      <a href={event.video_url} className="inline-block mt-3 text-[#003594] underline">
-                        View Recording
-                      </a>
-                    )}
+          {/* Chapter Events (fetched by chapter_id) */}
+          <section className="mb-16">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-3xl font-bold text-[#003594]">Chapter Events</h2>
+              <Link href="/events" className="text-[#003594] underline">View all events</Link>
+            </div>
+            {eventsLoading ? (
+              <div className="text-gray-500">Loading events...</div>
+            ) : eventsError ? (
+              <div className="text-red-600">{eventsError}</div>
+            ) : chapterEvents.length === 0 ? (
+              <div className="text-gray-600">No events posted yet for this chapter.</div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {chapterEvents.map((ev) => (
+                  <div key={ev.id} className="bg-white border border-gray-200 rounded-lg p-6">
+                    <div className="flex items-center gap-4 mb-2">
+                      <div className="text-3xl font-bold text-[#003594]">{ev.date}</div>
+                      <div className="flex flex-col text-sm">
+                        <span className="font-semibold">{ev.month}</span>
+                        <span className="text-gray-600">{ev.year}</span>
+                      </div>
+                      <div className="ml-auto text-gray-600 text-sm">{ev.time}</div>
+                    </div>
+                    <h3 className="text-xl font-semibold text-[#003594] mb-1">{ev.title}</h3>
+                    {ev.location && <p className="text-sm text-gray-600 mb-2">{ev.location}</p>}
+                    {ev.description && <p className="text-gray-700 mb-3">{ev.description}</p>}
+                    <div className="flex gap-3">
+                      {ev.registration_url && (
+                        <a href={ev.registration_url} target="_blank" rel="noopener noreferrer" className="text-[#003594] underline">Register</a>
+                      )}
+                      {ev.video_url && (
+                        <a href={ev.video_url} className="text-[#003594] underline">Recording</a>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
-            </section>
-          )}
+            )}
+          </section>
 
           {/* Leadership */}
           {chapter.leadership_team && chapter.leadership_team.length > 0 && (
