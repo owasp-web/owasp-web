@@ -8,6 +8,7 @@ export const dynamic = 'force-dynamic'
 import { useRouter } from 'next/navigation'
 import { adminService } from '@/lib/admin'
 import { createClientComponentClient } from '@/lib/supabase'
+import { createClientComponentClient } from '@/lib/supabase'
 import type { Event } from '@/lib/types'
 import Button from '@/components/Button'
 import Header from '@/components/Header'
@@ -35,12 +36,23 @@ export default function AdminEventsPage() {
       const { data: { session } } = await supabase.auth.getSession()
       const rolesRes = await fetch('/api/auth/roles', { headers: { Authorization: `Bearer ${session?.access_token || ''}` } })
       const roles = rolesRes.ok ? await rolesRes.json() : { isSuperAdmin: false, chapterIds: [] }
-      // Fetch all then scope; also refetch after create to show new items
-      const allEvents = await adminService.getEvents()
-      const scoped = roles.isSuperAdmin
-        ? allEvents
-        : allEvents.filter((e: any) => roles.chapterIds.includes(e.chapter_id))
-      setEvents(scoped)
+      // Fetch events explicitly by chapter ids to avoid RLS surprises
+      if (roles.isSuperAdmin) {
+        const all = await adminService.getEvents()
+        setEvents(all)
+      } else {
+        const supabase = createClientComponentClient()
+        if (roles.chapterIds.length === 0) {
+          setEvents([])
+        } else {
+          const { data, error } = await supabase
+            .from('events')
+            .select('*')
+            .in('chapter_id', roles.chapterIds)
+            .order('created_at', { ascending: false })
+          if (!error) setEvents((data as any) || [])
+        }
+      }
     } catch (error: any) {
       setError(error.message || 'Failed to load events')
     } finally {
