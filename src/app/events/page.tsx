@@ -91,10 +91,25 @@ export default function EventsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [featuredEvent, setFeaturedEvent] = useState<Event | null>(null);
+  const [chapters, setChapters] = useState<Array<{ id: string; name: string }>>([]);
+  const [chapterFilter, setChapterFilter] = useState<string>('all');
 
   useEffect(() => {
+    fetchChapters();
     fetchEvents();
-  }, []);
+  }, [chapterFilter]);
+
+  const fetchChapters = async () => {
+    try {
+      const supabase = createClientComponentClient();
+      const { data } = await supabase
+        .from('chapters')
+        .select('id,name')
+        .eq('is_active', true)
+        .order('name');
+      setChapters((data as any) || []);
+    } catch {}
+  };
 
   const fetchEvents = async () => {
     try {
@@ -107,7 +122,10 @@ export default function EventsPage() {
       
       if (error) throw error;
       
-      const eventsList = (data as unknown as Event[]) || [];
+      let eventsList = (data as unknown as Event[]) || [];
+      if (chapterFilter !== 'all') {
+        eventsList = eventsList.filter((e: any) => (e.chapter_id || null) === chapterFilter);
+      }
       setEvents(eventsList);
       
       // Find featured event
@@ -120,13 +138,7 @@ export default function EventsPage() {
     }
   };
 
-  const eventTypes = [
-    "All Events",
-    "Conferences", 
-    "Chapter Meetings",
-    "Training",
-    "Workshops"
-  ];
+  const eventTypes: string[] = [];
 
   if (loading) {
     return (
@@ -231,18 +243,16 @@ export default function EventsPage() {
       <div className="bg-white border-b border-gray-200">
         <ResponsiveContainer size="full" className="py-6 sm:py-8">
           <div className="flex flex-wrap gap-2 sm:gap-3">
-            {eventTypes.map((type, index) => (
-              <button
-                key={index}
-                className={`px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-medium transition-all duration-300 ${
-                  index === 0 
-                    ? 'bg-[#003594] text-white' 
-                    : 'bg-gray-100 text-[#757575] hover:bg-gray-200'
-                }`}
-              >
-                {type}
-              </button>
-            ))}
+            <select
+              value={chapterFilter}
+              onChange={(e) => setChapterFilter(e.target.value)}
+              className="px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-medium border border-gray-300 bg-white"
+            >
+              <option value="all">All Chapters</option>
+              {chapters.map((c) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
           </div>
         </ResponsiveContainer>
       </div>

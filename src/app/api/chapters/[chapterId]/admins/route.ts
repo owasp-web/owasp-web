@@ -12,7 +12,14 @@ async function requireAuthenticatedUser(req: NextRequest) {
   if (error || !data?.user) {
     return { user: null, error: 'Invalid or expired token' }
   }
-  return { user: data.user, error: null }
+  // Determine if super admin
+  const { data: superRows } = await supabase
+    .from('global_admins')
+    .select('id')
+    .or(`user_id.eq.${data.user.id},email.eq.${(data.user as any).email}`)
+    .limit(1)
+  const isSuperAdmin = !!(superRows && superRows.length > 0)
+  return { user: data.user as any, error: null, isSuperAdmin }
 }
 
 export async function GET(req: NextRequest, context: { params: { chapterId: string } }) {
@@ -37,9 +44,12 @@ export async function GET(req: NextRequest, context: { params: { chapterId: stri
 }
 
 export async function POST(req: NextRequest, context: { params: { chapterId: string } }) {
-  const { user, error } = await requireAuthenticatedUser(req)
+  const { user, error, isSuperAdmin } = await requireAuthenticatedUser(req) as any
   if (!user) {
     return NextResponse.json({ error }, { status: 401 })
+  }
+  if (!isSuperAdmin) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
   const { chapterId } = context.params
@@ -109,9 +119,12 @@ export async function POST(req: NextRequest, context: { params: { chapterId: str
 }
 
 export async function DELETE(req: NextRequest, context: { params: { chapterId: string } }) {
-  const { user, error } = await requireAuthenticatedUser(req)
+  const { user, error, isSuperAdmin } = await requireAuthenticatedUser(req) as any
   if (!user) {
     return NextResponse.json({ error }, { status: 401 })
+  }
+  if (!isSuperAdmin) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
   const { chapterId } = context.params
