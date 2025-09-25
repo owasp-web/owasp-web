@@ -18,7 +18,8 @@ function NewEventPageInner() {
   const [error, setError] = useState('')
   const router = useRouter()
   const searchParams = useSearchParams()
-  const chapterIdFromQuery = searchParams.get('chapterId')
+  // Support both `chapterId` and `chapterid` in query string
+  const chapterIdFromQuery = searchParams.get('chapterId') || searchParams.get('chapterid')
   const [initialData, setInitialData] = useState<Partial<EventFormData>>({})
 
   useEffect(() => {
