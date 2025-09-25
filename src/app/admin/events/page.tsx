@@ -35,10 +35,11 @@ export default function AdminEventsPage() {
       const { data: { session } } = await supabase.auth.getSession()
       const rolesRes = await fetch('/api/auth/roles', { headers: { Authorization: `Bearer ${session?.access_token || ''}` } })
       const roles = rolesRes.ok ? await rolesRes.json() : { isSuperAdmin: false, chapterIds: [] }
+      // Fetch all then scope; also refetch after create to show new items
       const allEvents = await adminService.getEvents()
       const scoped = roles.isSuperAdmin
         ? allEvents
-        : allEvents.filter((e: any) => !e.chapter_id || roles.chapterIds.includes(e.chapter_id))
+        : allEvents.filter((e: any) => roles.chapterIds.includes(e.chapter_id))
       setEvents(scoped)
     } catch (error: any) {
       setError(error.message || 'Failed to load events')

@@ -7,6 +7,8 @@ import { Chapter } from '@/lib/types';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { adminService } from '@/lib/admin';
+import { createClientComponentClient } from '@/lib/supabase';
+import type { Event } from '@/lib/types';
 
 interface EditChapterPageProps {
   params: {
@@ -24,6 +26,8 @@ export default function EditChapterPage({ params }: EditChapterPageProps) {
   const [newAdminEmail, setNewAdminEmail] = useState('');
   const [adminsLoading, setAdminsLoading] = useState(true);
   const [adminsError, setAdminsError] = useState<string | null>(null);
+  const [chapterEvents, setChapterEvents] = useState<Event[]>([]);
+  const [eventsLoading, setEventsLoading] = useState<boolean>(true);
   const [tempPassword, setTempPassword] = useState<string | null>(null);
   const [tempPasswordEmail, setTempPasswordEmail] = useState<string | null>(null);
 
@@ -32,6 +36,7 @@ export default function EditChapterPage({ params }: EditChapterPageProps) {
   useEffect(() => {
     fetchChapter();
     fetchAdmins();
+    fetchEvents();
   }, [params.id]);
 
   const fetchChapter = async () => {
@@ -60,6 +65,24 @@ export default function EditChapterPage({ params }: EditChapterPageProps) {
       setAdminsError(err?.message || 'Failed to load admins');
     } finally {
       setAdminsLoading(false);
+    }
+  };
+
+  const fetchEvents = async () => {
+    try {
+      setEventsLoading(true);
+      const supabase = createClientComponentClient();
+      const { data, error } = await supabase
+        .from('events')
+        .select('*')
+        .eq('chapter_id', params.id)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      setChapterEvents((data as unknown as Event[]) || []);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setEventsLoading(false);
     }
   };
 
@@ -543,6 +566,50 @@ export default function EditChapterPage({ params }: EditChapterPageProps) {
                 </div>
               </div>
             </div>
+
+        {/* Chapter Events Management */}
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-bold text-gray-900">Chapter Events</h2>
+            <button
+              type="button"
+              onClick={() => router.push(`/admin/events/new?chapterId=${params.id}`)}
+              className="px-4 py-2 bg-[#003594] text-white rounded-lg hover:bg-[#002d7a] transition-colors"
+            >
+              Create Event for this Chapter
+            </button>
+          </div>
+
+          {eventsLoading ? (
+            <div className="text-gray-500">Loading events...</div>
+          ) : chapterEvents.length === 0 ? (
+            <div className="text-gray-500">No events yet.</div>
+          ) : (
+            <ul className="divide-y divide-gray-200">
+              {chapterEvents.map(ev => (
+                <li key={ev.id} className="py-3 flex items-center justify-between">
+                  <div>
+                    <div className="text-sm font-medium text-gray-900">{ev.title}</div>
+                    <div className="text-xs text-gray-500">{ev.month} {ev.date}, {ev.year} • {ev.location}</div>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        const supabase = createClientComponentClient();
+                        await supabase.from('events').delete().eq('id', ev.id)
+                        fetchEvents()
+                      }}
+                      className="px-3 py-1 border border-red-300 text-red-700 rounded-lg hover:bg-red-50"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
 
         {/* Chapter Admins Management */}
         <div className="bg-white rounded-lg shadow p-6">

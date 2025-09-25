@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { createClientComponentClient } from '@/lib/supabase'
 import type { Event, EventFormData } from '@/lib/types'
 import Button from './Button'
 
@@ -28,6 +29,8 @@ export default function EventForm({ initialData, onSubmit, loading }: EventFormP
   })
 
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [file, setFile] = useState<File | null>(null)
+  const [uploading, setUploading] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -40,7 +43,7 @@ export default function EventForm({ initialData, onSubmit, loading }: EventFormP
     if (!formData.year.trim()) newErrors.year = 'Year is required'
     if (!formData.time.trim()) newErrors.time = 'Time is required'
     if (!formData.location.trim()) newErrors.location = 'Location is required'
-    if (!formData.image.trim()) newErrors.image = 'Image URL is required'
+    if (!file && !formData.image.trim()) newErrors.image = 'Image is required (upload or URL)'
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors)
@@ -48,7 +51,27 @@ export default function EventForm({ initialData, onSubmit, loading }: EventFormP
     }
 
     setErrors({})
-    await onSubmit(formData)
+    let imageUrl = formData.image
+    if (file) {
+      try {
+        setUploading(true)
+        const supabase = createClientComponentClient()
+        const bucket = 'events'
+        const ext = (file.name.split('.').pop() || 'jpg')
+        const path = `uploads/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+        const { error: upErr } = await supabase.storage.from(bucket).upload(path, file, { upsert: true })
+        if (upErr) throw upErr
+        const { data: pub } = supabase.storage.from(bucket).getPublicUrl(path)
+        imageUrl = pub.publicUrl
+      } catch (err: any) {
+        setUploading(false)
+        setErrors({ image: err?.message || 'Failed to upload image' })
+        return
+      } finally {
+        setUploading(false)
+      }
+    }
+    await onSubmit({ ...formData, image: imageUrl })
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -210,13 +233,18 @@ export default function EventForm({ initialData, onSubmit, loading }: EventFormP
           type="url"
           name="image"
           id="image"
-          placeholder="e.g., /images/events/event-1.png"
+          placeholder="e.g., https://..."
           value={formData.image}
           onChange={handleChange}
           className={`mt-1 block w-full border rounded-md px-3 py-2 ${
             errors.image ? 'border-red-300' : 'border-gray-300'
           } focus:outline-none focus:ring-[#003594] focus:border-[#003594]`}
         />
+        <div className="mt-3">
+          <label className="block text-sm font-medium text-gray-700 mb-1">Or Upload Image *</label>
+          <input type="file" accept="image/*" onChange={(e) => setFile(e.target.files?.[0] || null)} />
+          {uploading && <p className="text-sm text-gray-600 mt-1">Uploading...</p>}
+        </div>
         {errors.image && <p className="mt-1 text-sm text-red-600">{errors.image}</p>}
       </div>
 
