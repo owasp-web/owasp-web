@@ -43,7 +43,7 @@ export default function EventForm({ initialData, onSubmit, loading }: EventFormP
     if (!formData.year.trim()) newErrors.year = 'Year is required'
     if (!formData.time.trim()) newErrors.time = 'Time is required'
     if (!formData.location.trim()) newErrors.location = 'Location is required'
-    if (!file && !formData.image.trim()) newErrors.image = 'Image is required (upload or URL)'
+    // Image is optional; if provided via upload we'll attach the public URL
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors)
@@ -56,9 +56,9 @@ export default function EventForm({ initialData, onSubmit, loading }: EventFormP
       try {
         setUploading(true)
         const supabase = createClientComponentClient()
-        const bucket = 'events'
+        const bucket = process.env.NEXT_PUBLIC_EVENTS_BUCKET || 'public'
         const ext = (file.name.split('.').pop() || 'jpg')
-        const path = `uploads/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+        const path = `events/uploads/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
         const { error: upErr } = await supabase.storage.from(bucket).upload(path, file, { upsert: true })
         if (upErr) throw upErr
         const { data: pub } = supabase.storage.from(bucket).getPublicUrl(path)
@@ -226,25 +226,9 @@ export default function EventForm({ initialData, onSubmit, loading }: EventFormP
       </div>
 
       <div>
-        <label htmlFor="image" className="block text-sm font-medium text-gray-700">
-          Image URL *
-        </label>
-        <input
-          type="url"
-          name="image"
-          id="image"
-          placeholder="e.g., https://..."
-          value={formData.image}
-          onChange={handleChange}
-          className={`mt-1 block w-full border rounded-md px-3 py-2 ${
-            errors.image ? 'border-red-300' : 'border-gray-300'
-          } focus:outline-none focus:ring-[#003594] focus:border-[#003594]`}
-        />
-        <div className="mt-3">
-          <label className="block text-sm font-medium text-gray-700 mb-1">Or Upload Image *</label>
-          <input type="file" accept="image/*" onChange={(e) => setFile(e.target.files?.[0] || null)} />
-          {uploading && <p className="text-sm text-gray-600 mt-1">Uploading...</p>}
-        </div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Upload Image (optional)</label>
+        <input type="file" accept="image/*" onChange={(e) => setFile(e.target.files?.[0] || null)} />
+        {uploading && <p className="text-sm text-gray-600 mt-1">Uploading...</p>}
         {errors.image && <p className="mt-1 text-sm text-red-600">{errors.image}</p>}
       </div>
 
