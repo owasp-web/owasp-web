@@ -56,7 +56,7 @@ export default function EventForm({ initialData, onSubmit, loading }: EventFormP
       try {
         setUploading(true)
         const supabase = createClientComponentClient()
-        const bucket = process.env.NEXT_PUBLIC_EVENTS_BUCKET || 'public'
+        const bucket = process.env.NEXT_PUBLIC_EVENTS_BUCKET || 'NEXT_PUBLIC_EVENTS_BUCKET'
         const ext = (file.name.split('.').pop() || 'jpg')
         const path = `events/uploads/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
         const { error: upErr } = await supabase.storage.from(bucket).upload(path, file, { upsert: true })
