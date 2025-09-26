@@ -114,6 +114,34 @@ export async function POST(req: NextRequest, context: { params: { chapterId: str
   if (upsertError) {
     return NextResponse.json({ error: upsertError.message }, { status: 500 })
   }
+  // Ensure a temporary password is available for immediate sharing
+  if (!tempPassword) {
+    // Try to resolve user id if missing
+    if (!userId) {
+      try {
+        const { data: list } = await (supabase as any).auth.admin.listUsers()
+        const match = list?.users?.find((u: any) => (u?.email || '').toLowerCase() === email)
+        if (match?.id) userId = match.id
+      } catch {}
+    }
+    if (userId) {
+      try {
+        const rand = Math.random().toString(36).slice(-10)
+        const rand2 = Math.random().toString(36).slice(-10)
+        tempPassword = `Owasp!${rand}${rand2}`
+        const { error: updErr } = await (supabase as any).auth.admin.updateUserById(userId, {
+          password: tempPassword,
+          email_confirm: true
+        })
+        if (updErr) {
+          // Fall back to invite flow if update blocked
+          const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL || ''
+          const redirectTo = siteUrl ? `${siteUrl}/auth/callback` : undefined
+          await supabase.auth.admin.inviteUserByEmail(email, { redirectTo })
+        }
+      } catch {}
+    }
+  }
 
   return NextResponse.json({ admin: data, tempPassword })
 }
