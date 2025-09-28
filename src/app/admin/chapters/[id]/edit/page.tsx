@@ -381,7 +381,11 @@ export default function EditChapterPage({ params }: EditChapterPageProps) {
                         type="number"
                         value={tab.order}
                         onChange={(e) => updateTab(tIdx, { order: Number(e.target.value || 0) })}
-                        className="w-24 px-3 py-2 border border-gray-300 rounded-lg"
+                        min={1}
+                        step={1}
+                        aria-label="Tab order"
+                        title="Tab display order"
+                        className="w-16 px-3 py-2 border border-gray-300 rounded-lg"
                       />
                       <div className="flex gap-1">
                         <button type="button" onClick={() => moveTab(tIdx, 'up')} className="px-2 py-2 border rounded">↑</button>
@@ -434,25 +438,25 @@ export default function EditChapterPage({ params }: EditChapterPageProps) {
                                     placeholder="Label"
                                     value={btn.label}
                                     onChange={(e) => updateButton(tIdx, sIdx, bIdx, { label: e.target.value })}
-                                    className="md:col-span-3 px-3 py-2 border border-gray-300 rounded-lg"
+                                    className="md:col-span-3 px-3 py-2 border border-gray-300 rounded-lg min-w-0"
                                   />
                                   <input
                                     type="url"
                                     placeholder="https://..."
                                     value={btn.url}
                                     onChange={(e) => updateButton(tIdx, sIdx, bIdx, { url: e.target.value })}
-                                    className="md:col-span-7 px-3 py-2 border border-gray-300 rounded-lg"
+                                    className="md:col-span-6 px-3 py-2 border border-gray-300 rounded-lg min-w-0"
                                   />
                                   <select
                                     value={btn.style || 'primary'}
                                     onChange={(e) => updateButton(tIdx, sIdx, bIdx, { style: e.target.value as any })}
-                                    className="md:col-span-1 px-3 py-2 border border-gray-300 rounded-lg"
+                                    className="md:col-span-2 px-3 py-2 border border-gray-300 rounded-lg"
                                   >
                                     <option value="primary">primary</option>
                                     <option value="secondary">secondary</option>
                                     <option value="link">link</option>
                                   </select>
-                                  <div className="md:col-span-1 flex gap-1">
+                                  <div className="md:col-span-1 flex gap-1 flex-wrap justify-end">
                                     <button type="button" onClick={() => moveButton(tIdx, sIdx, bIdx, 'up')} className="px-2 py-2 border rounded">↑</button>
                                     <button type="button" onClick={() => moveButton(tIdx, sIdx, bIdx, 'down')} className="px-2 py-2 border rounded">↓</button>
                                     <button type="button" onClick={() => insertButtonAt(tIdx, sIdx, bIdx + 1)} className="px-2 py-2 border rounded">+ </button>
