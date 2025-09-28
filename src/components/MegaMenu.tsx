@@ -80,25 +80,23 @@ export default function MegaMenu({ isOpen, onClose, menuType }: MegaMenuProps) {
 
   const fetchProjects = async () => {
     try {
+      // Fast server API first
+      const res = await fetch('/api/public/projects/featured', { next: { revalidate: 60 } })
+      if (res.ok) {
+        const json = await res.json()
+        setFeaturedProjects(((json.projects as Project[]) || []).slice(0, 8))
+        return
+      }
+
+      // Fallback to client-side Supabase
       const supabase = createClientComponentClient()
-      let { data, error } = await supabase
+      const { data } = await supabase
         .from('projects')
         .select('*')
         .eq('status', 'active')
         .order('is_featured', { ascending: false })
         .order('title', { ascending: true })
         .limit(8)
-      if (error || !data || (data as any[]).length === 0) {
-        // Fallback to admin list API if authenticated (ensures content in header even if RLS/env mismatch)
-        const { data: { session } } = await supabase.auth.getSession()
-        if (session?.access_token) {
-          const res = await fetch('/api/admin/projects/list', { headers: { Authorization: `Bearer ${session.access_token}` } })
-          if (res.ok) {
-            const json = await res.json()
-            data = json.projects
-          }
-        }
-      }
       setFeaturedProjects(((data as unknown as Project[]) || []).slice(0, 8))
     } catch (err) {
       console.error('Failed to fetch projects:', err)

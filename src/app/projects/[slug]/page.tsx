@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
-import { getProjectBySlug } from '@/lib/projects';
 import ProjectDetailPageWithTabs from './page-with-tabs';
+import { createServerComponentClient } from '@/lib/supabase';
 
 interface ProjectPageProps {
   params: {
@@ -9,24 +9,18 @@ interface ProjectPageProps {
 }
 
 export default async function ProjectDetailPage({ params }: ProjectPageProps) {
-  const project = await getProjectBySlug(params.slug);
+  // Server-side fetch to guarantee consistency on prod
+  const svc = createServerComponentClient();
+  const { data, error } = await svc
+    .from('projects')
+    .select('*')
+    .eq('slug', params.slug)
+    .eq('status', 'active')
+    .single();
 
-  if (!project) {
+  if (error || !data) {
     notFound();
   }
 
-  // Debug: Log the project data to see what we're getting
-  console.log('Project data:', {
-    title: project.title,
-    slug: project.slug,
-    hasCustomTabs: !!project.tabs,
-    customTabsLength: project.tabs?.length || 0,
-    customTabs: project.tabs,
-    hasTabMain: !!project.tab_main_content,
-    hasTabTranslation: !!project.tab_translation_content,
-    hasTabSponsors: !!project.tab_sponsors_content,
-    hasTabData: !!project.tab_data_content
-  });
-
-  return <ProjectDetailPageWithTabs project={project} />;
+  return <ProjectDetailPageWithTabs project={data as any} />;
 }
