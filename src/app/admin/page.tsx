@@ -6,6 +6,7 @@ import Image from 'next/image'
 // Force dynamic rendering for admin pages
 export const dynamic = 'force-dynamic'
 import { useRouter } from 'next/navigation'
+import { createClientComponentClient } from '@/lib/supabase'
 import { adminService } from '@/lib/admin'
 import Button from '@/components/Button'
 import Header from '@/components/Header'
@@ -14,13 +15,17 @@ import Footer from '@/components/Footer'
 export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [rolesLoading, setRolesLoading] = useState(true)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [isSuperAdmin, setIsSuperAdmin] = useState<boolean>(false)
   const router = useRouter()
 
   useEffect(() => {
     checkAuth()
+    // Also load roles to tailor UI
+    loadRoles()
   }, [])
 
   const checkAuth = async () => {
@@ -31,6 +36,28 @@ export default function AdminPage() {
       console.error('Auth check failed:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const loadRoles = async () => {
+    try {
+      const supabase = createClientComponentClient()
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.access_token) {
+        setRolesLoading(false)
+        return
+      }
+      const res = await fetch('/api/auth/roles', {
+        headers: { Authorization: `Bearer ${session.access_token}` }
+      })
+      if (res.ok) {
+        const json = await res.json()
+        setIsSuperAdmin(!!json?.isSuperAdmin)
+      }
+    } catch (e) {
+      // ignore
+    } finally {
+      setRolesLoading(false)
     }
   }
 
@@ -59,7 +86,7 @@ export default function AdminPage() {
     }
   }
 
-  if (loading) {
+  if (loading || rolesLoading) {
     return (
       <div className="min-h-screen bg-[#F1F6FE]">
         <Header />
@@ -188,53 +215,57 @@ export default function AdminPage() {
 
             {/* Management Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 w-full">
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow duration-300">
-                <div className="p-4 sm:p-6 lg:p-8">
-                  <div className="flex items-center mb-4 sm:mb-6">
-                    <div className="bg-[#003594] p-2 sm:p-3 rounded-lg">
-                      <Image src="/images/icons/megaphone.svg" alt="" width={24} height={24} className="filter brightness-0 invert" />
+              {isSuperAdmin && (
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow duration-300">
+                  <div className="p-4 sm:p-6 lg:p-8">
+                    <div className="flex items-center mb-4 sm:mb-6">
+                      <div className="bg-[#003594] p-2 sm:p-3 rounded-lg">
+                        <Image src="/images/icons/megaphone.svg" alt="" width={24} height={24} className="filter brightness-0 invert" />
+                      </div>
+                      <div className="ml-3 sm:ml-4">
+                        <h3 className="font-['Barlow'] font-medium text-[#101820] text-lg sm:text-[20px] leading-tight sm:leading-[24px] tracking-[-0.36px] sm:tracking-[-0.4px]">
+                          Events
+                        </h3>
+                        <p className="font-['Poppins'] text-[#757575] text-sm leading-[18px] sm:leading-[20px]">
+                          Manage global and regional events
+                        </p>
+                      </div>
                     </div>
-                    <div className="ml-3 sm:ml-4">
-                      <h3 className="font-['Barlow'] font-medium text-[#101820] text-lg sm:text-[20px] leading-tight sm:leading-[24px] tracking-[-0.36px] sm:tracking-[-0.4px]">
-                        Events
-                      </h3>
-                      <p className="font-['Poppins'] text-[#757575] text-sm leading-[18px] sm:leading-[20px]">
-                        Manage global and regional events
-                      </p>
-                    </div>
+                    <Button 
+                      text="Manage Events" 
+                      variant="primary" 
+                      size="40"
+                      onClick={() => router.push('/admin/events')}
+                    />
                   </div>
-                  <Button 
-                    text="Manage Events" 
-                    variant="primary" 
-                    size="40"
-                    onClick={() => router.push('/admin/events')}
-                  />
                 </div>
-              </div>
+              )}
 
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow duration-300">
-                <div className="p-4 sm:p-6 lg:p-8">
-                  <div className="flex items-center mb-4 sm:mb-6">
-                    <div className="bg-[#003594] p-2 sm:p-3 rounded-lg">
-                      <Image src="/images/icons/briefcase-figma.svg" alt="" width={24} height={24} className="filter brightness-0 invert" />
+              {isSuperAdmin && (
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow duration-300">
+                  <div className="p-4 sm:p-6 lg:p-8">
+                    <div className="flex items-center mb-4 sm:mb-6">
+                      <div className="bg-[#003594] p-2 sm:p-3 rounded-lg">
+                        <Image src="/images/icons/briefcase-figma.svg" alt="" width={24} height={24} className="filter brightness-0 invert" />
+                      </div>
+                      <div className="ml-3 sm:ml-4">
+                        <h3 className="font-['Barlow'] font-medium text-[#101820] text-lg sm:text-[20px] leading-tight sm:leading-[24px] tracking-[-0.36px] sm:tracking-[-0.4px]">
+                          Projects
+                        </h3>
+                        <p className="font-['Poppins'] text-[#757575] text-sm leading-[18px] sm:leading-[20px]">
+                          Manage OWASP projects database
+                        </p>
+                      </div>
                     </div>
-                    <div className="ml-3 sm:ml-4">
-                      <h3 className="font-['Barlow'] font-medium text-[#101820] text-lg sm:text-[20px] leading-tight sm:leading-[24px] tracking-[-0.36px] sm:tracking-[-0.4px]">
-                        Projects
-                      </h3>
-                      <p className="font-['Poppins'] text-[#757575] text-sm leading-[18px] sm:leading-[20px]">
-                        Manage OWASP projects database
-                      </p>
-                    </div>
+                    <Button 
+                      text="Manage Projects" 
+                      variant="primary" 
+                      size="40"
+                      onClick={() => router.push('/admin/projects')}
+                    />
                   </div>
-                  <Button 
-                    text="Manage Projects" 
-                    variant="primary" 
-                    size="40"
-                    onClick={() => router.push('/admin/projects')}
-                  />
                 </div>
-              </div>
+              )}
 
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow duration-300">
                 <div className="p-4 sm:p-6 lg:p-8">
