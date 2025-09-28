@@ -44,18 +44,23 @@ export default function MegaMenu({ isOpen, onClose, menuType }: MegaMenuProps) {
   const fetchEvents = async () => {
     setLoading(true)
     try {
-      const supabase = createClientComponentClient()
-      const { data, error } = await supabase
-        .from('events')
-        .select('*')
-        .eq('status', 'published')
-        .order('date', { ascending: true })
-        .limit(8)
-      
-      if (error) throw error
-      setEvents((data as unknown as Event[]) || [])
+      const res = await fetch('/api/public/events/list?limit=6', { next: { revalidate: 60 } })
+      if (res.ok) {
+        const json = await res.json()
+        setEvents((json.events as Event[]) || [])
+      } else {
+        const supabase = createClientComponentClient()
+        const { data } = await supabase
+          .from('events')
+          .select('*')
+          .eq('status', 'published')
+          .order('date', { ascending: true })
+          .limit(6)
+        setEvents((data as unknown as Event[]) || [])
+      }
     } catch (err) {
       console.error('Failed to fetch events:', err)
+      setEvents([])
     } finally {
       setLoading(false)
     }
@@ -63,15 +68,20 @@ export default function MegaMenu({ isOpen, onClose, menuType }: MegaMenuProps) {
 
   const fetchChapters = async () => {
     try {
-      const supabase = createClientComponentClient()
-      const { data, error } = await supabase
-        .from('chapters')
-        .select('*')
-        .eq('is_active', true)
-        .order('name', { ascending: true })
-        .limit(30)
-      if (error) throw error
-      setChapters((data as unknown as Chapter[]) || [])
+      const res = await fetch('/api/public/chapters/list?limit=6', { next: { revalidate: 60 } })
+      if (res.ok) {
+        const json = await res.json()
+        setChapters((json.chapters as Chapter[]) || [])
+      } else {
+        const supabase = createClientComponentClient()
+        const { data } = await supabase
+          .from('chapters')
+          .select('*')
+          .eq('is_active', true)
+          .order('name', { ascending: true })
+          .limit(6)
+        setChapters((data as unknown as Chapter[]) || [])
+      }
     } catch (err) {
       console.error('Failed to fetch chapters:', err)
       setChapters([])
