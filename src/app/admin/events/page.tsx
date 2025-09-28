@@ -17,6 +17,7 @@ export default function AdminEventsPage() {
   const [events, setEvents] = useState<Event[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [firstChapterId, setFirstChapterId] = useState<string | null>(null)
   const router = useRouter()
 
   useEffect(() => {
@@ -30,26 +31,20 @@ export default function AdminEventsPage() {
         router.push('/admin')
         return
       }
-      // Scope events by chapter admin membership unless super admin
+      // Fetch via server route that enforces authorization and returns scoped events
       const supabase = createClientComponentClient()
       const { data: { session } } = await supabase.auth.getSession()
+      const res = await fetch('/api/admin/events/list', { headers: { Authorization: `Bearer ${session?.access_token || ''}` } })
+      if (!res.ok) throw new Error((await res.json()).error || 'Failed to load events')
+      const json = await res.json()
+      setEvents(json.events || [])
+
+      // Fetch roles to know where to send Add New Event for chapter admins
       const rolesRes = await fetch('/api/auth/roles', { headers: { Authorization: `Bearer ${session?.access_token || ''}` } })
-      const roles = rolesRes.ok ? await rolesRes.json() : { isSuperAdmin: false, chapterIds: [] }
-      // Fetch events explicitly by chapter ids to avoid RLS surprises
-      if (roles.isSuperAdmin) {
-        const all = await adminService.getEvents()
-        setEvents(all)
-      } else {
-        const supabase = createClientComponentClient()
-        if (roles.chapterIds.length === 0) {
-          setEvents([])
-        } else {
-          const { data, error } = await supabase
-            .from('events')
-            .select('*')
-            .in('chapter_id', roles.chapterIds)
-            .order('created_at', { ascending: false })
-          if (!error) setEvents((data as any) || [])
+      if (rolesRes.ok) {
+        const roles = await rolesRes.json()
+        if (roles?.chapterIds && roles.chapterIds.length === 1) {
+          setFirstChapterId(roles.chapterIds[0])
         }
       }
     } catch (error: any) {
@@ -129,7 +124,13 @@ export default function AdminEventsPage() {
               text="Add New Event" 
               variant="light-blue" 
               size="40"
-              onClick={() => router.push('/admin/events/new')}
+              onClick={() => {
+                if (firstChapterId) {
+                  router.push(`/admin/events/new?chapterId=${firstChapterId}`)
+                } else {
+                  router.push('/admin/events/new')
+                }
+              }}
             />
           </div>
         </div>
@@ -183,7 +184,13 @@ export default function AdminEventsPage() {
                   text="Create First Event" 
                   variant="primary" 
                   size="48"
-                  onClick={() => router.push('/admin/events/new')}
+                  onClick={() => {
+                    if (firstChapterId) {
+                      router.push(`/admin/events/new?chapterId=${firstChapterId}`)
+                    } else {
+                      router.push('/admin/events/new')
+                    }
+                  }}
                 />
               </div>
             ) : (

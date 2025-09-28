@@ -4,7 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import { Chapter } from '@/lib/types';
+import { Chapter, ChapterTab } from '@/lib/types';
 import { useEffect, useState } from 'react';
 import { createClientComponentClient } from '@/lib/supabase';
 import type { Event } from '@/lib/types';
@@ -17,6 +17,7 @@ export default function ChapterPageLayout({ chapter }: ChapterPageLayoutProps) {
   const [chapterEvents, setChapterEvents] = useState<Event[]>([]);
   const [eventsLoading, setEventsLoading] = useState<boolean>(true);
   const [eventsError, setEventsError] = useState<string | null>(null);
+  const [activeTabId, setActiveTabId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -39,6 +40,14 @@ export default function ChapterPageLayout({ chapter }: ChapterPageLayoutProps) {
     };
     if (chapter?.id) fetchEvents();
   }, [chapter?.id]);
+
+  // Initialize active tab when chapter tabs change
+  useEffect(() => {
+    const tabs = (chapter?.tabs || []).slice().sort((a, b) => a.order - b.order)
+    if (tabs.length > 0 && !activeTabId) {
+      setActiveTabId(tabs[0].id)
+    }
+  }, [chapter?.tabs, activeTabId])
 
   return (
     <>
@@ -100,6 +109,98 @@ export default function ChapterPageLayout({ chapter }: ChapterPageLayoutProps) {
         </section>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          {/* Custom Tabs (if present) */}
+          {(chapter.tabs && chapter.tabs.length > 0) && (
+            <section className="mb-16">
+              <div className="flex flex-wrap gap-2 border-b border-gray-200 mb-6">
+                {(chapter.tabs as ChapterTab[])
+                  .slice()
+                  .sort((a, b) => a.order - b.order)
+                  .map((t) => (
+                    <button
+                      key={t.id}
+                      type="button"
+                      onClick={() => setActiveTabId(t.id)}
+                      className={`px-4 py-2 rounded-t-lg border border-b-0 ${activeTabId === t.id ? 'bg-[#003594] text-white border-[#003594]' : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'}`}
+                    >
+                      {t.name}
+                    </button>
+                ))}
+              </div>
+
+              {(() => {
+                const tabs = (chapter.tabs as ChapterTab[]).slice().sort((a, b) => a.order - b.order)
+                const current = tabs.find((t) => t.id === activeTabId) || tabs[0]
+                if (!current) return null
+                return (
+                  <div className="space-y-6">
+                    {(current.sections || []).map((sec, idx) => (
+                      <div key={idx} className="bg-white border border-gray-200 rounded-lg p-6">
+                        {sec.title && <h3 className="text-xl font-semibold text-[#003594] mb-3">{sec.title}</h3>}
+                        {sec.content && (
+                          <div className="space-y-4 text-gray-700">
+                            {sec.content.split('\n\n').map((p, i) => (
+                              <p key={i}>{p}</p>
+                            ))}
+                          </div>
+                        )}
+                        {(sec.buttons && sec.buttons.length > 0) && (
+                          <div className="mt-4 flex flex-wrap gap-3">
+                            {sec.buttons.map((btn, bIdx) => {
+                              const style = btn.style || 'primary'
+                              const cls = style === 'secondary'
+                                ? 'border-2 border-[#003594] text-[#003594] hover:bg-[#003594] hover:text-white'
+                                : style === 'link'
+                                  ? 'text-[#003594] underline px-0 py-0'
+                                  : 'bg-[#003594] text-white hover:bg-[#002d7a]'
+                              return (
+                                <a key={bIdx} href={btn.url || '#'} className={`px-5 py-2 rounded-lg transition-colors ${cls}`}>{btn.label}</a>
+                              )
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )
+              })()}
+            </section>
+          )}
+          {/* Events Tab */}
+          <section className="mb-16">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-3xl font-bold text-[#003594]">Events</h2>
+              <Link href={`/chapters/${chapter.slug}/events`} className="text-[#003594] underline">View all events</Link>
+            </div>
+            {eventsLoading ? (
+              <div className="text-gray-500">Loading events…</div>
+            ) : eventsError ? (
+              <div className="text-red-600">{eventsError}</div>
+            ) : chapterEvents.length === 0 ? (
+              <div className="text-gray-600">No events yet for this chapter.</div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {chapterEvents.slice(0, 6).map((ev) => (
+                  <div key={ev.id} className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
+                    <div className="relative h-40 bg-gray-50">
+                      {ev.image && <Image src={ev.image} alt={ev.title} fill className="object-cover" />}
+                    </div>
+                    <div className="p-4">
+                      <div className="text-sm text-gray-600 mb-1">{ev.month} {ev.date}, {ev.year} • {ev.time}</div>
+                      <h3 className="text-lg font-semibold text-[#101820] mb-1">{ev.title}</h3>
+                      <div className="text-sm text-gray-600 mb-3">{ev.location}</div>
+                      <div className="flex gap-2">
+                        <Link href={`/events/${ev.id}`} className="px-3 py-1 border rounded text-[#003594]">Details</Link>
+                        {ev.registration_url && (
+                          <a href={ev.registration_url} target="_blank" rel="noopener noreferrer" className="px-3 py-1 bg-[#003594] text-white rounded">Register</a>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
           
           {/* About Section */}
           <section className="mb-16">

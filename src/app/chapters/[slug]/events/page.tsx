@@ -41,14 +41,29 @@ export default function ChapterEventsPage({ params }: { params: { slug: string }
         }
         setChapter(chap)
 
+        const chapterId = (chap as any).id as string | undefined
+        const isUuid = typeof chapterId === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(chapterId)
+        if (!isUuid) {
+          // Some mock chapters may not have a UUID; just show no events without error
+          setEvents([])
+          return
+        }
+
         const supabase = createClientComponentClient()
         const { data, error } = await supabase
           .from('events')
           .select('*')
           .eq('status', 'published')
-          .eq('chapter_id', (chap as any).id)
+          .eq('chapter_id', chapterId)
           .order('created_at', { ascending: false })
-        if (error) throw error
+        if (error) {
+          // If the backend still complains about UUID casting, fail soft with empty list
+          if (String(error.message || '').toLowerCase().includes('invalid input syntax for type uuid')) {
+            setEvents([])
+            return
+          }
+          throw error
+        }
         setEvents((data as unknown as Event[]) || [])
       } catch (e: any) {
         setError(e?.message || 'Failed to load events')

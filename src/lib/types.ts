@@ -113,6 +113,26 @@ export interface ProjectTab {
   order: number
 }
 
+// Chapter tabs schema
+export interface ChapterTabButton {
+  label: string
+  url: string
+  style?: 'primary' | 'secondary' | 'link'
+}
+
+export interface ChapterTabSection {
+  title?: string
+  content?: string
+  buttons?: ChapterTabButton[]
+}
+
+export interface ChapterTab {
+  id: string
+  name: string
+  order: number
+  sections: ChapterTabSection[]
+}
+
 export interface ProjectScreenshot {
   url: string
   caption?: string
@@ -213,6 +233,9 @@ export interface Chapter {
   // Administrative
   is_active: boolean
   content_status?: 'draft' | 'published' | 'archived'
+  
+  // Custom tabs
+  tabs?: ChapterTab[]
   
   // Economic/Impact data
   economic_impact?: ChapterEconomicImpact

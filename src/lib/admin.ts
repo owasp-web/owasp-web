@@ -142,13 +142,14 @@ export class AdminService {
     const supabase = this.getSupabase()
     const { data: { session } } = await supabase.auth.getSession()
     if (!session) throw new Error('Not authenticated')
-    const res = await fetch(`/api/chapters/${chapterId}/update`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
-      body: JSON.stringify(changes)
-    })
-    if (!res.ok) throw new Error((await res.json()).error || 'Failed to update chapter')
-    return (await res.json()).chapter
+    const { data, error } = await supabase
+      .from('chapters')
+      .update(changes)
+      .eq('id', chapterId)
+      .select('*')
+      .single()
+    if (error) throw error
+    return data
   }
 
   // Create event for a chapter (RLS enforced)

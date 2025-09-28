@@ -244,7 +244,9 @@ export default function EventsPage() {
                         <Button text="Register Now" variant="light-blue" size="48" />
                       </a>
                     )}
-                    <Button text="View Details" variant="ghost-white" size="48" />
+                    <a href={`/events/${featuredEvent.id}`} className="w-full sm:w-auto">
+                      <Button text="View Details" variant="ghost-white" size="48" />
+                    </a>
                   </div>
                 </div>
                 <div className="w-full lg:w-1/3 relative h-64 sm:h-80 lg:h-auto">

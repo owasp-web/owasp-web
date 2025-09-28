@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { getChapterById } from '@/lib/chapters';
-import { Chapter } from '@/lib/types';
+import { Chapter, ChapterTab, ChapterTabSection, ChapterTabButton } from '@/lib/types';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { adminService } from '@/lib/admin';
@@ -133,13 +133,100 @@ export default function EditChapterPage({ params }: EditChapterPageProps) {
     setChapter(prev => ({ ...prev!, mission_points: points }));
   };
 
+  // Tabs editor helpers
+  const ensureTabs = () => (chapter?.tabs && Array.isArray(chapter.tabs)) ? chapter.tabs : []
+
+  const addTab = () => {
+    if (!chapter) return
+    const newTab: ChapterTab = { id: `tab-${Date.now()}`, name: 'New Tab', order: ensureTabs().length + 1, sections: [] }
+    setChapter(prev => ({ ...prev!, tabs: [...ensureTabs(), newTab] }))
+  }
+
+  const updateTab = (idx: number, changes: Partial<ChapterTab>) => {
+    if (!chapter) return
+    const tabs = ensureTabs().slice()
+    tabs[idx] = { ...tabs[idx], ...changes }
+    setChapter(prev => ({ ...prev!, tabs }))
+  }
+
+  const deleteTab = (idx: number) => {
+    if (!chapter) return
+    const tabs = ensureTabs().slice()
+    tabs.splice(idx, 1)
+    // Reorder
+    const reordered = tabs.map((t, i) => ({ ...t, order: i + 1 }))
+    setChapter(prev => ({ ...prev!, tabs: reordered }))
+  }
+
+  const addSection = (tabIdx: number) => {
+    if (!chapter) return
+    const tabs = ensureTabs().slice()
+    const sec: ChapterTabSection = { title: 'Section title', content: '' }
+    tabs[tabIdx].sections = [...(tabs[tabIdx].sections || []), sec]
+    setChapter(prev => ({ ...prev!, tabs }))
+  }
+
+  const updateSection = (tabIdx: number, secIdx: number, changes: Partial<ChapterTabSection>) => {
+    if (!chapter) return
+    const tabs = ensureTabs().slice()
+    const sections = (tabs[tabIdx].sections || []).slice()
+    sections[secIdx] = { ...sections[secIdx], ...changes }
+    tabs[tabIdx].sections = sections
+    setChapter(prev => ({ ...prev!, tabs }))
+  }
+
+  const deleteSection = (tabIdx: number, secIdx: number) => {
+    if (!chapter) return
+    const tabs = ensureTabs().slice()
+    const sections = (tabs[tabIdx].sections || []).slice()
+    sections.splice(secIdx, 1)
+    tabs[tabIdx].sections = sections
+    setChapter(prev => ({ ...prev!, tabs }))
+  }
+
+  const addButton = (tabIdx: number, secIdx: number) => {
+    if (!chapter) return
+    const tabs = ensureTabs().slice()
+    const sections = (tabs[tabIdx].sections || []).slice()
+    const btns = (sections[secIdx].buttons || []).slice()
+    const btn: ChapterTabButton = { label: 'Button', url: '' }
+    btns.push(btn)
+    sections[secIdx].buttons = btns
+    tabs[tabIdx].sections = sections
+    setChapter(prev => ({ ...prev!, tabs }))
+  }
+
+  const updateButton = (tabIdx: number, secIdx: number, btnIdx: number, changes: Partial<ChapterTabButton>) => {
+    if (!chapter) return
+    const tabs = ensureTabs().slice()
+    const sections = (tabs[tabIdx].sections || []).slice()
+    const btns = (sections[secIdx].buttons || []).slice()
+    btns[btnIdx] = { ...btns[btnIdx], ...changes }
+    sections[secIdx].buttons = btns
+    tabs[tabIdx].sections = sections
+    setChapter(prev => ({ ...prev!, tabs }))
+  }
+
+  const deleteButton = (tabIdx: number, secIdx: number, btnIdx: number) => {
+    if (!chapter) return
+    const tabs = ensureTabs().slice()
+    const sections = (tabs[tabIdx].sections || []).slice()
+    const btns = (sections[secIdx].buttons || []).slice()
+    btns.splice(btnIdx, 1)
+    sections[secIdx].buttons = btns
+    tabs[tabIdx].sections = sections
+    setChapter(prev => ({ ...prev!, tabs }))
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!chapter) return;
 
     setSaving(true);
     try {
-      await adminService.updateChapter(params.id, chapter);
+      // Ensure tabs default structure is an array
+      const payload = { ...chapter, tabs: (chapter as any).tabs || [] } as Partial<Chapter>
+      await adminService.updateChapter(params.id, payload);
       alert('Chapter updated successfully!');
     } catch (error) {
       console.error('Error updating chapter:', error);
@@ -206,6 +293,105 @@ export default function EditChapterPage({ params }: EditChapterPageProps) {
                 Create Event for this Chapter
               </button>
             </div>
+          </div>
+
+          {/* Tabs Editor */}
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-gray-900">Custom Tabs</h2>
+              <button type="button" onClick={addTab} className="px-3 py-2 bg-[#003594] text-white rounded-lg hover:bg-[#002d7a]">Add Tab</button>
+            </div>
+            {(ensureTabs()).length === 0 ? (
+              <p className="text-gray-600">No tabs yet. Click "Add Tab" to create one.</p>
+            ) : (
+              <div className="space-y-6">
+                {ensureTabs().map((tab, tIdx) => (
+                  <div key={tab.id} className="border rounded-lg p-4">
+                    <div className="flex items-center gap-3 mb-3">
+                      <input
+                        type="text"
+                        value={tab.name}
+                        onChange={(e) => updateTab(tIdx, { name: e.target.value })}
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg"
+                      />
+                      <input
+                        type="number"
+                        value={tab.order}
+                        onChange={(e) => updateTab(tIdx, { order: Number(e.target.value || 0) })}
+                        className="w-24 px-3 py-2 border border-gray-300 rounded-lg"
+                      />
+                      <button type="button" onClick={() => deleteTab(tIdx)} className="px-3 py-2 border border-red-300 text-red-700 rounded-lg">Delete</button>
+                    </div>
+
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className="font-semibold text-gray-900">Sections</h3>
+                      <button type="button" onClick={() => addSection(tIdx)} className="px-2 py-1 border rounded">Add Section</button>
+                    </div>
+                    {(tab.sections || []).length === 0 ? (
+                      <p className="text-gray-600">No sections yet.</p>
+                    ) : (
+                      <div className="space-y-4">
+                        {(tab.sections || []).map((sec, sIdx) => (
+                          <div key={sIdx} className="rounded border p-3">
+                            <div className="flex items-center gap-3 mb-2">
+                              <input
+                                type="text"
+                                placeholder="Section title"
+                                value={sec.title || ''}
+                                onChange={(e) => updateSection(tIdx, sIdx, { title: e.target.value })}
+                                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg"
+                              />
+                              <button type="button" onClick={() => deleteSection(tIdx, sIdx)} className="px-2 py-1 border border-red-300 text-red-700 rounded-lg">Remove</button>
+                            </div>
+                            <textarea
+                              rows={4}
+                              placeholder="Section content (use blank line for paragraphs)"
+                              value={sec.content || ''}
+                              onChange={(e) => updateSection(tIdx, sIdx, { content: e.target.value })}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg mb-3"
+                            />
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="font-medium text-gray-900">Buttons</div>
+                              <button type="button" onClick={() => addButton(tIdx, sIdx)} className="px-2 py-1 border rounded">Add Button</button>
+                            </div>
+                            <div className="space-y-2">
+                              {(sec.buttons || []).map((btn, bIdx) => (
+                                <div key={bIdx} className="grid grid-cols-1 md:grid-cols-12 gap-2 items-center">
+                                  <input
+                                    type="text"
+                                    placeholder="Label"
+                                    value={btn.label}
+                                    onChange={(e) => updateButton(tIdx, sIdx, bIdx, { label: e.target.value })}
+                                    className="md:col-span-3 px-3 py-2 border border-gray-300 rounded-lg"
+                                  />
+                                  <input
+                                    type="url"
+                                    placeholder="https://..."
+                                    value={btn.url}
+                                    onChange={(e) => updateButton(tIdx, sIdx, bIdx, { url: e.target.value })}
+                                    className="md:col-span-7 px-3 py-2 border border-gray-300 rounded-lg"
+                                  />
+                                  <select
+                                    value={btn.style || 'primary'}
+                                    onChange={(e) => updateButton(tIdx, sIdx, bIdx, { style: e.target.value as any })}
+                                    className="md:col-span-1 px-3 py-2 border border-gray-300 rounded-lg"
+                                  >
+                                    <option value="primary">primary</option>
+                                    <option value="secondary">secondary</option>
+                                    <option value="link">link</option>
+                                  </select>
+                                  <button type="button" onClick={() => deleteButton(tIdx, sIdx, bIdx)} className="md:col-span-1 px-3 py-2 border border-red-300 text-red-700 rounded-lg">Delete</button>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-8">
