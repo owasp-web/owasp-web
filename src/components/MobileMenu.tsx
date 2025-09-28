@@ -317,7 +317,7 @@ export default function MobileMenu({ isOpen, onClose, navigationItems }: MobileM
                                 value={projectQuery}
                                 onChange={(e) => setProjectQuery(e.target.value)}
                                 placeholder="Search projects..."
-                                className="w-full bg-transparent text-white placeholder:text-white/50 text-sm outline-none"
+                                className="w-full bg-transparent text-white placeholder:text-white/50 text-base sm:text-sm outline-none"
                                 onKeyDown={(e) => { if (e.key === 'Enter' && projectQuery.trim()) { window.location.href = `/projects?query=${encodeURIComponent(projectQuery.trim())}`; onClose() } }}
                               />
                             </div>
@@ -355,7 +355,7 @@ export default function MobileMenu({ isOpen, onClose, navigationItems }: MobileM
                                 value={chapterQuery}
                                 onChange={(e) => setChapterQuery(e.target.value)}
                                 placeholder="Search chapters..."
-                                className="w-full bg-transparent text-white placeholder:text-white/50 text-sm outline-none"
+                                className="w-full bg-transparent text-white placeholder:text-white/50 text-base sm:text-sm outline-none"
                               />
                             </div>
                             <div className="max-h-56 overflow-y-auto">
@@ -386,7 +386,7 @@ export default function MobileMenu({ isOpen, onClose, navigationItems }: MobileM
                                 value={eventQuery}
                                 onChange={(e) => setEventQuery(e.target.value)}
                                 placeholder="Search events..."
-                                className="w-full bg-transparent text-white placeholder:text-white/50 text-sm outline-none"
+                                className="w-full bg-transparent text-white placeholder:text-white/50 text-base sm:text-sm outline-none"
                               />
                             </div>
                             <div className="max-h-56 overflow-y-auto space-y-2">
