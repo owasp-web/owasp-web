@@ -18,6 +18,9 @@ export default function MegaMenu({ isOpen, onClose, menuType }: MegaMenuProps) {
   const [chapters, setChapters] = useState<Chapter[]>([])
   const [featuredProjects, setFeaturedProjects] = useState<Project[]>([])
   const menuRef = useRef<HTMLDivElement>(null)
+  const [projectQuery, setProjectQuery] = useState('')
+  const [chapterQuery, setChapterQuery] = useState('')
+  const [eventQuery, setEventQuery] = useState('')
 
   // Fetch data when menu opens
   useEffect(() => {
@@ -127,6 +130,8 @@ export default function MegaMenu({ isOpen, onClose, menuType }: MegaMenuProps) {
               <input
                 type="text"
                 placeholder="Search events..."
+                value={eventQuery}
+                onChange={(e) => setEventQuery(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key !== 'Enter') return
                   const q = (e.currentTarget as HTMLInputElement).value.trim()
@@ -215,30 +220,41 @@ export default function MegaMenu({ isOpen, onClose, menuType }: MegaMenuProps) {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {events.slice(0, 6).map((event) => (
-                <Link 
-                  key={event.id} 
-                  href="/events" 
-                  onClick={onClose}
-                  className="p-4 rounded-lg bg-white/5 hover:bg-white/10 transition-all duration-200 group"
-                >
-                  <div className="flex items-start gap-3">
-                    <div className="text-center flex-shrink-0">
-                      <div className="text-[#00A7E1] font-bold text-lg leading-none">{event.date}</div>
-                      <div className="text-white/70 text-xs uppercase">{event.month}</div>
+              {events
+                .filter((ev) => {
+                  const q = eventQuery.trim().toLowerCase()
+                  if (!q) return true
+                  return (
+                    ev.title?.toLowerCase().includes(q) ||
+                    (ev.location || '').toLowerCase().includes(q) ||
+                    (ev.month || '').toLowerCase().includes(q)
+                  )
+                })
+                .slice(0, 6)
+                .map((event) => (
+                  <Link 
+                    key={event.id} 
+                    href="/events" 
+                    onClick={onClose}
+                    className="p-4 rounded-lg bg-white/5 hover:bg-white/10 transition-all duration-200 group"
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="text-center flex-shrink-0">
+                        <div className="text-[#00A7E1] font-bold text-lg leading-none">{event.date}</div>
+                        <div className="text-white/70 text-xs uppercase">{event.month}</div>
+                      </div>
+                      <div className="min-w-0">
+                        <h4 className="text-white font-medium text-sm line-clamp-2 group-hover:text-[#00A7E1] transition-colors">
+                          {event.title}
+                        </h4>
+                        <p className="text-white/70 text-xs mt-1 flex items-center">
+                          <Image src="/images/icons/marker.svg" alt="" width={12} height={12} className="mr-1 opacity-60 filter brightness-0 invert" />
+                          {event.location}
+                        </p>
+                      </div>
                     </div>
-                    <div className="min-w-0">
-                      <h4 className="text-white font-medium text-sm line-clamp-2 group-hover:text-[#00A7E1] transition-colors">
-                        {event.title}
-                      </h4>
-                      <p className="text-white/70 text-xs mt-1 flex items-center">
-                        <Image src="/images/icons/marker.svg" alt="" width={12} height={12} className="mr-1 opacity-60 filter brightness-0 invert" />
-                        {event.location}
-                      </p>
-                    </div>
-                  </div>
-                </Link>
-              ))}
+                  </Link>
+                ))}
             </div>
           )}
         </div>
@@ -257,6 +273,8 @@ export default function MegaMenu({ isOpen, onClose, menuType }: MegaMenuProps) {
               <input
                 type="text"
                 placeholder="Search projects..."
+                value={projectQuery}
+                onChange={(e) => setProjectQuery(e.target.value)}
                 onKeyDown={async (e) => {
                   if (e.key !== 'Enter') return
                   const q = (e.currentTarget as HTMLInputElement).value.trim()
@@ -268,32 +286,43 @@ export default function MegaMenu({ isOpen, onClose, menuType }: MegaMenuProps) {
             </div>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {featuredProjects.slice(0, 4).map((p) => (
-              <Link
-                key={p.id}
-                href={`/projects/${p.slug}`}
-                onClick={onClose}
-                className="p-4 rounded-lg bg-white/5 hover:bg-white/10 transition-all duration-200 group"
-              >
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 rounded-lg flex items-center justify-center"
-                       style={{ backgroundColor: p.project_type === 'flagship' ? '#dc3545' : p.project_type === 'production' ? '#28a745' : '#6c757d' }}>
-                    {p.image ? (
-                      <Image src={p.image} alt="" width={16} height={16} className="object-contain" />
-                    ) : (
-                      <span className="text-white font-bold text-lg">{p.title.slice(0,1)}</span>
-                    )}
+            {featuredProjects
+              .filter((p) => {
+                const q = projectQuery.trim().toLowerCase()
+                if (!q) return true
+                return (
+                  p.title?.toLowerCase().includes(q) ||
+                  (p.description || '').toLowerCase().includes(q) ||
+                  (p.category || '').toLowerCase().includes(q)
+                )
+              })
+              .slice(0, 4)
+              .map((p) => (
+                <Link
+                  key={p.id}
+                  href={`/projects/${p.slug}`}
+                  onClick={onClose}
+                  className="p-4 rounded-lg bg-white/5 hover:bg-white/10 transition-all duration-200 group"
+                >
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 rounded-lg flex items-center justify-center"
+                         style={{ backgroundColor: p.project_type === 'flagship' ? '#dc3545' : p.project_type === 'production' ? '#28a745' : '#6c757d' }}>
+                      {p.image ? (
+                        <Image src={p.image} alt="" width={16} height={16} className="object-contain" />
+                      ) : (
+                        <span className="text-white font-bold text-lg">{p.title.slice(0,1)}</span>
+                      )}
+                    </div>
+                    <div>
+                      <h4 className="text-white font-medium text-sm group-hover:text-[#00A7E1] transition-colors">{p.title}</h4>
+                      {p.project_type && (
+                        <span className="px-2 py-0.5 bg-white/10 text-white text-xs rounded-full capitalize">{p.project_type}</span>
+                      )}
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="text-white font-medium text-sm group-hover:text-[#00A7E1] transition-colors">{p.title}</h4>
-                    {p.project_type && (
-                      <span className="px-2 py-0.5 bg-white/10 text-white text-xs rounded-full capitalize">{p.project_type}</span>
-                    )}
-                  </div>
-                </div>
-                <p className="text-white/70 text-xs leading-relaxed line-clamp-2">{p.description}</p>
-              </Link>
-            ))}
+                  <p className="text-white/70 text-xs leading-relaxed line-clamp-2">{p.description}</p>
+                </Link>
+              ))}
           </div>
         </div>
 
@@ -344,6 +373,8 @@ export default function MegaMenu({ isOpen, onClose, menuType }: MegaMenuProps) {
               <input
                 type="text"
                 placeholder="Search chapters..."
+                value={chapterQuery}
+                onChange={(e) => setChapterQuery(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key !== 'Enter') return
                   const q = (e.currentTarget as HTMLInputElement).value.trim()
@@ -358,11 +389,22 @@ export default function MegaMenu({ isOpen, onClose, menuType }: MegaMenuProps) {
             {chapters.length === 0 ? (
               <div className="text-white/70 text-sm">No chapters available.</div>
             ) : (
-              chapters.slice(0, 6).map((c) => (
-                <Link key={c.id} href={`/chapters/${c.slug}`} onClick={onClose} className="block text-white/80 hover:text-white text-sm transition-colors">
-                  {c.name}
-                </Link>
-              ))
+              chapters
+                .filter((c) => {
+                  const q = chapterQuery.trim().toLowerCase()
+                  if (!q) return true
+                  return (
+                    c.name?.toLowerCase().includes(q) ||
+                    (c as any).city?.toLowerCase?.().includes(q) ||
+                    (c as any).country?.toLowerCase?.().includes(q)
+                  )
+                })
+                .slice(0, 6)
+                .map((c) => (
+                  <Link key={c.id} href={`/chapters/${c.slug}`} onClick={onClose} className="block text-white/80 hover:text-white text-sm transition-colors">
+                    {c.name}
+                  </Link>
+                ))
             )}
           </div>
         </div>
