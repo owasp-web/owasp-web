@@ -471,7 +471,7 @@ export default function ProjectDetailPageWithTabs({ project }: ProjectPageProps)
               </div>
             </div>
 
-            {/* Project Image/Logo */}
+            {/* Project Image/Logo (optional). When absent, hero uses gradient background */}
             {project.image && (
               <div className="w-full lg:w-80 h-48 lg:h-80 relative bg-white/10 backdrop-blur-sm rounded-lg p-8 flex items-center justify-center">
                 <div className="relative w-full h-full">

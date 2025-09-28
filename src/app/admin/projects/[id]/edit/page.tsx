@@ -430,6 +430,32 @@ export default function ProjectEditPage({ params }: ProjectEditPageProps) {
                 />
               </div>
 
+              {/* Hero / Preview Image */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Hero Image URL (used in hero and previews)
+                </label>
+                <input
+                  type="url"
+                  value={project.image || ''}
+                  onChange={(e) => updateProject('image', e.target.value)}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2"
+                  placeholder="https://.../logo-or-hero-image.png"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Optional. When provided, it appears in the project hero next to details and as a thumbnail in listings.
+                  If left blank, the page uses the default dark blue gradient background.
+                </p>
+                {project.image && (
+                  <div className="mt-3">
+                    <div className="relative h-40 w-40 border rounded bg-gray-50 overflow-hidden">
+                      {/* Use img for external URLs */}
+                      <img src={project.image} alt="Preview" className="object-contain w-full h-full" />
+                    </div>
+                  </div>
+                )}
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
