@@ -9,8 +9,10 @@ import Button from '@/components/Button';
 import ResponsiveContainer from '@/components/ResponsiveContainer';
 import { createClientComponentClient } from '@/lib/supabase';
 import type { Event } from '@/lib/types';
+import Fuse from 'fuse.js';
 
 interface EventCardProps {
+  id: string;
   date: string;
   month: string;
   year: string;
@@ -23,7 +25,7 @@ interface EventCardProps {
   registrationUrl?: string;
 }
 
-const EventCard = ({ date, month, year, time, title, location, type, image, price, registrationUrl }: EventCardProps) => {
+const EventCard = ({ id, date, month, year, time, title, location, type, image, price, registrationUrl }: EventCardProps) => {
   const typeColors = {
     'Conference': 'bg-[#dc3545] text-white',
     'Chapter Meeting': 'bg-[#28a745] text-white',
@@ -74,7 +76,9 @@ const EventCard = ({ date, month, year, time, title, location, type, image, pric
         </p>
         
         <div className="flex gap-3">
-          <Button text="Learn More" variant="ghost-dark" size="40" />
+          <a href={`/events/${id}`}>
+            <Button text="Learn More" variant="ghost-dark" size="40" />
+          </a>
           {registrationUrl && (
             <a href={registrationUrl} target="_blank" rel="noopener noreferrer">
               <Button text="Register" variant="primary" size="40" />
@@ -93,6 +97,7 @@ export default function EventsPage() {
   const [featuredEvent, setFeaturedEvent] = useState<Event | null>(null);
   const [chapters, setChapters] = useState<Array<{ id: string; name: string }>>([]);
   const [chapterFilter, setChapterFilter] = useState<string>('all');
+  const [searchTerm, setSearchTerm] = useState<string>('');
 
   useEffect(() => {
     fetchChapters();
@@ -136,6 +141,18 @@ export default function EventsPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const filterEvents = (eventsList: Event[], term: string) => {
+    const base = eventsList;
+    const t = term.trim();
+    if (!t) return base;
+    const fuse = new Fuse(base as any, {
+      keys: ['title', 'description', 'location', 'month', 'date', 'year', 'type'],
+      threshold: 0.35,
+      ignoreLocation: true,
+    });
+    return fuse.search(t).map(r => r.item as unknown as Event);
   };
 
   const eventTypes: string[] = [];
@@ -242,7 +259,7 @@ export default function EventsPage() {
       {/* Filters Section */}
       <div className="bg-white border-b border-gray-200">
         <ResponsiveContainer size="full" className="py-6 sm:py-8">
-          <div className="flex flex-wrap gap-2 sm:gap-3">
+          <div className="flex flex-wrap gap-3 items-center">
             <select
               value={chapterFilter}
               onChange={(e) => setChapterFilter(e.target.value)}
@@ -253,6 +270,14 @@ export default function EventsPage() {
                 <option key={c.id} value={c.id}>{c.name}</option>
               ))}
             </select>
+
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search events (title, description, location)"
+              className="flex-1 min-w-[220px] px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm border border-gray-300 bg-white"
+            />
           </div>
         </ResponsiveContainer>
       </div>
@@ -269,15 +294,16 @@ export default function EventsPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
-          {events.length === 0 ? (
+          {filterEvents(events, searchTerm).length === 0 ? (
             <div className="col-span-full text-center py-12">
               <h3 className="text-lg font-medium text-gray-900 mb-2">No events available</h3>
               <p className="text-gray-500">Check back soon for upcoming events.</p>
             </div>
           ) : (
-            events.map((event) => (
+            filterEvents(events, searchTerm).map((event) => (
               <EventCard 
                 key={event.id} 
+                id={event.id}
                 date={event.date}
                 month={event.month}
                 year={event.year}
