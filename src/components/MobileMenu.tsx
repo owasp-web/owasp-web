@@ -69,9 +69,21 @@ function getStatusColor(status: string) {
 export default function MobileMenu({ isOpen, onClose, navigationItems }: MobileMenuProps) {
   const [query, setQuery] = useState('')
   const [openSection, setOpenSection] = useState<string | null>('')
-  const [loading, setLoading] = useState(false)
-  const [results, setResults] = useState<Project[]>([])
-  const [error, setError] = useState<string>('')
+
+  // Projects search state
+  const [projectQuery, setProjectQuery] = useState('')
+  const [projectLoading, setProjectLoading] = useState(false)
+  const [projectResults, setProjectResults] = useState<Project[]>([])
+
+  // Chapters search state
+  const [chapterQuery, setChapterQuery] = useState('')
+  const [chapterLoading, setChapterLoading] = useState(false)
+  const [chapterResults, setChapterResults] = useState<Array<{ id: string; name: string; slug: string }>>([])
+
+  // Events search state (endpoint has no search param, so client-filter)
+  const [eventQuery, setEventQuery] = useState('')
+  const [eventLoading, setEventLoading] = useState(false)
+  const [eventsAll, setEventsAll] = useState<Array<{ id: string; title: string; location?: string; date?: string; month?: string; year?: string }>>([])
 
   useEffect(() => {
     // Lock scroll when menu is open
@@ -82,41 +94,87 @@ export default function MobileMenu({ isOpen, onClose, navigationItems }: MobileM
     }
   }, [isOpen])
 
-  const fetchResults = useDebouncedCallback(async (term: string) => {
+  // Debounced project search (server-side)
+  const fetchProjects = useDebouncedCallback(async (term: string) => {
     const t = term.trim()
     if (!t) {
-      setResults([])
-      setError('')
+      setProjectResults([])
       return
     }
     try {
-      setLoading(true)
-      setError('')
+      setProjectLoading(true)
       const params = new URLSearchParams()
       params.set('search', t)
-      params.set('limit', '6')
+      params.set('limit', '12')
       const res = await fetch(`/api/public/projects/list?${params.toString()}`, { next: { revalidate: 30 } })
-      if (!res.ok) throw new Error('Failed to search')
+      if (!res.ok) throw new Error('Failed to search projects')
       const json = await res.json()
-      setResults((json.projects as Project[]) || [])
+      setProjectResults((json.projects as Project[]) || [])
     } catch (e: any) {
-      console.warn('Falling back to sample projects for search:', e?.message || e)
       const q = t.toLowerCase()
       const fallback = sampleProjects.filter(p =>
         p.title.toLowerCase().includes(q) ||
         p.description.toLowerCase().includes(q) ||
         p.category.toLowerCase().includes(q)
-      ).slice(0, 6)
-      setResults(fallback)
-      setError('')
+      ).slice(0, 12)
+      setProjectResults(fallback)
     } finally {
-      setLoading(false)
+      setProjectLoading(false)
+    }
+  }, 250)
+
+  useEffect(() => { fetchProjects(projectQuery) }, [projectQuery, fetchProjects])
+
+  // Debounced chapters search (server-side)
+  const fetchChapters = useDebouncedCallback(async (term: string) => {
+    const params = new URLSearchParams()
+    params.set('limit', '30')
+    if (term.trim()) params.set('search', term.trim())
+    try {
+      setChapterLoading(true)
+      const res = await fetch(`/api/public/chapters/list?${params.toString()}`, { next: { revalidate: 60 } })
+      if (!res.ok) throw new Error('Failed to fetch chapters')
+      const json = await res.json()
+      const list = (json.chapters as any[]) || []
+      setChapterResults(list.map(c => ({ id: c.id, name: c.name, slug: c.slug })))
+    } catch {
+      setChapterResults([])
+    } finally {
+      setChapterLoading(false)
     }
   }, 250)
 
   useEffect(() => {
-    fetchResults(query)
-  }, [query, fetchResults])
+    if (openSection === 'Chapters') fetchChapters(chapterQuery)
+  }, [chapterQuery, openSection, fetchChapters])
+
+  // Events load once then client-filter
+  useEffect(() => {
+    const load = async () => {
+      if (openSection !== 'Events' || eventsAll.length > 0) return
+      try {
+        setEventLoading(true)
+        const res = await fetch('/api/public/events/list?limit=30', { next: { revalidate: 60 } })
+        if (!res.ok) throw new Error('Failed to fetch events')
+        const json = await res.json()
+        setEventsAll((json.events as any[]) || [])
+      } catch {
+        setEventsAll([])
+      } finally {
+        setEventLoading(false)
+      }
+    }
+    load()
+  }, [openSection, eventsAll.length])
+
+  const eventResults = useMemo(() => {
+    const t = eventQuery.trim().toLowerCase()
+    if (!t) return eventsAll
+    return eventsAll.filter((e: any) =>
+      (e.title || '').toLowerCase().includes(t) ||
+      (e.location || '').toLowerCase().includes(t)
+    )
+  }, [eventQuery, eventsAll])
 
   const quickFilters = [
     { label: 'Top 10', href: '/projects?query=Top%2010' },
@@ -160,58 +218,6 @@ export default function MobileMenu({ isOpen, onClose, navigationItems }: MobileM
         </div>
 
         <div className="p-4 bg-[#101820] flex-1 overflow-y-auto">
-          {/* Search */}
-          <div className="mb-4">
-            <div className="flex items-center bg-white/20 rounded-lg p-2 gap-2">
-              <Image src={searchIcon} alt="" width={18} height={18} className="opacity-60" />
-              <input
-                type="text"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search OWASP projects..."
-                className="w-full bg-transparent text-white placeholder:text-white/50 text-sm outline-none"
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && query.trim()) {
-                    window.location.href = `/projects?query=${encodeURIComponent(query.trim())}`
-                    onClose()
-                  }
-                }}
-              />
-            </div>
-            {query.trim() && (
-              <div className="mt-2 max-h-56 overflow-y-auto bg-[#0b1218] border border-white/10 rounded-lg">
-                {loading && (
-                  <div className="p-3 text-white/70 text-sm">Searching…</div>
-                )}
-                {!loading && results.length === 0 && (
-                  <div className="p-3 text-white/70 text-sm">No results</div>
-                )}
-                {!loading && results.map((p, idx) => (
-                  <button
-                    key={`${p.slug}-${idx}`}
-                    onClick={() => { window.location.href = `/projects/${p.slug}`; onClose() }}
-                    className="w-full text-left p-3 hover:bg-white/5 transition-colors flex items-start gap-3"
-                  >
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <div className="text-white text-sm font-medium font-['Poppins'] truncate">{p.title}</div>
-                        <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(p.status)}`}>{p.status}</span>
-                      </div>
-                      <div className="text-white/70 text-xs leading-relaxed line-clamp-2">{p.description}</div>
-                    </div>
-                  </button>
-                ))}
-                <div className="border-t border-white/10 p-2">
-                  <button
-                    onClick={() => { window.location.href = `/projects?query=${encodeURIComponent(query.trim())}`; onClose() }}
-                    className="w-full text-center p-2 rounded-md text-[#00A7E1] hover:text-white text-xs font-medium"
-                  >
-                    View all results for "{query}"
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
 
           {/* Filter pills */}
           <div className="flex flex-wrap gap-2 mb-6">
@@ -222,7 +228,7 @@ export default function MobileMenu({ isOpen, onClose, navigationItems }: MobileM
             ))}
           </div>
 
-          {/* Accordions for primary nav */}
+          {/* Accordions with in-section search/results */}
           <div className="divide-y divide-white/10 rounded-lg overflow-hidden border border-white/10">
             {navigationItems.map((item) => {
               const isOpenSection = openSection === item.label
@@ -238,33 +244,116 @@ export default function MobileMenu({ isOpen, onClose, navigationItems }: MobileM
                     </svg>
                   </button>
                   {isOpenSection && (
-                    <div className="px-4 pb-3 pt-0 text-sm">
-                      <Link href={item.href} onClick={onClose} className="block px-3 py-2 rounded-md text-white/80 hover:text-white hover:bg-white/5">
-                        Go to {item.label}
-                      </Link>
-                      {/* Contextual quick links */}
+                    <div className="px-4 pb-4 pt-0 text-sm">
+                      {/* Projects content */}
                       {item.label === 'Projects' && (
-                        <div className="mt-1">
-                          <Link href="/projects?query=Security%20Testing" onClick={onClose} className="block px-3 py-2 rounded-md text-white/70 hover:text-white hover:bg-white/5">Security Testing</Link>
-                          <Link href="/projects?query=Supply%20Chain" onClick={onClose} className="block px-3 py-2 rounded-md text-white/70 hover:text-white hover:bg-white/5">Supply Chain</Link>
+                        <div>
+                          <div className="flex items-center bg-white/10 rounded-lg p-2 gap-2 mb-3">
+                            <Image src={searchIcon} alt="" width={18} height={18} className="opacity-60" />
+                            <input
+                              type="text"
+                              value={projectQuery}
+                              onChange={(e) => setProjectQuery(e.target.value)}
+                              placeholder="Search projects..."
+                              className="w-full bg-transparent text-white placeholder:text-white/50 text-sm outline-none"
+                              onKeyDown={(e) => { if (e.key === 'Enter' && projectQuery.trim()) { window.location.href = `/projects?query=${encodeURIComponent(projectQuery.trim())}`; onClose() } }}
+                            />
+                          </div>
+                          <div className="max-h-64 overflow-y-auto">
+                            {projectLoading && <div className="p-2 text-white/70">Searching…</div>}
+                            {!projectLoading && projectResults.length === 0 && projectQuery.trim() && (
+                              <div className="p-2 text-white/70">No projects found</div>
+                            )}
+                            {!projectLoading && projectResults.map((p, idx) => (
+                              <button key={`${p.slug}-${idx}`} onClick={() => { window.location.href = `/projects/${p.slug}`; onClose() }} className="w-full text-left p-3 hover:bg-white/5 rounded-md transition-colors flex items-start gap-3">
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <div className="text-white text-sm font-medium font-['Poppins'] truncate">{p.title}</div>
+                                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(p.status)}`}>{p.status}</span>
+                                  </div>
+                                  <div className="text-white/70 text-xs leading-relaxed line-clamp-2">{p.description}</div>
+                                </div>
+                              </button>
+                            ))}
+                          </div>
+                          <div className="border-t border-white/10 mt-2 pt-2">
+                            <Link href={`/projects?query=${encodeURIComponent(projectQuery.trim() || '')}`} onClick={onClose} className="block text-center p-2 rounded-md text-[#00A7E1] hover:text-white text-xs font-medium">
+                              View all projects{projectQuery.trim() ? ` for "${projectQuery}"` : ''}
+                            </Link>
+                          </div>
                         </div>
                       )}
+
+                      {/* Chapters content */}
                       {item.label === 'Chapters' && (
-                        <div className="mt-1">
-                          <Link href="/chapters" onClick={onClose} className="block px-3 py-2 rounded-md text-white/70 hover:text-white hover:bg-white/5">All Chapters</Link>
-                          <Link href="/chapter-starter-kit" onClick={onClose} className="block px-3 py-2 rounded-md text-white/70 hover:text-white hover:bg-white/5">Start a Chapter</Link>
+                        <div>
+                          <div className="flex items-center bg-white/10 rounded-lg p-2 gap-2 mb-3">
+                            <Image src={searchIcon} alt="" width={18} height={18} className="opacity-60" />
+                            <input
+                              type="text"
+                              value={chapterQuery}
+                              onChange={(e) => setChapterQuery(e.target.value)}
+                              placeholder="Search chapters..."
+                              className="w-full bg-transparent text-white placeholder:text-white/50 text-sm outline-none"
+                            />
+                          </div>
+                          <div className="max-h-64 overflow-y-auto">
+                            {chapterLoading && <div className="p-2 text-white/70">Loading…</div>}
+                            {!chapterLoading && chapterResults.length === 0 && chapterQuery.trim() && (
+                              <div className="p-2 text-white/70">No chapters found</div>
+                            )}
+                            {!chapterLoading && chapterResults.map((c) => (
+                              <Link key={c.id} href={`/chapters/${c.slug}`} onClick={onClose} className="block px-3 py-2 rounded-md text-white/80 hover:text-white hover:bg-white/5">
+                                {c.name}
+                              </Link>
+                            ))}
+                          </div>
+                          <div className="border-t border-white/10 mt-2 pt-2">
+                            <Link href={`/chapters${chapterQuery.trim() ? `?query=${encodeURIComponent(chapterQuery.trim())}` : ''}`} onClick={onClose} className="block text-center p-2 rounded-md text-[#00A7E1] hover:text-white text-xs font-medium">
+                              View all chapters
+                            </Link>
+                          </div>
                         </div>
                       )}
+
+                      {/* Events content */}
                       {item.label === 'Events' && (
-                        <div className="mt-1">
-                          <Link href="/events?type=conference" onClick={onClose} className="block px-3 py-2 rounded-md text-white/70 hover:text-white hover:bg-white/5">Conferences</Link>
-                          <Link href="/events?type=meetup" onClick={onClose} className="block px-3 py-2 rounded-md text-white/70 hover:text-white hover:bg-white/5">Meetups</Link>
+                        <div>
+                          <div className="flex items-center bg-white/10 rounded-lg p-2 gap-2 mb-3">
+                            <Image src={searchIcon} alt="" width={18} height={18} className="opacity-60" />
+                            <input
+                              type="text"
+                              value={eventQuery}
+                              onChange={(e) => setEventQuery(e.target.value)}
+                              placeholder="Search events..."
+                              className="w-full bg-transparent text-white placeholder:text-white/50 text-sm outline-none"
+                            />
+                          </div>
+                          <div className="max-h-64 overflow-y-auto space-y-2">
+                            {eventLoading && <div className="p-2 text-white/70">Loading…</div>}
+                            {!eventLoading && eventResults.length === 0 && (
+                              <div className="p-2 text-white/70">No events found</div>
+                            )}
+                            {!eventLoading && eventResults.map((e: any) => (
+                              <Link key={e.id} href={`/events/${e.id}`} onClick={onClose} className="block p-3 rounded-md hover:bg-white/5">
+                                <div className="text-white text-sm font-medium">{e.title}</div>
+                                <div className="text-white/60 text-xs">{(e.month || '')} {(e.date || '')} {(e.year || '')} {(e.location ? `• ${e.location}` : '')}</div>
+                              </Link>
+                            ))}
+                          </div>
+                          <div className="border-t border-white/10 mt-2 pt-2">
+                            <Link href="/events" onClick={onClose} className="block text-center p-2 rounded-md text-[#00A7E1] hover:text-white text-xs font-medium">
+                              View all events
+                            </Link>
+                          </div>
                         </div>
                       )}
+
+                      {/* About content */}
                       {item.label === 'About' && (
-                        <div className="mt-1">
-                          <Link href="/about" onClick={onClose} className="block px-3 py-2 rounded-md text-white/70 hover:text-white hover:bg-white/5">About OWASP</Link>
-                          <Link href="/join-community" onClick={onClose} className="block px-3 py-2 rounded-md text-white/70 hover:text-white hover:bg-white/5">Join Community</Link>
+                        <div className="space-y-1">
+                          <Link href="/about" onClick={onClose} className="block px-3 py-2 rounded-md text-white/80 hover:text-white hover:bg-white/5">About OWASP</Link>
+                          <Link href="/join-community" onClick={onClose} className="block px-3 py-2 rounded-md text-white/80 hover:text-white hover:bg-white/5">Join Community</Link>
                         </div>
                       )}
                     </div>
