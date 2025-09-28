@@ -125,3 +125,55 @@ INSERT INTO events (title, date, month, year, time, location, type, image, price
 
 -- Note: You'll need to create an admin user in Supabase Auth
 -- Then you can sign in through the admin interface 
+
+-- Storage: project-media bucket and policies for super admins
+-- Create bucket if it doesn't exist
+insert into storage.buckets (id, name, public)
+select 'project-media', 'project-media', false
+where not exists (select 1 from storage.buckets where id = 'project-media');
+
+-- Policies for storage.objects targeting project-media
+create policy if not exists "project-media-super-select" on storage.objects
+  for select to authenticated
+  using (
+    bucket_id = 'project-media' and (
+      exists (
+        select 1 from public.global_admins ga
+        where ga.user_id = auth.uid() or lower(ga.email) = lower(coalesce((auth.jwt() ->> 'email')::text, ''))
+      )
+    )
+  );
+
+create policy if not exists "project-media-super-insert" on storage.objects
+  for insert to authenticated
+  with check (
+    bucket_id = 'project-media' and (
+      exists (
+        select 1 from public.global_admins ga
+        where ga.user_id = auth.uid() or lower(ga.email) = lower(coalesce((auth.jwt() ->> 'email')::text, ''))
+      )
+    )
+  );
+
+create policy if not exists "project-media-super-update" on storage.objects
+  for update to authenticated
+  using (
+    bucket_id = 'project-media' and (
+      exists (
+        select 1 from public.global_admins ga
+        where ga.user_id = auth.uid() or lower(ga.email) = lower(coalesce((auth.jwt() ->> 'email')::text, ''))
+      )
+    )
+  )
+  with check ( bucket_id = 'project-media' );
+
+create policy if not exists "project-media-super-delete" on storage.objects
+  for delete to authenticated
+  using (
+    bucket_id = 'project-media' and (
+      exists (
+        select 1 from public.global_admins ga
+        where ga.user_id = auth.uid() or lower(ga.email) = lower(coalesce((auth.jwt() ->> 'email')::text, ''))
+      )
+    )
+  );
