@@ -166,6 +166,17 @@ export default function EditChapterPage({ params }: EditChapterPageProps) {
     setChapter(prev => ({ ...prev!, tabs }))
   }
 
+  const insertSectionAt = (tabIdx: number, index: number) => {
+    if (!chapter) return
+    const tabs = ensureTabs().slice()
+    const sec: ChapterTabSection = { title: 'Section title', content: '' }
+    const arr = (tabs[tabIdx].sections || []).slice()
+    const clamped = Math.max(0, Math.min(index, arr.length))
+    arr.splice(clamped, 0, sec)
+    tabs[tabIdx].sections = arr
+    setChapter(prev => ({ ...prev!, tabs }))
+  }
+
   const updateSection = (tabIdx: number, secIdx: number, changes: Partial<ChapterTabSection>) => {
     if (!chapter) return
     const tabs = ensureTabs().slice()
@@ -184,6 +195,19 @@ export default function EditChapterPage({ params }: EditChapterPageProps) {
     setChapter(prev => ({ ...prev!, tabs }))
   }
 
+  const moveSection = (tabIdx: number, secIdx: number, direction: 'up' | 'down') => {
+    if (!chapter) return
+    const tabs = ensureTabs().slice()
+    const sections = (tabs[tabIdx].sections || []).slice()
+    const target = direction === 'up' ? secIdx - 1 : secIdx + 1
+    if (target < 0 || target >= sections.length) return
+    const tmp = sections[secIdx]
+    sections[secIdx] = sections[target]
+    sections[target] = tmp
+    tabs[tabIdx].sections = sections
+    setChapter(prev => ({ ...prev!, tabs }))
+  }
+
   const addButton = (tabIdx: number, secIdx: number) => {
     if (!chapter) return
     const tabs = ensureTabs().slice()
@@ -191,6 +215,18 @@ export default function EditChapterPage({ params }: EditChapterPageProps) {
     const btns = (sections[secIdx].buttons || []).slice()
     const btn: ChapterTabButton = { label: 'Button', url: '' }
     btns.push(btn)
+    sections[secIdx].buttons = btns
+    tabs[tabIdx].sections = sections
+    setChapter(prev => ({ ...prev!, tabs }))
+  }
+
+  const insertButtonAt = (tabIdx: number, secIdx: number, index: number) => {
+    if (!chapter) return
+    const tabs = ensureTabs().slice()
+    const sections = (tabs[tabIdx].sections || []).slice()
+    const btns = (sections[secIdx].buttons || []).slice()
+    const clamped = Math.max(0, Math.min(index, btns.length))
+    btns.splice(clamped, 0, { label: 'Button', url: '' })
     sections[secIdx].buttons = btns
     tabs[tabIdx].sections = sections
     setChapter(prev => ({ ...prev!, tabs }))
@@ -216,6 +252,33 @@ export default function EditChapterPage({ params }: EditChapterPageProps) {
     sections[secIdx].buttons = btns
     tabs[tabIdx].sections = sections
     setChapter(prev => ({ ...prev!, tabs }))
+  }
+
+  const moveButton = (tabIdx: number, secIdx: number, btnIdx: number, direction: 'up' | 'down') => {
+    if (!chapter) return
+    const tabs = ensureTabs().slice()
+    const sections = (tabs[tabIdx].sections || []).slice()
+    const btns = (sections[secIdx].buttons || []).slice()
+    const target = direction === 'up' ? btnIdx - 1 : btnIdx + 1
+    if (target < 0 || target >= btns.length) return
+    const tmp = btns[btnIdx]
+    btns[btnIdx] = btns[target]
+    btns[target] = tmp
+    sections[secIdx].buttons = btns
+    tabs[tabIdx].sections = sections
+    setChapter(prev => ({ ...prev!, tabs }))
+  }
+
+  const moveTab = (idx: number, direction: 'up' | 'down') => {
+    if (!chapter) return
+    const tabs = ensureTabs().slice()
+    const target = direction === 'up' ? idx - 1 : idx + 1
+    if (target < 0 || target >= tabs.length) return
+    const tmp = tabs[idx]
+    tabs[idx] = tabs[target]
+    tabs[target] = tmp
+    const reordered = tabs.map((t, i) => ({ ...t, order: i + 1 }))
+    setChapter(prev => ({ ...prev!, tabs: reordered }))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -320,6 +383,10 @@ export default function EditChapterPage({ params }: EditChapterPageProps) {
                         onChange={(e) => updateTab(tIdx, { order: Number(e.target.value || 0) })}
                         className="w-24 px-3 py-2 border border-gray-300 rounded-lg"
                       />
+                      <div className="flex gap-1">
+                        <button type="button" onClick={() => moveTab(tIdx, 'up')} className="px-2 py-2 border rounded">↑</button>
+                        <button type="button" onClick={() => moveTab(tIdx, 'down')} className="px-2 py-2 border rounded">↓</button>
+                      </div>
                       <button type="button" onClick={() => deleteTab(tIdx)} className="px-3 py-2 border border-red-300 text-red-700 rounded-lg">Delete</button>
                     </div>
 
@@ -341,6 +408,11 @@ export default function EditChapterPage({ params }: EditChapterPageProps) {
                                 onChange={(e) => updateSection(tIdx, sIdx, { title: e.target.value })}
                                 className="flex-1 px-3 py-2 border border-gray-300 rounded-lg"
                               />
+                              <div className="flex gap-1">
+                                <button type="button" onClick={() => moveSection(tIdx, sIdx, 'up')} className="px-2 py-1 border rounded">↑</button>
+                                <button type="button" onClick={() => moveSection(tIdx, sIdx, 'down')} className="px-2 py-1 border rounded">↓</button>
+                                <button type="button" onClick={() => insertSectionAt(tIdx, sIdx + 1)} className="px-2 py-1 border rounded">+ Below</button>
+                              </div>
                               <button type="button" onClick={() => deleteSection(tIdx, sIdx)} className="px-2 py-1 border border-red-300 text-red-700 rounded-lg">Remove</button>
                             </div>
                             <textarea
@@ -380,7 +452,12 @@ export default function EditChapterPage({ params }: EditChapterPageProps) {
                                     <option value="secondary">secondary</option>
                                     <option value="link">link</option>
                                   </select>
-                                  <button type="button" onClick={() => deleteButton(tIdx, sIdx, bIdx)} className="md:col-span-1 px-3 py-2 border border-red-300 text-red-700 rounded-lg">Delete</button>
+                                  <div className="md:col-span-1 flex gap-1">
+                                    <button type="button" onClick={() => moveButton(tIdx, sIdx, bIdx, 'up')} className="px-2 py-2 border rounded">↑</button>
+                                    <button type="button" onClick={() => moveButton(tIdx, sIdx, bIdx, 'down')} className="px-2 py-2 border rounded">↓</button>
+                                    <button type="button" onClick={() => insertButtonAt(tIdx, sIdx, bIdx + 1)} className="px-2 py-2 border rounded">+ </button>
+                                    <button type="button" onClick={() => deleteButton(tIdx, sIdx, bIdx)} className="px-2 py-2 border border-red-300 text-red-700 rounded-lg">🗑</button>
+                                  </div>
                                 </div>
                               ))}
                             </div>
