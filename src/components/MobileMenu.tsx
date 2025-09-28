@@ -67,9 +67,7 @@ function getStatusColor(status: string) {
 }
 
 export default function MobileMenu({ isOpen, onClose, navigationItems }: MobileMenuProps) {
-  const [query, setQuery] = useState('')
-  const [openSection, setOpenSection] = useState<string | null>('')
-  const [activeTab, setActiveTab] = useState<'Projects' | 'Chapters' | 'Events' | 'About'>('Projects')
+  const [openSection, setOpenSection] = useState<string | null>('Projects')
 
   // Projects search state
   const [projectQuery, setProjectQuery] = useState('')
@@ -90,7 +88,6 @@ export default function MobileMenu({ isOpen, onClose, navigationItems }: MobileM
   const [eventsPrefetched, setEventsPrefetched] = useState(false)
 
   useEffect(() => {
-    // Lock scroll when menu is open
     if (isOpen) {
       const original = document.body.style.overflow
       document.body.style.overflow = 'hidden'
@@ -126,7 +123,7 @@ export default function MobileMenu({ isOpen, onClose, navigationItems }: MobileM
 
   useEffect(() => { fetchProjects(projectQuery) }, [projectQuery, fetchProjects])
 
-  // Prefetch default projects so the tab is pre-populated
+  // Prefetch defaults for Projects
   const prefetchDefaultProjects = async () => {
     try {
       setProjectLoading(true)
@@ -167,8 +164,8 @@ export default function MobileMenu({ isOpen, onClose, navigationItems }: MobileM
   }, 250)
 
   useEffect(() => {
-    if (activeTab === 'Chapters') fetchChapters(chapterQuery)
-  }, [chapterQuery, activeTab, fetchChapters])
+    if (openSection === 'Chapters') fetchChapters(chapterQuery)
+  }, [chapterQuery, openSection, fetchChapters])
 
   const prefetchDefaultChapters = async () => {
     try {
@@ -187,28 +184,46 @@ export default function MobileMenu({ isOpen, onClose, navigationItems }: MobileM
   }
 
   // Events load once then client-filter
-  const prefetchDefaultEvents = async () => {
-    try {
-      setEventLoading(true)
-      const res = await fetch('/api/public/events/list?limit=30', { next: { revalidate: 60 } })
-      if (res.ok) {
+  useEffect(() => {
+    const load = async () => {
+      if (openSection !== 'Events' || eventsAll.length > 0) return
+      try {
+        setEventLoading(true)
+        const res = await fetch('/api/public/events/list?limit=30', { next: { revalidate: 60 } })
+        if (!res.ok) throw new Error('Failed to fetch events')
         const json = await res.json()
         setEventsAll((json.events as any[]) || [])
+      } catch {
+        setEventsAll([])
+      } finally {
+        setEventLoading(false)
       }
-    } catch {}
-    finally {
-      setEventLoading(false)
-      setEventsPrefetched(true)
     }
-  }
+    load()
+  }, [openSection, eventsAll.length])
 
   // Prefetch defaults when the menu opens
   useEffect(() => {
     if (!isOpen) return
     if (!projectsPrefetched) prefetchDefaultProjects()
     if (!chaptersPrefetched) prefetchDefaultChapters()
-    if (!eventsPrefetched) prefetchDefaultEvents()
-  }, [isOpen])
+    if (!eventsPrefetched) {
+      // load events list once for default view
+      (async () => {
+        try {
+          setEventLoading(true)
+          const res = await fetch('/api/public/events/list?limit=30', { next: { revalidate: 60 } })
+          if (res.ok) {
+            const json = await res.json()
+            setEventsAll((json.events as any[]) || [])
+          }
+        } finally {
+          setEventLoading(false)
+          setEventsPrefetched(true)
+        }
+      })()
+    }
+  }, [isOpen, projectsPrefetched, chaptersPrefetched, eventsPrefetched])
 
   const eventResults = useMemo(() => {
     const t = eventQuery.trim().toLowerCase()
@@ -229,7 +244,6 @@ export default function MobileMenu({ isOpen, onClose, navigationItems }: MobileM
 
   return (
     <>
-      {/* Overlay */}
       {isOpen && (
         <div
           className="fixed inset-0 bg-black/50 backdrop-blur-sm z-30"
@@ -237,7 +251,6 @@ export default function MobileMenu({ isOpen, onClose, navigationItems }: MobileM
         />
       )}
 
-      {/* Panel */}
       <div className={`
         fixed inset-y-0 right-0 w-full max-w-sm bg-[#101820] border-l border-white/20 shadow-xl
         transform transition-transform duration-300 ease-in-out z-40
@@ -261,8 +274,6 @@ export default function MobileMenu({ isOpen, onClose, navigationItems }: MobileM
         </div>
 
         <div className="p-4 bg-[#101820] flex-1 overflow-y-auto">
-
-          {/* Filter pills */}
           <div className="flex flex-wrap gap-2 mb-6">
             {quickFilters.map((f) => (
               <Link key={f.label} href={f.href} onClick={onClose} className="px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white text-xs font-medium">
@@ -271,124 +282,147 @@ export default function MobileMenu({ isOpen, onClose, navigationItems }: MobileM
             ))}
           </div>
 
-          {/* Stage content by active tab */}
-          <div className="bg-[#0b1218] border border-white/10 rounded-lg p-3">
-            {activeTab === 'Projects' && (
-              <div className="text-sm">
-                <div>
-                          <div className="flex items-center bg-white/10 rounded-lg p-2 gap-2 mb-3">
-                            <Image src={searchIcon} alt="" width={18} height={18} className="opacity-60" />
-                            <input
-                              type="text"
-                              value={projectQuery}
-                              onChange={(e) => setProjectQuery(e.target.value)}
-                              placeholder="Search projects..."
-                              className="w-full bg-transparent text-white placeholder:text-white/50 text-sm outline-none"
-                              onKeyDown={(e) => { if (e.key === 'Enter' && projectQuery.trim()) { window.location.href = `/projects?query=${encodeURIComponent(projectQuery.trim())}`; onClose() } }}
-                            />
-                          </div>
-                          <div className="max-h-64 overflow-y-auto">
-                            {projectLoading && <div className="p-2 text-white/70">Searching…</div>}
-                            {!projectLoading && projectResults.length === 0 && projectQuery.trim() && (
-                              <div className="p-2 text-white/70">No projects found</div>
-                            )}
-                            {!projectLoading && projectResults.map((p, idx) => (
-                              <button key={`${p.slug}-${idx}`} onClick={() => { window.location.href = `/projects/${p.slug}`; onClose() }} className="w-full text-left p-3 hover:bg-white/5 rounded-md transition-colors flex items-start gap-3">
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex items-center gap-2 mb-1">
-                                    <div className="text-white text-sm font-medium font-['Poppins'] truncate">{p.title}</div>
-                                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(p.status)}`}>{p.status}</span>
+          <div className="rounded-lg overflow-hidden border border-white/10 divide-y divide-white/10">
+            {navigationItems.map((item) => {
+              const isHome = item.label === 'Home'
+              const isOpenPanel = openSection === item.label
+              return (
+                <div key={item.href} className="bg-[#0b1218]">
+                  <div className="px-4 py-3 flex items-center justify-between">
+                    <Link href={item.href} onClick={isHome ? onClose : undefined} className="font-['Poppins'] text-sm text-white">
+                      {item.label}
+                    </Link>
+                    {!isHome && (
+                      <button
+                        onClick={() => setOpenSection(isOpenPanel ? null : item.label)}
+                        className="text-white/80 hover:text-white p-2 -mr-2"
+                        aria-label={`Toggle ${item.label}`}
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className={`transition-transform ${isOpenPanel ? 'rotate-180' : ''}`}>
+                          <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      </button>
+                    )}
+                  </div>
+
+                  {!isHome && (
+                    <div className={`transition-[max-height] duration-300 ease-in-out overflow-hidden ${isOpenPanel ? 'max-h-[70vh]' : 'max-h-0'}`}>
+                      <div className="px-4 pb-4 pt-0 text-sm">
+                        {item.label === 'Projects' && (
+                          <div>
+                            <div className="flex items-center bg-white/10 rounded-lg p-2 gap-2 mb-3">
+                              <Image src={searchIcon} alt="" width={18} height={18} className="opacity-60" />
+                              <input
+                                type="text"
+                                value={projectQuery}
+                                onChange={(e) => setProjectQuery(e.target.value)}
+                                placeholder="Search projects..."
+                                className="w-full bg-transparent text-white placeholder:text-white/50 text-sm outline-none"
+                                onKeyDown={(e) => { if (e.key === 'Enter' && projectQuery.trim()) { window.location.href = `/projects?query=${encodeURIComponent(projectQuery.trim())}`; onClose() } }}
+                              />
+                            </div>
+                            <div className="max-h-56 overflow-y-auto">
+                              {projectLoading && <div className="p-2 text-white/70">Searching…</div>}
+                              {!projectLoading && projectResults.length === 0 && projectQuery.trim() && (
+                                <div className="p-2 text-white/70">No projects found</div>
+                              )}
+                              {!projectLoading && projectResults.map((p, idx) => (
+                                <button key={`${p.slug}-${idx}`} onClick={() => { window.location.href = `/projects/${p.slug}`; onClose() }} className="w-full text-left p-3 hover:bg-white/5 rounded-md transition-colors flex items-start gap-3">
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2 mb-1">
+                                      <div className="text-white text-sm font-medium font-['Poppins'] truncate">{p.title}</div>
+                                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(p.status)}`}>{p.status}</span>
+                                    </div>
+                                    <div className="text-white/70 text-xs leading-relaxed line-clamp-2">{p.description}</div>
                                   </div>
-                                  <div className="text-white/70 text-xs leading-relaxed line-clamp-2">{p.description}</div>
-                                </div>
-                              </button>
-                            ))}
-                          </div>
-                          <div className="border-t border-white/10 mt-2 pt-2">
-                            <Link href={`/projects?query=${encodeURIComponent(projectQuery.trim() || '')}`} onClick={onClose} className="block text-center p-2 rounded-md text-[#00A7E1] hover:text-white text-xs font-medium">
-                              View all projects{projectQuery.trim() ? ` for "${projectQuery}"` : ''}
-                            </Link>
-                          </div>
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'Chapters' && (
-              <div className="text-sm">
-                <div>
-                          <div className="flex items-center bg-white/10 rounded-lg p-2 gap-2 mb-3">
-                            <Image src={searchIcon} alt="" width={18} height={18} className="opacity-60" />
-                            <input
-                              type="text"
-                              value={chapterQuery}
-                              onChange={(e) => setChapterQuery(e.target.value)}
-                              placeholder="Search chapters..."
-                              className="w-full bg-transparent text-white placeholder:text-white/50 text-sm outline-none"
-                            />
-                          </div>
-                          <div className="max-h-64 overflow-y-auto">
-                            {chapterLoading && <div className="p-2 text-white/70">Loading…</div>}
-                            {!chapterLoading && chapterResults.length === 0 && chapterQuery.trim() && (
-                              <div className="p-2 text-white/70">No chapters found</div>
-                            )}
-                            {!chapterLoading && chapterResults.map((c) => (
-                              <Link key={c.id} href={`/chapters/${c.slug}`} onClick={onClose} className="block px-3 py-2 rounded-md text-white/80 hover:text-white hover:bg-white/5">
-                                {c.name}
+                                </button>
+                              ))}
+                            </div>
+                            <div className="border-t border-white/10 mt-2 pt-2">
+                              <Link href={`/projects?query=${encodeURIComponent(projectQuery.trim() || '')}`} onClick={onClose} className="block text-center p-2 rounded-md text-[#00A7E1] hover:text-white text-xs font-medium">
+                                View all projects{projectQuery.trim() ? ` for "${projectQuery}"` : ''}
                               </Link>
-                            ))}
+                            </div>
                           </div>
-                          <div className="border-t border-white/10 mt-2 pt-2">
-                            <Link href={`/chapters${chapterQuery.trim() ? `?query=${encodeURIComponent(chapterQuery.trim())}` : ''}`} onClick={onClose} className="block text-center p-2 rounded-md text-[#00A7E1] hover:text-white text-xs font-medium">
-                              View all chapters
-                            </Link>
-                          </div>
-                </div>
-              </div>
-            )}
+                        )}
 
-            {activeTab === 'Events' && (
-              <div className="text-sm">
-                <div>
-                          <div className="flex items-center bg-white/10 rounded-lg p-2 gap-2 mb-3">
-                            <Image src={searchIcon} alt="" width={18} height={18} className="opacity-60" />
-                            <input
-                              type="text"
-                              value={eventQuery}
-                              onChange={(e) => setEventQuery(e.target.value)}
-                              placeholder="Search events..."
-                              className="w-full bg-transparent text-white placeholder:text-white/50 text-sm outline-none"
-                            />
-                          </div>
-                          <div className="max-h-64 overflow-y-auto space-y-2">
-                            {eventLoading && <div className="p-2 text-white/70">Loading…</div>}
-                            {!eventLoading && eventResults.length === 0 && (
-                              <div className="p-2 text-white/70">No events found</div>
-                            )}
-                            {!eventLoading && eventResults.map((e: any) => (
-                              <Link key={e.id} href={`/events/${e.id}`} onClick={onClose} className="block p-3 rounded-md hover:bg-white/5">
-                                <div className="text-white text-sm font-medium">{e.title}</div>
-                                <div className="text-white/60 text-xs">{(e.month || '')} {(e.date || '')} {(e.year || '')} {(e.location ? `• ${e.location}` : '')}</div>
+                        {item.label === 'Chapters' && (
+                          <div>
+                            <div className="flex items-center bg-white/10 rounded-lg p-2 gap-2 mb-3">
+                              <Image src={searchIcon} alt="" width={18} height={18} className="opacity-60" />
+                              <input
+                                type="text"
+                                value={chapterQuery}
+                                onChange={(e) => setChapterQuery(e.target.value)}
+                                placeholder="Search chapters..."
+                                className="w-full bg-transparent text-white placeholder:text-white/50 text-sm outline-none"
+                              />
+                            </div>
+                            <div className="max-h-56 overflow-y-auto">
+                              {chapterLoading && <div className="p-2 text-white/70">Loading…</div>}
+                              {!chapterLoading && chapterResults.length === 0 && chapterQuery.trim() && (
+                                <div className="p-2 text-white/70">No chapters found</div>
+                              )}
+                              {!chapterLoading && chapterResults.map((c) => (
+                                <Link key={c.id} href={`/chapters/${c.slug}`} onClick={onClose} className="block px-3 py-2 rounded-md text-white/80 hover:text-white hover:bg-white/5">
+                                  {c.name}
+                                </Link>
+                              ))}
+                            </div>
+                            <div className="border-t border-white/10 mt-2 pt-2">
+                              <Link href={`/chapters${chapterQuery.trim() ? `?query=${encodeURIComponent(chapterQuery.trim())}` : ''}`} onClick={onClose} className="block text-center p-2 rounded-md text-[#00A7E1] hover:text-white text-xs font-medium">
+                                View all chapters
                               </Link>
-                            ))}
+                            </div>
                           </div>
-                          <div className="border-t border-white/10 mt-2 pt-2">
-                            <Link href="/events" onClick={onClose} className="block text-center p-2 rounded-md text-[#00A7E1] hover:text-white text-xs font-medium">
-                              View all events
-                            </Link>
-                          </div>
-                </div>
-              </div>
-            )}
+                        )}
 
-            {activeTab === 'About' && (
-              <div className="text-sm space-y-1">
-                <Link href="/about" onClick={onClose} className="block px-3 py-2 rounded-md text-white/80 hover:text-white hover:bg-white/5">About OWASP</Link>
-                <Link href="/join-community" onClick={onClose} className="block px-3 py-2 rounded-md text-white/80 hover:text-white hover:bg-white/5">Join Community</Link>
-              </div>
-            )}
+                        {item.label === 'Events' && (
+                          <div>
+                            <div className="flex items-center bg-white/10 rounded-lg p-2 gap-2 mb-3">
+                              <Image src={searchIcon} alt="" width={18} height={18} className="opacity-60" />
+                              <input
+                                type="text"
+                                value={eventQuery}
+                                onChange={(e) => setEventQuery(e.target.value)}
+                                placeholder="Search events..."
+                                className="w-full bg-transparent text-white placeholder:text-white/50 text-sm outline-none"
+                              />
+                            </div>
+                            <div className="max-h-56 overflow-y-auto space-y-2">
+                              {eventLoading && <div className="p-2 text-white/70">Loading…</div>}
+                              {!eventLoading && eventResults.length === 0 && (
+                                <div className="p-2 text-white/70">No events found</div>
+                              )}
+                              {!eventLoading && eventResults.map((e: any) => (
+                                <Link key={e.id} href={`/events/${e.id}`} onClick={onClose} className="block p-3 rounded-md hover:bg-white/5">
+                                  <div className="text-white text-sm font-medium">{e.title}</div>
+                                  <div className="text-white/60 text-xs">{(e.month || '')} {(e.date || '')} {(e.year || '')} {(e.location ? `• ${e.location}` : '')}</div>
+                                </Link>
+                              ))}
+                            </div>
+                            <div className="border-t border-white/10 mt-2 pt-2">
+                              <Link href="/events" onClick={onClose} className="block text-center p-2 rounded-md text-[#00A7E1] hover:text-white text-xs font-medium">
+                                View all events
+                              </Link>
+                            </div>
+                          </div>
+                        )}
+
+                        {item.label === 'About' && (
+                          <div className="space-y-1">
+                            <Link href="/about" onClick={onClose} className="block px-3 py-2 rounded-md text-white/80 hover:text-white hover:bg-white/5">About OWASP</Link>
+                            <Link href="/join-community" onClick={onClose} className="block px-3 py-2 rounded-md text-white/80 hover:text-white hover:bg-white/5">Join Community</Link>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )
+            })}
           </div>
 
-          {/* Action buttons */}
           <div className="mt-6 space-y-3 md:hidden">
             <Link href="/join-community" onClick={onClose}>
               <button className="w-full border-2 border-[#757575] h-11 sm:h-12 px-4 text-white font-['Poppins'] font-semibold text-sm 
@@ -404,21 +438,6 @@ export default function MobileMenu({ isOpen, onClose, navigationItems }: MobileM
                 Secure My App
               </button>
             </Link>
-          </div>
-        </div>
-        {/* Bottom tabs bar */}
-        <div className="border-t border-white/10 p-2 bg-[#0b1218]">
-          <div className="grid grid-cols-4 gap-2">
-            <button onClick={() => { window.location.href = '/'; onClose() }} className="px-3 py-2 rounded-md text-white/90 bg-white/5 hover:bg-white/10 text-xs font-medium">Home</button>
-            <button onClick={() => setActiveTab('Projects')} className={`px-3 py-2 rounded-md text-xs font-medium ${activeTab === 'Projects' ? 'bg-[#003594] text-white' : 'bg-white/5 text-white/90 hover:bg-white/10'}`}>Projects</button>
-            <button onClick={() => setActiveTab('Chapters')} className={`px-3 py-2 rounded-md text-xs font-medium ${activeTab === 'Chapters' ? 'bg-[#003594] text-white' : 'bg-white/5 text-white/90 hover:bg-white/10'}`}>Chapters</button>
-            <button onClick={() => setActiveTab('Events')} className={`px-3 py-2 rounded-md text-xs font-medium ${activeTab === 'Events' ? 'bg-[#003594] text-white' : 'bg-white/5 text-white/90 hover:bg-white/10'}`}>Events</button>
-          </div>
-          <div className="mt-2 grid grid-cols-4 gap-2">
-            <button onClick={() => setActiveTab('About')} className={`px-3 py-2 rounded-md text-xs font-medium ${activeTab === 'About' ? 'bg-[#003594] text-white' : 'bg-white/5 text-white/90 hover:bg-white/10'}`}>About</button>
-            <Link href="/projects" onClick={onClose} className="px-3 py-2 rounded-md text-xs font-medium bg-white/5 text-white/90 hover:bg-white/10 text-center">All Projects</Link>
-            <Link href="/chapters" onClick={onClose} className="px-3 py-2 rounded-md text-xs font-medium bg-white/5 text-white/90 hover:bg-white/10 text-center">All Chapters</Link>
-            <Link href="/events" onClick={onClose} className="px-3 py-2 rounded-md text-xs font-medium bg-white/5 text-white/90 hover:bg-white/10 text-center">All Events</Link>
           </div>
         </div>
       </div>
