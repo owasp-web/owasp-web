@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { adminService } from '@/lib/admin';
 import { getChapters } from '@/lib/chapters';
 import { Chapter } from '@/lib/types';
 import Header from '@/components/Header';
