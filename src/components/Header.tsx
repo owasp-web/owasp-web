@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect, useMemo } from 'react';
 import MegaMenu from './MegaMenu';
+import MobileMenu from './MobileMenu';
 
 // Local images
 const logo = "/images/logos/owasp-logo.svg";
@@ -373,94 +374,12 @@ export default function Header() {
         </div>
       </div>
 
-      {/* Mobile Menu */}
-      <div className={`
-        fixed inset-y-0 right-0 w-full max-w-sm bg-[#101820] border-l border-white/20 shadow-xl
-        transform transition-transform duration-300 ease-in-out z-40
-        ${mobileMenuOpen ? 'translate-x-0' : 'translate-x-full'}
-      `}>
-        <div className="h-20 flex items-center justify-end px-4 border-b border-white/10">
-          <button
-            onClick={() => setMobileMenuOpen(false)}
-            className="p-2 hover:bg-white/10 rounded-lg transition-colors"
-            aria-label="Close mobile menu"
-          >
-            <div className="w-5 h-5 relative">
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-4 h-0.5 bg-white/60 rotate-45" />
-                <div className="w-4 h-0.5 bg-white/60 -rotate-45" />
-              </div>
-            </div>
-          </button>
-        </div>
-        
-        <div className="p-4 bg-[#101820]">
-          {/* Mobile Search */}
-          <div className="mb-6">
-            <div className="flex items-center bg-white/20 rounded-lg p-2 gap-2">
-              <Image src={searchIcon} alt="" width={18} height={18} className="opacity-60" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search OWASP projects..."
-                className="w-full bg-transparent text-white placeholder:text-white/50 text-sm outline-none"
-              />
-            </div>
-          </div>
-
-          {/* Mobile Navigation */}
-          <div className="space-y-1 sm:space-y-2">
-            {navigationItems.map((item) => {
-              const isActive = isActiveTab(item.href);
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={`
-                    block w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg transition-all duration-300
-                    ${isActive 
-                      ? 'bg-[#003594] text-white shadow-lg' 
-                      : 'text-white/80 hover:text-white hover:bg-white/20'
-                    }
-                  `}
-                >
-                  <span className="font-['Poppins'] text-sm sm:text-base font-medium">
-                    {item.label}
-                  </span>
-                </Link>
-              );
-            })}
-          </div>
-
-          {/* Mobile Action Buttons */}
-          <div className="mt-6 space-y-3 md:hidden">
-            <Link href="/join-community" onClick={() => setMobileMenuOpen(false)}>
-              <button className="w-full border-2 border-[#757575] h-11 sm:h-12 px-4 text-white font-['Poppins'] font-semibold text-sm 
-                hover:border-[#00A7E1]/60 hover:bg-[#00A7E1]/20 hover:text-[#00A7E1] 
-                transition-all duration-300 rounded-lg bg-[#101820]">
-                Join the Community
-              </button>
-            </Link>
-            <Link href="/secure-my-app" onClick={() => setMobileMenuOpen(false)}>
-              <button className="w-full bg-gradient-to-r from-[#003594] to-[#004bbb] h-11 sm:h-12 px-4 text-white font-['Poppins'] font-semibold text-sm 
-                hover:from-[#004bbb] hover:to-[#0056cc] hover:shadow-lg
-                transition-all duration-300 rounded-lg">
-                Secure My App
-              </button>
-            </Link>
-          </div>
-        </div>
-      </div>
-
-      {/* Overlay for Mobile Menu */}
-      {mobileMenuOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-30"
-          onClick={() => setMobileMenuOpen(false)}
-        />
-      )}
+      {/* Mobile Menu (revamped) */}
+      <MobileMenu 
+        isOpen={mobileMenuOpen}
+        onClose={() => setMobileMenuOpen(false)}
+        navigationItems={navigationItems}
+      />
 
       {/* Search Modal - Keep existing code */}
       {searchOpen && (

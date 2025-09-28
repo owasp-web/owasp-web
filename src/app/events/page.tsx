@@ -183,15 +183,15 @@ export default function EventsPage() {
       
       {/* Hero Section */}
       <div className="bg-white">
-        <ResponsiveContainer size="full" className="py-16 sm:py-20 lg:py-32">
+        <ResponsiveContainer size="full" className="py-16 sm:py-20 lg:py-28">
           <div className="text-center space-y-8 lg:space-y-16">
             <div className="space-y-6 lg:space-y-8">
-              <h1 className="font-['Barlow'] font-medium text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-[64px] text-[#101820] tracking-[-0.48px] sm:tracking-[-0.64px] md:tracking-[-0.8px] xl:tracking-[-1.28px] leading-tight xl:leading-[64px]">
+              <h1 className="font-['Barlow'] font-medium text-3xl sm:text-4xl md:text-5xl lg:text-[56px] xl:text-[64px] text-[#101820] tracking-[-0.48px] sm:tracking-[-0.64px] md:tracking-[-0.8px] xl:tracking-[-1.28px] leading-tight xl:leading-[64px]">
                 Global and Regional Events
               </h1>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-20 text-left lg:text-left">
                 <div>
-                  <p className="font-['Poppins'] text-[#757575] text-sm sm:text-base leading-6 sm:leading-7">
+                  <p className="font-['Poppins'] text-[#757575] text-base sm:text-lg leading-6 sm:leading-7">
                     Ever wanted to network and learn along with other AppSec
                     professionals? We host nearly a dozen events each year varying
                     in format to week long trainings and conferences, to single day
@@ -199,7 +199,7 @@ export default function EventsPage() {
                   </p>
                 </div>
                 <div>
-                  <p className="font-['Poppins'] text-[#757575] text-sm sm:text-base leading-6 sm:leading-7">
+                  <p className="font-['Poppins'] text-[#757575] text-base sm:text-lg leading-6 sm:leading-7">
                     Although some events have corporate sponsors, all content
                     remains vendor neutral, and speakers are carefully selected to
                     deliver a valuable experience.
@@ -285,9 +285,9 @@ export default function EventsPage() {
       </div>
 
       {/* Events Grid */}
-      <ResponsiveContainer size="full" className="py-16 sm:py-20">
+      <ResponsiveContainer size="full" className="py-12 sm:py-16 lg:py-20">
         <div className="mb-8 sm:mb-12">
-          <h2 className="font-['Barlow'] font-medium text-2xl sm:text-3xl lg:text-[40px] text-[#101820] leading-tight lg:leading-[40px] tracking-[-0.48px] lg:tracking-[-0.8px] mb-3 sm:mb-4">
+          <h2 className="font-['Barlow'] font-medium text-2xl sm:text-3xl lg:text-[40px] text-[#101820] leading-tight lg:leading-[40px] tracking-[-0.48px] lg:tracking-[-0.8px] mb-2 sm:mb-4">
             Upcoming Events
           </h2>
           <p className="font-['Poppins'] text-[#757575] text-sm sm:text-base leading-6">
@@ -295,7 +295,7 @@ export default function EventsPage() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 mb-12 lg:mb-16">
           {filterEvents(events, searchTerm).length === 0 ? (
             <div className="col-span-full text-center py-12">
               <h3 className="text-lg font-medium text-gray-900 mb-2">No events available</h3>

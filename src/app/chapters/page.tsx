@@ -6,6 +6,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import ResponsiveContainer from '@/components/ResponsiveContainer';
 import Button from '@/components/Button';
 import { createClientComponentClient } from '@/lib/supabase';
 import type { Chapter } from '@/lib/types';
@@ -108,101 +109,46 @@ function ChaptersPageContent() {
     <div className="min-h-screen bg-white">
       <Header />
       {/* Hero Section */}
-      <div
-        className="bg-[#101820] flex flex-col gap-6 lg:gap-8 items-start justify-start px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-[120px] py-12 sm:py-16 lg:py-20 relative w-full min-h-[400px] sm:min-h-[500px] overflow-hidden"
-        data-name="Hero"
-      >
+      <div className="bg-[#101820] relative w-full overflow-hidden">
+        <ResponsiveContainer size="full" className="py-12 sm:py-16 lg:py-20">
+          <div className="flex flex-col lg:flex-row gap-8 lg:gap-20 items-start justify-start relative w-full">
         <div
-          className="absolute h-[300px] sm:h-[402px] top-0 w-[360px] sm:w-[480px] opacity-20 sm:opacity-100"
-          data-name="Ray"
-          style={{ left: "calc(25% + 60px)", display: 'none' }}
-        >
-          <div className="absolute bottom-[-49.751%] left-[-124.166%] right-[-123.939%] top-[-218.905%]">
-            <Image
-              alt=""
-              className="block max-w-none size-full"
-              src="/images/ray.svg"
-              width={480}
-              height={402}
-            />
-          </div>
-        </div>
-        <div
-          className="flex flex-col lg:flex-row gap-8 lg:gap-20 items-start justify-start relative shrink-0 w-full"
-          data-name="Container"
-        >
-          <div
-            className="flex-1 flex flex-col items-start justify-between min-h-px min-w-px relative self-stretch"
-          >
-            <div
-              className="flex flex-col gap-6 lg:gap-8 items-start justify-center relative shrink-0 w-full"
-            >
-              <div
-                className="font-['Barlow'] font-medium text-[#ffffff] text-[32px] sm:text-[40px] md:text-[48px] lg:text-[56px] xl:text-[64px] leading-tight xl:leading-[64px] tracking-[-0.64px] sm:tracking-[-0.8px] lg:tracking-[-1.12px] xl:tracking-[-1.28px] w-full"
-              >
-                <p>OWASP Local Chapters</p>
+            <div className="flex-1 flex flex-col items-start justify-between w-full">
+              <div className="space-y-4 lg:space-y-6 w-full">
+                <div className="font-['Barlow'] font-medium text-white text-3xl sm:text-4xl md:text-5xl lg:text-[56px] xl:text-[64px] leading-tight xl:leading-[64px] tracking-tight">
+                  <p>OWASP Local Chapters</p>
+                </div>
+                <div className="font-['Poppins'] text-[#f4f4f4] text-sm sm:text-base leading-6 w-full max-w-2xl">
+                  <p>
+                    OWASP Local Chapters bring application security professionals
+                    together around the world. Meetings are free and open to
+                    everyone, members and non‑members alike.
+                    <br />
+                    <br />
+                    Local meetings include training to build your skills, talks on
+                    relevant topics, and opportunities to connect with others in the
+                    field.
+                  </p>
+                </div>
               </div>
-              <div
-                className="font-['Poppins'] text-[#f4f4f4] text-sm sm:text-base leading-6 tracking-[-0.28px] sm:tracking-[-0.32px] w-full max-w-2xl"
-              >
-                <p>
-                  OWASP Local Chapters bring application security professionals
-                  together around the world. Meetings are free and open to
-                  everyone, members and non‑members alike.
-                  <br />
-                  <br />
-                  Local meetings include training to build your skills, talks on
-                  relevant topics, and opportunities to connect with others in the
-                  field.
-                </p>
+              <div className="flex flex-row gap-6 lg:gap-10 h-12 sm:h-14 items-center mt-6 lg:mt-8">
+                <FigmaButton text="RSVP for Local Meetings" type="Ghost White" size="56" />
               </div>
             </div>
-            <div
-              className="flex flex-row gap-6 lg:gap-10 h-12 sm:h-14 items-center justify-start relative shrink-0 mt-6 lg:mt-0"
-              data-name="Button"
-            >
-              <FigmaButton
-                text="RSVP for Local Meetings"
-                type="Ghost White"
-                size="56"
-              />
-            </div>
-          </div>
-          <div
-            className="h-[500px] relative shrink-0 w-[560px]"
-            data-name="Map"
-          >
-            <div
-              className="absolute bg-[#9fbef4] blur-[150px] filter left-[70px] opacity-60 rounded-[2571.43px] size-[640px] top-10"
-              data-name="Blur"
-            />
-            <div
-              className="absolute left-[30px] overflow-clip rounded-[2571.43px] size-[720px] top-0"
-              data-name="Circle Globe"
-              style={{
-                backgroundImage:
-                  "url('data:image/svg+xml;utf8,<svg viewBox=\\'0 0 720 720\\' xmlns=\\'http://www.w3.org/2000/svg\\' preserveAspectRatio=\\'none\\'><rect x=\\'0\\' y=\\'0\\' height=\\'100%\\' width=\\'100%\\' fill=\\'url(%23grad)\\' opacity=\\'1\\'/><defs><radialGradient id=\\'grad\\' gradientUnits=\\'userSpaceOnUse\\' cx=\\'0\\' cy=\\'0\\' r=\\'10\\' gradientTransform=\\'matrix(-32.9 -37.25 -133.41 117.83 453 451.5)\\'><stop stop-color=\\'rgba(0,0,0,1)\\' offset=\\'0\\'/><stop stop-color=\\'rgba(4,6,8,1)\\' offset=\\'0.125\\'/><stop stop-color=\\'rgba(8,12,16,1)\\' offset=\\'0.25\\'/><stop stop-color=\\'rgba(16,24,33,1)\\' offset=\\'0.5\\'/><stop stop-color=\\'rgba(32,48,65,1)\\' offset=\\'1\\'/></radialGradient></defs></svg>')",
-              }}
-            >
-              <div
-                className="absolute h-[637.714px] left-[-136.494px] top-[41.143px] w-[992.989px]"
-                data-name="World Map"
-              >
-                <Image
-                  alt=""
-                  className="block max-w-none size-full"
-                  src="/images/world-map.svg"
-                  width={993}
-                  height={638}
-                />
+            <div className="h-[320px] sm:h-[420px] lg:h-[500px] relative w-full lg:w-[560px]">
+              <div className="absolute bg-[#9fbef4] blur-[150px] filter left-[70px] opacity-60 rounded-[2571.43px] size-[640px] top-10" />
+              <div className="absolute left-[30px] overflow-clip rounded-[2571.43px] size-[720px] top-0">
+                <div className="absolute h-[637.714px] left-[-136.494px] top-[41.143px] w-[992.989px]">
+                  <Image alt="" className="block max-w-none size-full" src="/images/world-map.svg" width={993} height={638} />
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        </ResponsiveContainer>
       </div>
 
       {/* Chapter Listing Section */}
-      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-[120px] py-12 sm:py-16 relative z-10 bg:white">
+      <ResponsiveContainer size="full" className="py-12 sm:py-16 relative z-10 bg:white">
         {/* Section Header with Search */}
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8 sm:mb-12 gap-6 lg:gap-0">
           <div>
@@ -279,7 +225,7 @@ function ChaptersPageContent() {
             </div>
           ))}
         </div>
-      </div>
+      </ResponsiveContainer>
 
       <Footer />
     </div>

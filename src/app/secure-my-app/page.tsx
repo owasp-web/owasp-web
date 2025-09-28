@@ -2,6 +2,7 @@ import Link from 'next/link';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import Button from '@/components/Button';
+import ResponsiveContainer from '@/components/ResponsiveContainer';
 
 export default function SecureMyAppPage() {
   const securityTools = [
@@ -85,66 +86,66 @@ export default function SecureMyAppPage() {
       
       {/* Hero Section */}
       <div className="bg-[#101820] relative">
-        <div className="max-w-[1440px] mx-auto px-[120px] py-24">
+        <ResponsiveContainer size="full" className="py-12 sm:py-16 md:py-20 lg:py-24">
           <div className="max-w-4xl">
-            <h1 className="font-['Barlow'] font-medium text-[56px] text-white leading-[56px] tracking-[-1.12px] mb-6">
+            <h1 className="font-['Barlow'] font-medium text-4xl sm:text-5xl lg:text-[56px] text-white leading-tight sm:leading-[1.1] tracking-tight mb-4 sm:mb-6">
               Secure My App
             </h1>
-            <p className="font-['Poppins'] text-[#f4f4f4] text-lg leading-7 mb-8">
+            <p className="font-['Poppins'] text-[#f4f4f4] text-base sm:text-lg leading-7 sm:leading-7 mb-6 sm:mb-8">
               Get started with application security using OWASP's free tools and resources. 
               Whether you're a developer or security professional, we'll help you build more secure applications.
             </p>
-            <div className="flex gap-4">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full sm:w-auto">
               <Button text="Start Security Assessment" variant="light-blue" size="56" />
               <Button text="View All Tools" variant="ghost-white" size="56" />
             </div>
           </div>
-        </div>
+        </ResponsiveContainer>
       </div>
 
       {/* Quick Start Guide */}
-      <div className="max-w-[1440px] mx-auto px-[120px] py-20">
-        <div className="text-center mb-16">
-          <h2 className="font-['Barlow'] font-medium text-[48px] text-[#101820] leading-[48px] tracking-[-0.96px] mb-6">
+      <ResponsiveContainer size="full" className="py-12 sm:py-16 lg:py-20">
+        <div className="text-center mb-10 sm:mb-12 lg:mb-16">
+          <h2 className="font-['Barlow'] font-medium text-3xl sm:text-4xl lg:text-[48px] text-[#101820] leading-tight tracking-tight mb-4 lg:mb-6">
             5 Steps to Secure Your Application
           </h2>
-          <p className="font-['Poppins'] text-[#757575] text-lg leading-8 max-w-3xl mx-auto">
+          <p className="font-['Poppins'] text-[#757575] text-base sm:text-lg leading-7 sm:leading-8 max-w-3xl mx-auto">
             Follow this proven process to improve your application's security posture using OWASP resources.
           </p>
         </div>
 
-        <div className="space-y-8 mb-16">
+        <div className="space-y-4 sm:space-y-6 lg:space-y-8 mb-12 lg:mb-16">
           {securitySteps.map((item, index) => (
-            <div key={index} className="flex items-start gap-6 p-6 bg-white rounded-lg shadow-sm">
-              <div className="w-12 h-12 bg-[#003594] text-white rounded-full flex items-center justify-center text-xl font-bold shrink-0">
+            <div key={index} className="flex items-start gap-4 sm:gap-6 p-4 sm:p-6 bg-white rounded-lg shadow-sm">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-[#003594] text-white rounded-full flex items-center justify-center text-lg sm:text-xl font-bold shrink-0">
                 {item.step}
               </div>
               <div className="flex-1">
-                <h3 className="font-['Barlow'] font-medium text-[24px] text-[#101820] mb-3">
+                <h3 className="font-['Barlow'] font-medium text-xl sm:text-2xl lg:text-[24px] text-[#101820] mb-2 sm:mb-3">
                   {item.title}
                 </h3>
-                <p className="font-['Poppins'] text-[#757575] text-base leading-6">
+                <p className="font-['Poppins'] text-[#757575] text-sm sm:text-base leading-6">
                   {item.description}
                 </p>
               </div>
             </div>
           ))}
         </div>
-      </div>
+      </ResponsiveContainer>
 
       {/* Security Tools */}
       <div className="bg-white">
-        <div className="max-w-[1440px] mx-auto px-[120px] py-20">
+        <ResponsiveContainer size="full" className="py-12 sm:py-16 lg:py-20">
           <div className="text-center mb-16">
-            <h2 className="font-['Barlow'] font-medium text-[48px] text-[#101820] leading-[48px] tracking-[-0.96px] mb-6">
+            <h2 className="font-['Barlow'] font-medium text-3xl sm:text-4xl lg:text-[48px] text-[#101820] leading-tight tracking-tight mb-4 lg:mb-6">
               Essential Security Tools
             </h2>
-            <p className="font-['Poppins'] text-[#757575] text-lg leading-8 max-w-3xl mx-auto">
+            <p className="font-['Poppins'] text-[#757575] text-base sm:text-lg leading-7 sm:leading-8 max-w-3xl mx-auto">
               Start with these proven OWASP tools to assess and improve your application security.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 lg:gap-8 mb-12 lg:mb-16">
             {securityTools.map((tool, index) => {
               // Define difficulty-specific colors and styles
               const difficultyStyles = {
@@ -166,10 +167,10 @@ export default function SecureMyAppPage() {
               return (
                 <div 
                   key={index} 
-                  className="group bg-white border border-gray-200 hover:border-[#003594] rounded-xl p-6 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
+                  className="group bg-white border border-gray-200 hover:border-[#003594] rounded-xl p-5 sm:p-6 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
                 >
                   {/* Header with badges */}
-                  <div className="flex justify-between items-start mb-4">
+                  <div className="flex justify-between items-start mb-3 sm:mb-4">
                     <div className="flex gap-2">
                       <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${difficultyStyle.bg} ${difficultyStyle.text} ${difficultyStyle.border} border`}>
                         {tool.difficulty}
@@ -178,24 +179,24 @@ export default function SecureMyAppPage() {
                         {tool.category}
                       </span>
                     </div>
-                                         <div className="w-12 h-12 bg-gradient-to-br from-[#003594] to-[#0056d6] group-hover:from-[#0056d6] group-hover:to-[#00a7e1] rounded-lg flex items-center justify-center shrink-0 transition-all duration-300 shadow-md">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-[#003594] to-[#0056d6] group-hover:from-[#0056d6] group-hover:to-[#00a7e1] rounded-lg flex items-center justify-center shrink-0 transition-all duration-300 shadow-md">
                        {tool.icon}
                      </div>
                   </div>
                   
                   {/* Content */}
-                  <div className="mb-6">
-                    <h3 className="font-['Barlow'] font-medium text-[24px] text-[#101820] group-hover:text-[#003594] transition-colors duration-300 mb-3 leading-tight">
+                  <div className="mb-4 sm:mb-6">
+                    <h3 className="font-['Barlow'] font-medium text-xl sm:text-2xl lg:text-[24px] text-[#101820] group-hover:text-[#003594] transition-colors duration-300 mb-2 sm:mb-3 leading-tight">
                       {tool.title}
                     </h3>
-                    <p className="font-['Poppins'] text-[#757575] text-sm leading-6 mb-4">
+                    <p className="font-['Poppins'] text-[#757575] text-sm leading-6 mb-3 sm:mb-4">
                       {tool.description}
                     </p>
                   </div>
                   
                   {/* Action buttons */}
                   <div className="pt-4 border-t border-gray-100">
-                    <div className="flex gap-3">
+                    <div className="flex flex-col sm:flex-row gap-3">
                       <button className="flex-1 bg-gray-100 hover:bg-gray-200 text-[#101820] font-['Poppins'] font-medium text-sm py-3 px-4 rounded-lg transition-all duration-300 flex items-center justify-center gap-2 group/btn">
                         <span>Learn More</span>
                         <svg 
@@ -226,36 +227,36 @@ export default function SecureMyAppPage() {
           </div>
           
           {/* Additional Security Resources */}
-          <div className="bg-gradient-to-r from-indigo-50 to-blue-50 border border-indigo-200 rounded-xl p-8 text-center">
+          <div className="bg-gradient-to-r from-indigo-50 to-blue-50 border border-indigo-200 rounded-xl p-6 sm:p-8 text-center">
             <div className="max-w-2xl mx-auto">
-              <h3 className="font-['Barlow'] font-medium text-[24px] text-[#101820] mb-3">
+              <h3 className="font-['Barlow'] font-medium text-xl sm:text-2xl lg:text-[24px] text-[#101820] mb-2 sm:mb-3">
                 Need More Advanced Tools?
               </h3>
-              <p className="font-['Poppins'] text-[#757575] text-sm leading-6 mb-6">
+              <p className="font-['Poppins'] text-[#757575] text-sm leading-6 mb-4 sm:mb-6">
                 Explore our complete catalog of security tools and resources designed for every level of expertise and application type.
               </p>
-              <div className="flex gap-4 justify-center">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
                 <Button text="Browse All Tools" variant="primary" size="48" />
                 <Button text="Custom Assessment" variant="ghost-dark" size="48" />
               </div>
             </div>
           </div>
-        </div>
+        </ResponsiveContainer>
       </div>
 
       {/* Assessment Form */}
-      <div className="max-w-[1440px] mx-auto px-[120px] py-20">
-        <div className="bg-gradient-to-r from-[#003594] to-[#0056d6] rounded-2xl p-16 text-center text-white">
-          <h2 className="font-['Barlow'] font-medium text-[48px] leading-[48px] tracking-[-0.96px] mb-6">
+      <ResponsiveContainer size="full" className="py-12 sm:py-16 lg:py-20">
+        <div className="bg-gradient-to-r from-[#003594] to-[#0056d6] rounded-2xl p-8 sm:p-12 lg:p-16 text-center text-white">
+          <h2 className="font-['Barlow'] font-medium text-3xl sm:text-4xl lg:text-[48px] leading-tight tracking-tight mb-4 sm:mb-6">
             Free Security Assessment
           </h2>
-          <p className="font-['Poppins'] text-white/90 text-lg leading-8 mb-12 max-w-3xl mx-auto">
+          <p className="font-['Poppins'] text-white/90 text-base sm:text-lg leading-7 sm:leading-8 mb-8 sm:mb-12 max-w-3xl mx-auto">
             Get a personalized security assessment for your application. Our experts will review your setup 
             and provide actionable recommendations.
           </p>
           
           <div className="max-w-2xl mx-auto">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 mb-6 sm:mb-8">
               <input 
                 type="text" 
                 placeholder="Your Name"
@@ -267,7 +268,7 @@ export default function SecureMyAppPage() {
                 className="px-4 py-3 rounded-sm text-[#101820] focus:outline-none focus:ring-2 focus:ring-[#ffb81b]"
               />
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 mb-6 sm:mb-8">
               <input 
                 type="text" 
                 placeholder="Company (Optional)"
@@ -289,7 +290,7 @@ export default function SecureMyAppPage() {
             <Button text="Request Free Assessment" variant="light-blue" size="56" />
           </div>
         </div>
-      </div>
+      </ResponsiveContainer>
 
       <Footer />
     </div>

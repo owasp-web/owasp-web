@@ -14,6 +14,7 @@ import ProjectInventorySection from '@/components/ProjectInventorySection';
 import FinalCTASection from '@/components/FinalCTASection';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import ResponsiveContainer from '@/components/ResponsiveContainer';
 import { getProjects } from '@/lib/projects';
 import { Project } from '@/lib/types';
 
@@ -225,17 +226,17 @@ function AllProjectsContent() {
     <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
       <div className="bg-gradient-to-br from-[#1a237e] via-[#303f9f] to-[#42a5f5] relative overflow-hidden">
-        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-[120px] py-12 sm:py-16 lg:py-20">
+        <ResponsiveContainer size="full" className="py-12 sm:py-16 lg:py-20">
           <div className="text-center">
-            <h1 className="font-['Barlow'] font-bold text-white text-[32px] sm:text-[40px] lg:text-[48px] leading-tight tracking-[-0.96px] mb-6">
+            <h1 className="font-['Barlow'] font-bold text-white text-3xl sm:text-[40px] lg:text-[48px] leading-tight tracking-[-0.96px] mb-4 sm:mb-6">
               OWASP Project Inventory ({totalProjects})
             </h1>
-            <p className="font-['Poppins'] text-white/90 text-lg leading-relaxed max-w-3xl mx-auto mb-8">
+            <p className="font-['Poppins'] text-white/90 text-base sm:text-lg leading-7 sm:leading-relaxed max-w-3xl mx-auto mb-6 sm:mb-8">
               All OWASP tools, document, and code library projects are organized into the following categories
             </p>
             
             {/* Search Bar */}
-            <div className="max-w-md mx-auto mb-8">
+            <div className="max-w-md mx-auto mb-6 sm:mb-8">
               <div className="relative">
                 <input
                   type="text"
@@ -255,10 +256,10 @@ function AllProjectsContent() {
             </div>
 
             {/* View Toggle */}
-            <div className="flex justify-center gap-4 mb-6">
+            <div className="flex flex-wrap justify-center gap-3 sm:gap-4 mb-6">
               <button
                 onClick={() => updateURL({ view: 'all' })}
-                className={`px-6 py-2 rounded-lg font-medium transition-colors ${
+                className={`px-4 sm:px-6 py-2 rounded-lg font-medium transition-colors ${
                   filterType === 'all' 
                     ? 'bg-white text-[#003594]' 
                     : 'bg-white/10 text-white hover:bg-white/20'
@@ -268,7 +269,7 @@ function AllProjectsContent() {
               </button>
               <button
                 onClick={() => updateURL({ view: 'level' })}
-                className={`px-6 py-2 rounded-lg font-medium transition-colors ${
+                className={`px-4 sm:px-6 py-2 rounded-lg font-medium transition-colors ${
                   filterType === 'level' 
                     ? 'bg-white text-[#003594]' 
                     : 'bg-white/10 text-white hover:bg-white/20'
@@ -278,7 +279,7 @@ function AllProjectsContent() {
               </button>
               <button
                 onClick={() => updateURL({ view: 'type' })}
-                className={`px-6 py-2 rounded-lg font-medium transition-colors ${
+                className={`px-4 sm:px-6 py-2 rounded-lg font-medium transition-colors ${
                   filterType === 'type' 
                     ? 'bg-white text-[#003594]' 
                     : 'bg-white/10 text-white hover:bg-white/20'
@@ -290,7 +291,7 @@ function AllProjectsContent() {
 
             {/* Level Filters */}
             {filterType === 'level' && (
-              <div className="flex justify-center gap-4">
+              <div className="flex flex-wrap justify-center gap-3 sm:gap-4">
                 <button
                   onClick={() => updateURL({ view: 'level', level: 'all' })}
                   className={`px-4 py-2 rounded-lg font-medium transition-colors ${
@@ -326,7 +327,7 @@ function AllProjectsContent() {
 
             {/* Type Filters */}
             {filterType === 'type' && (
-              <div className="flex justify-center gap-4">
+              <div className="flex flex-wrap justify-center gap-3 sm:gap-4">
                 <button
                   onClick={() => updateURL({ view: 'type', type: 'all' })}
                   className={`px-4 py-2 rounded-lg font-medium transition-colors ${
@@ -370,11 +371,11 @@ function AllProjectsContent() {
               </div>
             )}
           </div>
-        </div>
+        </ResponsiveContainer>
       </div>
 
       {/* Projects Content */}
-      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-[120px] py-12 sm:py-16 lg:py-20">
+      <ResponsiveContainer size="full" className="py-12 sm:py-16 lg:py-20">
         {loading ? (
           <div className="text-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#003594] mx-auto mb-4"></div>
@@ -604,7 +605,7 @@ function AllProjectsContent() {
             </div>
           </div>
         )}
-      </div>
+      </ResponsiveContainer>
     </div>
   );
 }
