@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { getProjectById } from '@/lib/projects';
+import { createClientComponentClient } from '@/lib/supabase';
 import { Project } from '@/lib/types';
 
 interface ProjectEditPageProps {
@@ -23,6 +24,18 @@ export default function ProjectEditPage({ params }: ProjectEditPageProps) {
   useEffect(() => {
     const fetchProject = async () => {
       try {
+        // Try server API first (service role, super admin)
+        const supabase = createClientComponentClient();
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.access_token) {
+          const res = await fetch(`/api/admin/projects/${params.id}`, { headers: { Authorization: `Bearer ${session.access_token}` } })
+          if (res.ok) {
+            const json = await res.json()
+            setProject(json.project)
+            return
+          }
+        }
+        // Fallback to client fetch
         const projectData = await getProjectById(params.id);
         setProject(projectData);
       } catch (error) {
