@@ -152,7 +152,7 @@ export default function ProjectEditPage({ params }: ProjectEditPageProps) {
     const tab = (project?.tabs as any[])?.find((t: any) => t.id === tabId);
     if (!tab) return;
     const sections = parseSections(tab);
-    sections.push({ title: 'New Section', content: 'Describe this section...', buttons: [] });
+    sections.push({ title: 'New Section', content: 'Describe this section...', imageUrl: '', imageAlt: '', imageCaption: '', videoUrl: '', links: [], buttons: [] });
     writeSections(tabId, sections);
   };
 
@@ -164,7 +164,7 @@ export default function ProjectEditPage({ params }: ProjectEditPageProps) {
     writeSections(tabId, sections);
   };
 
-  const updateSection = (tabId: string, index: number, key: 'title' | 'content', value: string) => {
+  const updateSection = (tabId: string, index: number, key: 'title' | 'content' | 'imageUrl' | 'imageAlt' | 'imageCaption' | 'videoUrl', value: string) => {
     const tab = (project?.tabs as any[])?.find((t: any) => t.id === tabId);
     if (!tab) return;
     const sections = parseSections(tab);
@@ -179,6 +179,38 @@ export default function ProjectEditPage({ params }: ProjectEditPageProps) {
     const buttons = Array.isArray(sections[sectionIndex]?.buttons) ? sections[sectionIndex].buttons : [];
     buttons.push({ label: 'Learn More', url: 'https://example.com', style: 'primary' });
     sections[sectionIndex] = { ...(sections[sectionIndex] || {}), buttons };
+    writeSections(tabId, sections);
+  };
+
+  // Links management per section
+  const addLink = (tabId: string, sectionIndex: number) => {
+    const tab = (project?.tabs as any[])?.find((t: any) => t.id === tabId);
+    if (!tab) return;
+    const sections = parseSections(tab);
+    const links = Array.isArray(sections[sectionIndex]?.links) ? sections[sectionIndex].links : [];
+    links.push({ title: 'Official Site', url: 'https://example.com' });
+    sections[sectionIndex] = { ...(sections[sectionIndex] || {}), links };
+    writeSections(tabId, sections);
+  };
+
+  const updateLink = (tabId: string, sectionIndex: number, linkIndex: number, key: 'title' | 'url', value: string) => {
+    const tab = (project?.tabs as any[])?.find((t: any) => t.id === tabId);
+    if (!tab) return;
+    const sections = parseSections(tab);
+    const links = Array.isArray(sections[sectionIndex]?.links) ? sections[sectionIndex].links : [];
+    if (!links[linkIndex]) return;
+    (links[linkIndex] as any)[key] = value;
+    sections[sectionIndex] = { ...(sections[sectionIndex] || {}), links };
+    writeSections(tabId, sections);
+  };
+
+  const removeLink = (tabId: string, sectionIndex: number, linkIndex: number) => {
+    const tab = (project?.tabs as any[])?.find((t: any) => t.id === tabId);
+    if (!tab) return;
+    const sections = parseSections(tab);
+    const links = Array.isArray(sections[sectionIndex]?.links) ? sections[sectionIndex].links : [];
+    links.splice(linkIndex, 1);
+    sections[sectionIndex] = { ...(sections[sectionIndex] || {}), links };
     writeSections(tabId, sections);
   };
 
@@ -420,6 +452,14 @@ export default function ProjectEditPage({ params }: ProjectEditPageProps) {
                                 placeholder="Section content (supports URLs, OWASP A01..A10, [YOUTUBE]...[/YOUTUBE])"
                               />
 
+                              {/* Media inputs */}
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-3">
+                                <input value={section.imageUrl || ''} onChange={(e) => updateSection(tab.id, idx, 'imageUrl', e.target.value)} placeholder="Image URL (optional)" className="border rounded px-2 py-1" />
+                                <input value={section.imageAlt || ''} onChange={(e) => updateSection(tab.id, idx, 'imageAlt', e.target.value)} placeholder="Image alt text" className="border rounded px-2 py-1" />
+                              </div>
+                              <input value={section.imageCaption || ''} onChange={(e) => updateSection(tab.id, idx, 'imageCaption', e.target.value)} placeholder="Image caption (optional)" className="border rounded px-2 py-1 w-full mt-2" />
+                              <input value={section.videoUrl || ''} onChange={(e) => updateSection(tab.id, idx, 'videoUrl', e.target.value)} placeholder="Video URL (YouTube or MP4)" className="border rounded px-2 py-1 w-full mt-2" />
+
                               <div className="mt-3">
                                 <div className="flex items-center justify-between mb-2">
                                   <h4 className="font-medium">Buttons</h4>
@@ -437,6 +477,25 @@ export default function ProjectEditPage({ params }: ProjectEditPageProps) {
                                           <option value="link">link</option>
                                         </select>
                                         <button onClick={() => removeButton(tab.id, idx, bIdx)} className="px-2 py-1 border rounded text-red-600">Remove</button>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+
+                              {/* Links */}
+                              <div className="mt-3">
+                                <div className="flex items-center justify-between mb-2">
+                                  <h4 className="font-medium">Links</h4>
+                                  <button onClick={() => addLink(tab.id, idx)} className="px-2 py-1 border rounded">Add Link</button>
+                                </div>
+                                <div className="space-y-2">
+                                  {(section.links || []).map((lnk: any, lIdx: number) => (
+                                    <div key={lIdx} className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                                      <input value={lnk.title || ''} onChange={(e) => updateLink(tab.id, idx, lIdx, 'title', e.target.value)} placeholder="Title" className="border rounded px-2 py-1" />
+                                      <input value={lnk.url || ''} onChange={(e) => updateLink(tab.id, idx, lIdx, 'url', e.target.value)} placeholder="https://..." className="border rounded px-2 py-1" />
+                                      <div className="flex items-center">
+                                        <button onClick={() => removeLink(tab.id, idx, lIdx)} className="px-2 py-1 border rounded text-red-600">Remove</button>
                                       </div>
                                     </div>
                                   ))}

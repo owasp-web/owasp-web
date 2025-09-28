@@ -156,9 +156,51 @@ function TabContent({ content }: TabContentProps) {
               {section.title && (
                 <h3 className="font-['Barlow'] font-bold text-[#101820] text-xl mb-3">{section.title}</h3>
               )}
+              {/* Optional image (single) */}
+              {section.imageUrl && (
+                <div className="my-4">
+                  <div className="relative rounded-lg overflow-hidden border border-gray-200">
+                    {/* Use img because source may be external */}
+                    <img src={section.imageUrl} alt={section.imageAlt || ''} className="w-full h-auto" />
+                  </div>
+                  {section.imageCaption && (
+                    <p className="text-sm text-gray-600 text-center mt-2 italic">{section.imageCaption}</p>
+                  )}
+                </div>
+              )}
+              {/* Optional video (YouTube iframe or direct video) */}
+              {section.videoUrl && (
+                <div className="my-4">
+                  <div className="relative aspect-video rounded-lg overflow-hidden border border-gray-200">
+                    {/(youtube\.com|youtu\.be)/i.test(section.videoUrl) ? (
+                      <iframe
+                        src={section.videoUrl.includes('embed') ? section.videoUrl : section.videoUrl.replace('watch?v=', 'embed/')}
+                        title={section.title || 'Video'}
+                        className="w-full h-full"
+                        allowFullScreen
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      />
+                    ) : (
+                      <video src={section.videoUrl} controls className="w-full h-full" />
+                    )}
+                  </div>
+                </div>
+              )}
               {section.content && (
                 <div className="font-['Poppins'] text-[#757575] leading-relaxed">
                   {renderRichContent(section.content)}
+                </div>
+              )}
+              {/* Optional links list */}
+              {section.links && Array.isArray(section.links) && section.links.length > 0 && (
+                <div className="mt-4 space-y-2">
+                  {section.links.map((lnk: any, li: number) => (
+                    <div key={li}>
+                      <a href={lnk.url} target="_blank" rel="noopener noreferrer" className="text-[#003594] hover:text-[#0056b3] underline font-medium text-sm">
+                        • {lnk.title || lnk.url}
+                      </a>
+                    </div>
+                  ))}
                 </div>
               )}
               {section.buttons && Array.isArray(section.buttons) && section.buttons.length > 0 && (
