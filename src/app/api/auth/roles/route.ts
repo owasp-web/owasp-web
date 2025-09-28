@@ -38,7 +38,19 @@ export async function GET(req: NextRequest) {
 
   const chapterIds = (chapterRows || []).map((r: any) => r.chapter_id)
 
-  return NextResponse.json({ isSuperAdmin, chapterIds })
+  // List project ids the user administers
+  let projectIds: string[] = []
+  try {
+    const { data: projectRows } = await supabase
+      .from('project_admins')
+      .select('project_id')
+      .or(`user_id.eq.${user.id},email.eq.${(user as any).email}`)
+    projectIds = (projectRows || []).map((r: any) => r.project_id)
+  } catch (e) {
+    projectIds = []
+  }
+
+  return NextResponse.json({ isSuperAdmin, chapterIds, projectIds })
 }
 
 

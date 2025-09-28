@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { createClientComponentClient } from '@/lib/supabase'
-import type { Event, Chapter } from '@/lib/types'
+import type { Event, Chapter, Project } from '@/lib/types'
 
 interface MegaMenuProps {
   isOpen: boolean
@@ -16,6 +16,7 @@ export default function MegaMenu({ isOpen, onClose, menuType }: MegaMenuProps) {
   const [events, setEvents] = useState<Event[]>([])
   const [loading, setLoading] = useState(false)
   const [chapters, setChapters] = useState<Chapter[]>([])
+  const [featuredProjects, setFeaturedProjects] = useState<Project[]>([])
   const menuRef = useRef<HTMLDivElement>(null)
 
   // Fetch data when menu opens
@@ -23,6 +24,7 @@ export default function MegaMenu({ isOpen, onClose, menuType }: MegaMenuProps) {
     if (!isOpen) return
     if (menuType === 'events') fetchEvents()
     if (menuType === 'chapters') fetchChapters()
+    if (menuType === 'projects') fetchProjects()
   }, [isOpen, menuType])
 
   // Close menu when clicking outside
@@ -73,6 +75,24 @@ export default function MegaMenu({ isOpen, onClose, menuType }: MegaMenuProps) {
     } catch (err) {
       console.error('Failed to fetch chapters:', err)
       setChapters([])
+    }
+  }
+
+  const fetchProjects = async () => {
+    try {
+      const supabase = createClientComponentClient()
+      const { data, error } = await supabase
+        .from('projects')
+        .select('*')
+        .eq('status', 'active')
+        .order('is_featured', { ascending: false })
+        .order('title', { ascending: true })
+        .limit(8)
+      if (error) throw error
+      setFeaturedProjects((data as unknown as Project[]) || [])
+    } catch (err) {
+      console.error('Failed to fetch projects:', err)
+      setFeaturedProjects([])
     }
   }
 
@@ -200,73 +220,32 @@ export default function MegaMenu({ isOpen, onClose, menuType }: MegaMenuProps) {
         <div className="md:col-span-8">
           <h3 className="font-['Barlow'] font-medium text-lg text-white mb-6">Featured Projects</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Link 
-              href="/projects/owasp-top-10" 
-              onClick={onClose}
-              className="p-4 rounded-lg bg-white/5 hover:bg-white/10 transition-all duration-200 group"
-            >
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 bg-[#dc3545] rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-lg">10</span>
+            {featuredProjects.map((p) => (
+              <Link
+                key={p.id}
+                href={`/projects/${p.slug}`}
+                onClick={onClose}
+                className="p-4 rounded-lg bg-white/5 hover:bg-white/10 transition-all duration-200 group"
+              >
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-lg flex items-center justify-center"
+                       style={{ backgroundColor: p.project_type === 'flagship' ? '#dc3545' : p.project_type === 'production' ? '#28a745' : '#6c757d' }}>
+                    {p.image ? (
+                      <Image src={p.image} alt="" width={16} height={16} className="object-contain" />
+                    ) : (
+                      <span className="text-white font-bold text-lg">{p.title.slice(0,1)}</span>
+                    )}
+                  </div>
+                  <div>
+                    <h4 className="text-white font-medium text-sm group-hover:text-[#00A7E1] transition-colors">{p.title}</h4>
+                    {p.project_type && (
+                      <span className="px-2 py-0.5 bg-white/10 text-white text-xs rounded-full capitalize">{p.project_type}</span>
+                    )}
+                  </div>
                 </div>
-                <div>
-                  <h4 className="text-white font-medium text-sm group-hover:text-[#00A7E1] transition-colors">OWASP Top 10</h4>
-                  <span className="px-2 py-0.5 bg-[#dc3545] text-white text-xs rounded-full">Flagship</span>
-                </div>
-              </div>
-              <p className="text-white/70 text-xs leading-relaxed">Standard awareness document for developers and web application security</p>
-            </Link>
-
-            <Link 
-              href="/projects/dependency-track" 
-              onClick={onClose}
-              className="p-4 rounded-lg bg-white/5 hover:bg-white/10 transition-all duration-200 group"
-            >
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 bg-[#28a745] rounded-lg flex items-center justify-center">
-                  <Image src="/images/icons/search.svg" alt="" width={16} height={16} className="filter brightness-0 invert" />
-                </div>
-                <div>
-                  <h4 className="text-white font-medium text-sm group-hover:text-[#00A7E1] transition-colors">Dependency-Track</h4>
-                  <span className="px-2 py-0.5 bg-[#dc3545] text-white text-xs rounded-full">Flagship</span>
-                </div>
-              </div>
-              <p className="text-white/70 text-xs leading-relaxed">Intelligent software supply chain security platform</p>
-            </Link>
-
-            <Link 
-              href="/projects/amass" 
-              onClick={onClose}
-              className="p-4 rounded-lg bg-white/5 hover:bg-white/10 transition-all duration-200 group"
-            >
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 bg-[#6f42c1] rounded-lg flex items-center justify-center">
-                  <Image src="/images/icons/globe-alt.svg" alt="" width={16} height={16} className="filter brightness-0 invert" />
-                </div>
-                <div>
-                  <h4 className="text-white font-medium text-sm group-hover:text-[#00A7E1] transition-colors">Amass</h4>
-                  <span className="px-2 py-0.5 bg-[#28a745] text-white text-xs rounded-full">Active</span>
-                </div>
-              </div>
-              <p className="text-white/70 text-xs leading-relaxed">In-depth attack surface mapping and asset discovery</p>
-            </Link>
-
-            <Link 
-              href="/projects/juice-shop" 
-              onClick={onClose}
-              className="p-4 rounded-lg bg-white/5 hover:bg-white/10 transition-all duration-200 group"
-            >
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 bg-[#ffc107] rounded-lg flex items-center justify-center">
-                  <span className="text-[#101820] font-bold text-lg">🧃</span>
-                </div>
-                <div>
-                  <h4 className="text-white font-medium text-sm group-hover:text-[#00A7E1] transition-colors">Juice Shop</h4>
-                  <span className="px-2 py-0.5 bg-[#dc3545] text-white text-xs rounded-full">Flagship</span>
-                </div>
-              </div>
-              <p className="text-white/70 text-xs leading-relaxed">Intentionally insecure web application for security training</p>
-            </Link>
+                <p className="text-white/70 text-xs leading-relaxed line-clamp-2">{p.description}</p>
+              </Link>
+            ))}
           </div>
         </div>
 
@@ -274,47 +253,23 @@ export default function MegaMenu({ isOpen, onClose, menuType }: MegaMenuProps) {
         <div className="md:col-span-4">
           <h3 className="font-['Barlow'] font-medium text-lg text-white mb-6">Browse by Category</h3>
           <div className="space-y-3">
-            <Link 
-              href="/projects?category=documentation" 
-              onClick={onClose}
-              className="flex items-center gap-3 p-3 rounded-lg hover:bg-white/10 transition-all duration-200 group"
-            >
-              <div className="w-8 h-8 bg-[#003594] rounded-lg flex items-center justify-center">
-                <Image src="/images/icons/book-open.svg" alt="" width={16} height={16} className="filter brightness-0 invert" />
-              </div>
-              <div>
-                <div className="text-white font-medium text-sm">Documentation</div>
-                <div className="text-white/70 text-xs">Standards & guides</div>
-              </div>
-            </Link>
-
-            <Link 
-              href="/projects?category=security-testing" 
-              onClick={onClose}
-              className="flex items-center gap-3 p-3 rounded-lg hover:bg-white/10 transition-all duration-200 group"
-            >
-              <div className="w-8 h-8 bg-[#28a745] rounded-lg flex items-center justify-center">
-                <Image src="/images/icons/code.svg" alt="" width={16} height={16} className="filter brightness-0 invert" />
-              </div>
-              <div>
-                <div className="text-white font-medium text-sm">Security Testing</div>
-                <div className="text-white/70 text-xs">Testing tools</div>
-              </div>
-            </Link>
-
-            <Link 
-              href="/projects?category=training" 
-              onClick={onClose}
-              className="flex items-center gap-3 p-3 rounded-lg hover:bg-white/10 transition-all duration-200 group"
-            >
-              <div className="w-8 h-8 bg-[#ffc107] rounded-lg flex items-center justify-center">
-                <Image src="/images/icons/chart-projector.svg" alt="" width={16} height={16} className="filter brightness-0" />
-              </div>
-              <div>
-                <div className="text-white font-medium text-sm">Training</div>
-                <div className="text-white/70 text-xs">Learning resources</div>
-              </div>
-            </Link>
+            {/* Simple category list derived from featured projects */}
+            {[...new Set(featuredProjects.map(p => p.category))].slice(0,6).map((cat) => (
+              <Link
+                key={cat}
+                href={`/projects?category=${encodeURIComponent(cat)}`}
+                onClick={onClose}
+                className="flex items-center gap-3 p-3 rounded-lg hover:bg-white/10 transition-all duration-200 group"
+              >
+                <div className="w-8 h-8 bg-[#003594] rounded-lg flex items-center justify-center">
+                  <Image src="/images/icons/book-open.svg" alt="" width={16} height={16} className="filter brightness-0 invert" />
+                </div>
+                <div>
+                  <div className="text-white font-medium text-sm">{cat}</div>
+                  <div className="text-white/70 text-xs">Browse {cat}</div>
+                </div>
+              </Link>
+            ))}
 
             <Link 
               href="/projects" 

@@ -117,6 +117,11 @@ create policy "chapter_admins_delete_event" on public.events
 
 -- PROJECTS
 -- Keep public read of active projects; restrict manage to super admins only for now
+drop policy if exists "public_select_active_projects" on public.projects;
+create policy "public_select_active_projects" on public.projects
+  for select to public
+  using (status = 'active');
+
 drop policy if exists "super_admins_insert_project" on public.projects;
 create policy "super_admins_insert_project" on public.projects
   for insert to authenticated
@@ -131,6 +136,12 @@ create policy "super_admins_update_project" on public.projects
 drop policy if exists "super_admins_delete_project" on public.projects;
 create policy "super_admins_delete_project" on public.projects
   for delete to authenticated
+  using (public.is_super_admin());
+
+-- Allow super admins to select all projects in admin views
+drop policy if exists "super_admins_select_projects" on public.projects;
+create policy "super_admins_select_projects" on public.projects
+  for select to authenticated
   using (public.is_super_admin());
 
 -- Optional future: if you add projects.chapter_id, mirror the events policies with public.is_chapter_admin(chapter_id)

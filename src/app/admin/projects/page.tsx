@@ -57,17 +57,29 @@ export default function AdminProjectsPage() {
           options.search = searchTerm;
         }
 
-        const response = await getProjects(options);
-        // Scope by chapter admin membership if needed (projects may not be chapter-scoped; keep for parity)
-        try {
-          const supabase = createClientComponentClient();
-          const { data: { session } } = await supabase.auth.getSession();
-          const rolesRes = await fetch('/api/auth/roles', { headers: { Authorization: `Bearer ${session?.access_token || ''}` } })
-          const roles = rolesRes.ok ? await rolesRes.json() : { isSuperAdmin: false, chapterIds: [] }
-          const scoped = roles.isSuperAdmin ? response.projects : response.projects
-          setProjects(scoped);
-          setTotalCount(scoped.length);
-        } catch {
+        // Prefer server route to ensure super admins can see all projects via service role
+        const supabase = createClientComponentClient();
+        const { data: { session } } = await supabase.auth.getSession();
+        const res = await fetch('/api/admin/projects/list', { headers: { Authorization: `Bearer ${session?.access_token || ''}` } })
+        if (res.ok) {
+          const json = await res.json()
+          let list = (json.projects as Project[]) || []
+          // Apply client-side filters
+          if (filterType !== 'all') {
+            list = list.filter(p => (p.project_type || 'other') === filterType)
+          }
+          if (filterCategory !== 'all') {
+            list = list.filter(p => (p.category || '').toLowerCase() === filterCategory.toLowerCase())
+          }
+          if (searchTerm) {
+            const q = searchTerm.toLowerCase()
+            list = list.filter(p => p.title.toLowerCase().includes(q) || (p.description || '').toLowerCase().includes(q))
+          }
+          setProjects(list)
+          setTotalCount(list.length)
+        } else {
+          // Fallback to client query
+          const response = await getProjects(options);
           setProjects(response.projects);
           setTotalCount(response.total);
         }

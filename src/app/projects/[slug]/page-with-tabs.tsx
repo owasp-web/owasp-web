@@ -138,6 +138,46 @@ function TabContent({ content }: TabContentProps) {
 
   if (!content) return null;
 
+  // Allow JSON sections with optional buttons; else treat as markdown-ish text
+  let asSections: any[] | null = null
+  try {
+    const parsed = JSON.parse(content)
+    if (Array.isArray(parsed)) asSections = parsed
+  } catch {}
+
+  if (asSections) {
+    // Styled sections with slight layout variation
+    return (
+      <div className="space-y-6">
+        {asSections.map((section: any, index: number) => {
+          const flip = index % 3 === 1
+          return (
+            <div key={index} className={`bg-white rounded-lg border border-gray-200 p-6 ${flip ? 'shadow-sm' : ''}`}>
+              {section.title && (
+                <h3 className="font-['Barlow'] font-bold text-[#101820] text-xl mb-3">{section.title}</h3>
+              )}
+              {section.content && (
+                <div className="font-['Poppins'] text-[#757575] leading-relaxed">
+                  {renderRichContent(section.content)}
+                </div>
+              )}
+              {section.buttons && Array.isArray(section.buttons) && section.buttons.length > 0 && (
+                <div className="mt-4 flex flex-wrap gap-3">
+                  {section.buttons.map((btn: any, i: number) => (
+                    <a key={i} href={btn.url} target="_blank" rel="noopener noreferrer"
+                       className={`${btn.style === 'secondary' ? 'border border-[#003594] text-[#003594] hover:bg-blue-50' : 'bg-[#003594] text-white hover:bg-[#002d7a]'} px-4 py-2 rounded-lg transition-colors text-sm`}>
+                      {btn.label}
+                    </a>
+                  ))}
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </div>
+    )
+  }
+
   return (
     <div className="prose prose-lg max-w-none space-y-6">
       {content.split('\n\n').map((paragraph, index) => {
