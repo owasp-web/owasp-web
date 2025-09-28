@@ -68,7 +68,13 @@ export default function AdminChaptersPage() {
     }
 
     try {
-      await adminService.deleteChapter(id)
+      const supabase = createClientComponentClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch(`/api/admin/chapters/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${session?.access_token || ''}` }
+      })
+      if (!res.ok) throw new Error((await res.json()).error || 'Failed')
       fetchChapters();
     } catch (err) {
       console.error('Error deleting chapter:', err);

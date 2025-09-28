@@ -182,6 +182,67 @@ export default function ProjectEditPage({ params }: ProjectEditPageProps) {
     writeSections(tabId, sections);
   };
 
+  // Project admins state for this page
+  const [projAdmins, setProjAdmins] = useState<Array<{ id: string; email: string; user_id: string | null; created_at: string }>>([])
+  const [projAdminsLoading, setProjAdminsLoading] = useState<boolean>(false)
+  const [projAdminsError, setProjAdminsError] = useState<string | null>(null)
+  const [newProjAdminEmail, setNewProjAdminEmail] = useState<string>('')
+
+  const fetchProjectAdmins = async () => {
+    try {
+      setProjAdminsLoading(true)
+      const supabase = createClientComponentClient()
+      const { data: { session } } = await supabase.auth.getSession()
+      const res = await fetch(`/api/admin/projects/${project!.id}/admins`, { headers: { Authorization: `Bearer ${session?.access_token || ''}` } })
+      if (!res.ok) throw new Error((await res.json()).error || 'Failed to load project admins')
+      const json = await res.json()
+      setProjAdmins((json.admins as any[]) || [])
+    } catch (e: any) {
+      setProjAdminsError(e?.message || 'Failed to load project admins')
+    } finally {
+      setProjAdminsLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    if (activeTab === 'admins' && project?.id) fetchProjectAdmins()
+  }, [activeTab, project?.id])
+
+  const handleAddProjectAdmin = async () => {
+    if (!newProjAdminEmail.trim()) return
+    try {
+      const supabase = createClientComponentClient()
+      const { data: { session } } = await supabase.auth.getSession()
+      const res = await fetch(`/api/admin/projects/${project!.id}/admins`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token || ''}` },
+        body: JSON.stringify({ email: newProjAdminEmail.trim() })
+      })
+      if (!res.ok) throw new Error((await res.json()).error || 'Failed')
+      setNewProjAdminEmail('')
+      fetchProjectAdmins()
+    } catch (e: any) {
+      setProjAdminsError(e?.message || 'Failed to add admin')
+    }
+  }
+
+  const handleRemoveProjectAdmin = async (admin: { id?: string; email?: string }) => {
+    if (!confirm('Remove this project admin?')) return
+    try {
+      const supabase = createClientComponentClient()
+      const { data: { session } } = await supabase.auth.getSession()
+      const res = await fetch(`/api/admin/projects/${project!.id}/admins`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token || ''}` },
+        body: JSON.stringify({ id: admin.id, email: admin.email })
+      })
+      if (!res.ok) throw new Error((await res.json()).error || 'Failed')
+      fetchProjectAdmins()
+    } catch (e: any) {
+      setProjAdminsError(e?.message || 'Failed to remove admin')
+    }
+  }
+
   // Links management per section
   const addLink = (tabId: string, sectionIndex: number) => {
     const tab = (project?.tabs as any[])?.find((t: any) => t.id === tabId);
@@ -273,6 +334,7 @@ export default function ProjectEditPage({ params }: ProjectEditPageProps) {
   const tabs = [
     { id: 'overview', label: 'Overview' },
     { id: 'content', label: 'Tab Content' },
+    { id: 'admins', label: 'Admins' },
     { id: 'resources', label: 'Resources' },
     { id: 'metadata', label: 'Metadata' },
     { id: 'relationships', label: 'Relationships' }
@@ -513,6 +575,55 @@ export default function ProjectEditPage({ params }: ProjectEditPageProps) {
               ) : (
                 <div className="text-sm text-gray-600">No custom tabs yet. Click “Add Tab”.</div>
               )}
+            </div>
+          )}
+
+          {activeTab === 'admins' && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold">Project Admins</h3>
+                <div className="flex gap-2">
+                  <input
+                    type="email"
+                    placeholder="admin@example.com"
+                    value={newProjAdminEmail}
+                    onChange={(e) => setNewProjAdminEmail(e.target.value)}
+                    className="border rounded px-3 py-2"
+                  />
+                  <button onClick={handleAddProjectAdmin} className="px-3 py-2 bg-[#003594] text-white rounded-md hover:bg-[#0056b3]">
+                    Add Admin
+                  </button>
+                </div>
+              </div>
+              {projAdminsError && (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded">{projAdminsError}</div>
+              )}
+              <div className="border rounded-lg">
+                <div className="grid grid-cols-3 bg-gray-50 px-4 py-2 text-sm font-medium text-gray-600">
+                  <div>Email</div>
+                  <div>User ID</div>
+                  <div className="text-right">Actions</div>
+                </div>
+                {projAdminsLoading ? (
+                  <div className="px-4 py-3 text-sm text-gray-600">Loading…</div>
+                ) : (
+                  <div>
+                    {projAdmins.length === 0 && (
+                      <div className="px-4 py-3 text-sm text-gray-600">No admins yet.</div>
+                    )}
+                    {projAdmins.map((a) => (
+                      <div key={a.id} className="grid grid-cols-3 px-4 py-2 border-t text-sm items-center">
+                        <div className="truncate">{a.email}</div>
+                        <div className="truncate text-gray-600">{a.user_id || '—'}</div>
+                        <div className="text-right">
+                          <button onClick={() => handleRemoveProjectAdmin({ id: a.id, email: a.email })} className="text-red-600 hover:text-red-800">Remove</button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <p className="text-xs text-gray-500">Admins can edit this project via RLS. Super admins can always edit.</p>
             </div>
           )}
 
