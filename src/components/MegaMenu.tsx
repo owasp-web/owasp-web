@@ -226,9 +226,24 @@ export default function MegaMenu({ isOpen, onClose, menuType }: MegaMenuProps) {
       <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-6 lg:gap-8">
         {/* Featured Projects */}
         <div className="md:col-span-8">
-          <h3 className="font-['Barlow'] font-medium text-lg text-white mb-6">Featured Projects</h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-['Barlow'] font-medium text-lg text-white">Featured Projects</h3>
+            <div className="hidden md:block">
+              <input
+                type="text"
+                placeholder="Search projects..."
+                onKeyDown={async (e) => {
+                  if (e.key !== 'Enter') return
+                  const q = (e.currentTarget as HTMLInputElement).value.trim()
+                  const url = q ? `/projects?view=all&query=${encodeURIComponent(q)}` : '/projects?view=all'
+                  window.location.href = url
+                }}
+                className="px-3 py-2 rounded-lg bg-white/10 placeholder-white/70 text-white text-sm outline-none border border-white/20 focus:border-[#00A7E1]"
+              />
+            </div>
+          </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {featuredProjects.map((p) => (
+            {featuredProjects.slice(0, 4).map((p) => (
               <Link
                 key={p.id}
                 href={`/projects/${p.slug}`}

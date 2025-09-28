@@ -149,23 +149,24 @@ function AllProjectsContent() {
       try {
         setLoading(true);
         const offset = (currentPage - 1) * projectsPerPage;
-        
-        let projectTypeFilter: string | undefined;
-        if (filterType === 'level' && selectedLevel !== 'all') {
-          projectTypeFilter = selectedLevel;
-        }
 
-        const response = await getProjects({
-          limit: projectsPerPage,
-          offset: offset,
-          project_type: projectTypeFilter,
-          search: searchQuery || undefined,
-        });
-        
-        setProjects(response.projects);
-        setTotalProjects(response.total);
+        const params = new URLSearchParams();
+        params.set('limit', String(projectsPerPage));
+        params.set('offset', String(offset));
+        if (filterType === 'level' && selectedLevel !== 'all') {
+          params.set('project_type', selectedLevel);
+        }
+        if (searchQuery) params.set('search', searchQuery);
+
+        const res = await fetch(`/api/public/projects/list?${params.toString()}`, { next: { revalidate: 60 } });
+        if (!res.ok) throw new Error('Failed');
+        const json = await res.json();
+        setProjects(json.projects as Project[]);
+        setTotalProjects(json.total as number);
       } catch (error) {
         console.error('Error fetching projects:', error);
+        setProjects([]);
+        setTotalProjects(0);
       } finally {
         setLoading(false);
       }
