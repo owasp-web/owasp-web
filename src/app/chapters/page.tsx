@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { Suspense, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -42,7 +42,7 @@ function FigmaButton({
   return null;
 }
 
-export default function ChaptersPage() {
+function ChaptersPageContent() {
   const [expandedRegions, setExpandedRegions] = useState<Set<string>>(new Set());
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -285,3 +285,11 @@ export default function ChaptersPage() {
     </div>
   );
 } 
+
+export default function ChaptersPage() {
+  return (
+    <Suspense fallback={<div />}> 
+      <ChaptersPageContent />
+    </Suspense>
+  );
+}
