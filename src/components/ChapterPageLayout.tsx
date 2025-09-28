@@ -91,6 +91,9 @@ export default function ChapterPageLayout({ chapter }: ChapterPageLayoutProps) {
                     Contact Chapter
                   </a>
                 )}
+                <Link href={`/chapters/${chapter.slug}/events`} className="border-2 border-white text-white px-6 py-3 rounded-lg font-semibold hover:bg-white hover:text-[#003594] transition-colors">
+                  View Chapter Events
+                </Link>
               </div>
             </div>
           </div>
