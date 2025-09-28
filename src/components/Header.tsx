@@ -231,8 +231,32 @@ export default function Header() {
     }
   };
 
+  const [isHiddenOnMobile, setIsHiddenOnMobile] = useState(false);
+  const [lastScrollY, setLastScrollY] = useState(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentY = window.scrollY || 0;
+      const isMobile = window.innerWidth < 1024; // only below lg
+      if (!isMobile) {
+        setIsHiddenOnMobile(false);
+        setLastScrollY(currentY);
+        return;
+      }
+      const delta = currentY - lastScrollY;
+      const threshold = 6; // tiny threshold to avoid jitter
+      if (Math.abs(delta) > threshold) {
+        setIsHiddenOnMobile(delta > 0 && currentY > 40);
+        setLastScrollY(currentY);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll as any);
+  }, [lastScrollY]);
+
   return (
-    <header className="backdrop-blur-[5px] backdrop-filter bg-[#101820]/95 sticky top-0 w-full z-50 border-b border-white/10 shadow-sm">
+    <header className={`backdrop-blur-[5px] backdrop-filter bg-[#101820]/95 sticky top-0 w-full z-50 border-b border-white/10 shadow-sm transition-transform duration-300 ease-out ${isHiddenOnMobile ? 'translate-y-[-100%] lg:translate-y-0' : 'translate-y-0'}`}>
       <div className="flex flex-row items-center h-20">
         <div className="box-border flex flex-row h-20 items-center justify-between px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-[120px] py-0 relative w-full max-w-[1440px] mx-auto">
           
