@@ -18,14 +18,14 @@ export class AdminService {
   }
 
   async getEvent(id: string): Promise<Event | null> {
-    const { data, error } = await this.getSupabase()
-      .from('events')
-      .select('*')
-      .eq('id', id)
-      .single()
-    
-    if (error) throw error
-    return data as unknown as Event
+    const supabase = this.getSupabase()
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) throw new Error('Not authenticated')
+    const res = await fetch(`/api/admin/events/${id}`, {
+      headers: { Authorization: `Bearer ${session.access_token}` }
+    })
+    if (!res.ok) throw new Error((await res.json()).error || 'Failed to load event')
+    return (await res.json()).event as Event
   }
 
   async createEvent(eventData: EventFormData): Promise<Event> {
@@ -40,15 +40,16 @@ export class AdminService {
   }
 
   async updateEvent(id: string, eventData: Partial<EventFormData>): Promise<Event> {
-    const { data, error } = await this.getSupabase()
-      .from('events')
-      .update(eventData)
-      .eq('id', id)
-      .select()
-      .single()
-    
-    if (error) throw error
-    return data as unknown as Event
+    const supabase = this.getSupabase()
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) throw new Error('Not authenticated')
+    const res = await fetch(`/api/admin/events/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+      body: JSON.stringify(eventData)
+    })
+    if (!res.ok) throw new Error((await res.json()).error || 'Failed to update event')
+    return (await res.json()).event as Event
   }
 
   async deleteEvent(id: string): Promise<void> {
