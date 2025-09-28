@@ -67,8 +67,7 @@ export default function AdminChaptersPage() {
     }
 
     try {
-      // TODO: Implement delete functionality
-      console.log('Delete chapter:', id);
+      await adminService.deleteChapter(id)
       fetchChapters();
     } catch (err) {
       console.error('Error deleting chapter:', err);

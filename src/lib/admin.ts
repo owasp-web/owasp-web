@@ -167,7 +167,7 @@ export class AdminService {
       .update(filtered)
       .eq('id', chapterId)
       .select('*')
-      .single()
+      .maybeSingle()
     if (error) {
       const msg = String(error.message || '')
       if (msg.includes('column') && msg.includes('tabs')) {
@@ -175,7 +175,21 @@ export class AdminService {
       }
       throw error
     }
+    if (!data) {
+      throw new Error('No permission or chapter not found (RLS blocked update).')
+    }
     return data
+  }
+
+  async deleteChapter(chapterId: string): Promise<void> {
+    const supabase = this.getSupabase()
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) throw new Error('Not authenticated')
+    const { error } = await supabase
+      .from('chapters')
+      .delete()
+      .eq('id', chapterId)
+    if (error) throw error
   }
 
   // Create event for a chapter (RLS enforced)
