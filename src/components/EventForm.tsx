@@ -25,7 +25,7 @@ export default function EventForm({ initialData, onSubmit, loading }: EventFormP
     registration_url: initialData?.registration_url || '',
     description: initialData?.description || '',
     is_featured: initialData?.is_featured || false,
-    status: initialData?.status || 'draft'
+    status: initialData?.status || 'published'
   })
 
   const [errors, setErrors] = useState<Record<string, string>>({})

@@ -39,6 +39,7 @@ export async function GET(req: NextRequest) {
   const chapterIdParam = url.searchParams.get('chapterId') || undefined
 
   // Build events query using service role
+  // Return both draft and published for chapter admins (and super admins)
   let query = supabase.from('events').select('*').order('created_at', { ascending: false })
   if (isSuperAdmin) {
     if (chapterIdParam) query = query.eq('chapter_id', chapterIdParam)
