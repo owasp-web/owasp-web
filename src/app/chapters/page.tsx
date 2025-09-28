@@ -112,7 +112,6 @@ function ChaptersPageContent() {
       <div className="bg-[#101820] relative w-full overflow-hidden">
         <ResponsiveContainer size="full" className="py-12 sm:py-16 lg:py-20">
           <div className="flex flex-col lg:flex-row gap-8 lg:gap-20 items-start justify-start relative w-full">
-        <div
             <div className="flex-1 flex flex-col items-start justify-between w-full">
               <div className="space-y-4 lg:space-y-6 w-full">
                 <div className="font-['Barlow'] font-medium text-white text-3xl sm:text-4xl md:text-5xl lg:text-[56px] xl:text-[64px] leading-tight xl:leading-[64px] tracking-tight">
