@@ -148,9 +148,23 @@ export class AdminService {
       if (v !== undefined) sanitized[k] = v
     })
 
+    // Discover available columns on this table by selecting the row first
+    const { data: currentRow, error: selectError } = await supabase
+      .from('chapters')
+      .select('*')
+      .eq('id', chapterId)
+      .single()
+    if (selectError) throw selectError
+
+    const allowedKeys = new Set(Object.keys(currentRow || {}))
+    const filtered: Record<string, any> = {}
+    Object.keys(sanitized).forEach((k) => {
+      if (allowedKeys.has(k)) filtered[k] = sanitized[k]
+    })
+
     const { data, error } = await supabase
       .from('chapters')
-      .update(sanitized)
+      .update(filtered)
       .eq('id', chapterId)
       .select('*')
       .single()
