@@ -50,13 +50,32 @@ export default function ProjectEditPage({ params }: ProjectEditPageProps) {
 
   const handleSave = async () => {
     if (!project) return;
-    
     setSaving(true);
     try {
-      // Here you would implement the save functionality
-      // For now, just simulate the save
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      alert('Project saved successfully!');
+      const supabase = createClientComponentClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Not authenticated');
+
+      // Ensure only valid columns are sent
+      const { data: currentRow, error: selectError } = await supabase
+        .from('projects')
+        .select('*')
+        .eq('id', project.id)
+        .single();
+      if (selectError) throw selectError;
+
+      const allowedKeys = new Set(Object.keys(currentRow || {}));
+      const sanitized: Record<string, any> = {};
+      Object.entries(project).forEach(([k, v]) => {
+        if (allowedKeys.has(k) && v !== undefined) sanitized[k] = v;
+      });
+
+      const { error } = await supabase
+        .from('projects')
+        .update(sanitized)
+        .eq('id', project.id);
+      if (error) throw error;
+      alert('Project saved successfully.');
     } catch (error) {
       console.error('Error saving project:', error);
       alert('Error saving project');
@@ -68,6 +87,120 @@ export default function ProjectEditPage({ params }: ProjectEditPageProps) {
   const updateProject = (field: keyof Project, value: any) => {
     if (!project) return;
     setProject({ ...project, [field]: value });
+  };
+
+  // Custom Tabs Editor helpers
+  const ensureTabsArray = () => {
+    if (!project) return;
+    if (!Array.isArray((project as any).tabs)) {
+      updateProject('tabs', [] as any);
+    }
+  };
+
+  const addCustomTab = () => {
+    if (!project) return;
+    const nextOrder = ((project.tabs as any[])?.length || 0) + 1;
+    const newTab: any = {
+      id: `tab_${Date.now()}`,
+      name: 'New Tab',
+      order: nextOrder,
+      content: JSON.stringify([{ title: 'Section', content: 'Add content here...', buttons: [] }])
+    };
+    updateProject('tabs', ([...(project.tabs as any[]) || [], newTab]) as any);
+  };
+
+  const removeCustomTab = (tabId: string) => {
+    if (!project || !project.tabs) return;
+    updateProject('tabs', (project.tabs as any[]).filter((t: any) => t.id === undefined || t.id !== tabId) as any);
+  };
+
+  const renameCustomTab = (tabId: string, name: string) => {
+    if (!project || !project.tabs) return;
+    updateProject('tabs', (project.tabs as any[]).map((t: any) => t.id === tabId ? { ...t, name } : t) as any);
+  };
+
+  const moveCustomTab = (tabId: string, delta: number) => {
+    if (!project || !project.tabs) return;
+    const tabs = [...(project.tabs as any[])];
+    const idx = tabs.findIndex((t: any) => t.id === tabId);
+    if (idx < 0) return;
+    const swapIdx = idx + delta;
+    if (swapIdx < 0 || swapIdx >= tabs.length) return;
+    const tmp = tabs[idx];
+    tabs[idx] = tabs[swapIdx];
+    tabs[swapIdx] = tmp;
+    tabs.forEach((t: any, i: number) => t.order = i + 1);
+    updateProject('tabs', tabs as any);
+  };
+
+  const parseSections = (tab: any): any[] => {
+    try {
+      const parsed = JSON.parse(tab.content || '[]');
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  };
+
+  const writeSections = (tabId: string, sections: any[]) => {
+    if (!project || !project.tabs) return;
+    const content = JSON.stringify(sections);
+    updateProject('tabs', (project.tabs as any[]).map((t: any) => t.id === tabId ? { ...t, content } : t) as any);
+  };
+
+  const addSection = (tabId: string) => {
+    const tab = (project?.tabs as any[])?.find((t: any) => t.id === tabId);
+    if (!tab) return;
+    const sections = parseSections(tab);
+    sections.push({ title: 'New Section', content: 'Describe this section...', buttons: [] });
+    writeSections(tabId, sections);
+  };
+
+  const removeSection = (tabId: string, index: number) => {
+    const tab = (project?.tabs as any[])?.find((t: any) => t.id === tabId);
+    if (!tab) return;
+    const sections = parseSections(tab);
+    sections.splice(index, 1);
+    writeSections(tabId, sections);
+  };
+
+  const updateSection = (tabId: string, index: number, key: 'title' | 'content', value: string) => {
+    const tab = (project?.tabs as any[])?.find((t: any) => t.id === tabId);
+    if (!tab) return;
+    const sections = parseSections(tab);
+    sections[index] = { ...(sections[index] || {}), [key]: value };
+    writeSections(tabId, sections);
+  };
+
+  const addButton = (tabId: string, sectionIndex: number) => {
+    const tab = (project?.tabs as any[])?.find((t: any) => t.id === tabId);
+    if (!tab) return;
+    const sections = parseSections(tab);
+    const buttons = Array.isArray(sections[sectionIndex]?.buttons) ? sections[sectionIndex].buttons : [];
+    buttons.push({ label: 'Learn More', url: 'https://example.com', style: 'primary' });
+    sections[sectionIndex] = { ...(sections[sectionIndex] || {}), buttons };
+    writeSections(tabId, sections);
+  };
+
+  const updateButton = (tabId: string, sectionIndex: number, buttonIndex: number, key: 'label' | 'url' | 'style', value: string) => {
+    const tab = (project?.tabs as any[])?.find((t: any) => t.id === tabId);
+    if (!tab) return;
+    const sections = parseSections(tab);
+    const buttons = Array.isArray(sections[sectionIndex]?.buttons) ? sections[sectionIndex].buttons : [];
+    if (!buttons[buttonIndex]) return;
+    (buttons[buttonIndex] as any)[key] = value;
+    sections[sectionIndex] = { ...(sections[sectionIndex] || {}), buttons };
+    writeSections(tabId, sections);
+  };
+
+  const removeButton = (tabId: string, sectionIndex: number, buttonIndex: number) => {
+    const tab = (project?.tabs as any[])?.find((t: any) => t.id === tabId);
+    if (!tab) return;
+    const sections = parseSections(tab);
+    const buttons = Array.isArray(sections[sectionIndex]?.buttons) ? sections[sectionIndex].buttons : [];
+    buttons.splice(buttonIndex, 1);
+    sections[sectionIndex] = { ...(sections[sectionIndex] || {}), buttons };
+    writeSections(tabId, sections);
   };
 
   if (loading) {
@@ -242,57 +375,85 @@ export default function ProjectEditPage({ params }: ProjectEditPageProps) {
 
           {activeTab === 'content' && (
             <div className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Overview Tab Content
-                </label>
-                <textarea
-                  value={project.tab_overview_content || ''}
-                  onChange={(e) => updateProject('tab_overview_content', e.target.value)}
-                  rows={6}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2"
-                  placeholder="Content for the Overview tab..."
-                />
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold">Custom Tabs</h3>
+                <button onClick={() => { ensureTabsArray(); addCustomTab(); }} className="px-3 py-2 bg-[#003594] text-white rounded-md hover:bg-[#0056b3]">Add Tab</button>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Documentation Tab Content
-                </label>
-                <textarea
-                  value={project.tab_documentation_content || ''}
-                  onChange={(e) => updateProject('tab_documentation_content', e.target.value)}
-                  rows={6}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2"
-                  placeholder="Content for the Documentation tab..."
-                />
-              </div>
+              <p className="text-sm text-gray-600">Each tab’s content is a list of sections with optional buttons. Buttons appear as styled links on the project page.</p>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Downloads & Usage Tab Content
-                </label>
-                <textarea
-                  value={project.tab_downloads_content || ''}
-                  onChange={(e) => updateProject('tab_downloads_content', e.target.value)}
-                  rows={6}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2"
-                  placeholder="Content for the Downloads & Usage tab..."
-                />
-              </div>
+              {(project.tabs as any[])?.length ? (
+                <div className="space-y-6">
+                  {(project.tabs as any[]).sort((a, b) => a.order - b.order).map((tab: any) => {
+                    const sections = parseSections(tab);
+                    return (
+                      <div key={tab.id} className="border rounded-lg p-4">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-2">
+                            <input value={tab.name} onChange={(e) => renameCustomTab(tab.id, e.target.value)} className="border rounded px-2 py-1" />
+                            <span className="text-xs text-gray-500">order {tab.order}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <button onClick={() => moveCustomTab(tab.id, -1)} className="px-2 py-1 border rounded">↑</button>
+                            <button onClick={() => moveCustomTab(tab.id, 1)} className="px-2 py-1 border rounded">↓</button>
+                            <button onClick={() => removeCustomTab(tab.id)} className="px-2 py-1 border rounded text-red-600">Delete</button>
+                          </div>
+                        </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Community Tab Content
-                </label>
-                <textarea
-                  value={project.tab_community_content || ''}
-                  onChange={(e) => updateProject('tab_community_content', e.target.value)}
-                  rows={6}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2"
-                  placeholder="Content for the Community tab..."
-                />
-              </div>
+                        <div className="space-y-4">
+                          {sections.map((section, idx) => (
+                            <div key={idx} className="bg-gray-50 border rounded p-3">
+                              <div className="flex items-center justify-between mb-2">
+                                <input
+                                  value={section.title || ''}
+                                  onChange={(e) => updateSection(tab.id, idx, 'title', e.target.value)}
+                                  placeholder="Section title"
+                                  className="border rounded px-2 py-1 w-1/2"
+                                />
+                                <button onClick={() => removeSection(tab.id, idx)} className="px-2 py-1 border rounded text-red-600">Remove</button>
+                              </div>
+                              <textarea
+                                value={section.content || ''}
+                                onChange={(e) => updateSection(tab.id, idx, 'content', e.target.value)}
+                                rows={4}
+                                className="w-full border rounded px-2 py-1"
+                                placeholder="Section content (supports URLs, OWASP A01..A10, [YOUTUBE]...[/YOUTUBE])"
+                              />
+
+                              <div className="mt-3">
+                                <div className="flex items-center justify-between mb-2">
+                                  <h4 className="font-medium">Buttons</h4>
+                                  <button onClick={() => addButton(tab.id, idx)} className="px-2 py-1 border rounded">Add Button</button>
+                                </div>
+                                <div className="space-y-2">
+                                  {(section.buttons || []).map((btn: any, bIdx: number) => (
+                                    <div key={bIdx} className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                                      <input value={btn.label || ''} onChange={(e) => updateButton(tab.id, idx, bIdx, 'label', e.target.value)} placeholder="Label" className="border rounded px-2 py-1" />
+                                      <input value={btn.url || ''} onChange={(e) => updateButton(tab.id, idx, bIdx, 'url', e.target.value)} placeholder="https://..." className="border rounded px-2 py-1" />
+                                      <div className="flex items-center gap-2">
+                                        <select value={btn.style || 'primary'} onChange={(e) => updateButton(tab.id, idx, bIdx, 'style', e.target.value)} className="border rounded px-2 py-1">
+                                          <option value="primary">primary</option>
+                                          <option value="secondary">secondary</option>
+                                          <option value="link">link</option>
+                                        </select>
+                                        <button onClick={() => removeButton(tab.id, idx, bIdx)} className="px-2 py-1 border rounded text-red-600">Remove</button>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+
+                          <button onClick={() => addSection(tab.id)} className="px-3 py-2 border rounded">Add Section</button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="text-sm text-gray-600">No custom tabs yet. Click “Add Tab”.</div>
+              )}
             </div>
           )}
 
