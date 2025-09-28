@@ -69,21 +69,25 @@ function getStatusColor(status: string) {
 export default function MobileMenu({ isOpen, onClose, navigationItems }: MobileMenuProps) {
   const [query, setQuery] = useState('')
   const [openSection, setOpenSection] = useState<string | null>('')
+  const [activeTab, setActiveTab] = useState<'Projects' | 'Chapters' | 'Events' | 'About'>('Projects')
 
   // Projects search state
   const [projectQuery, setProjectQuery] = useState('')
   const [projectLoading, setProjectLoading] = useState(false)
   const [projectResults, setProjectResults] = useState<Project[]>([])
+  const [projectsPrefetched, setProjectsPrefetched] = useState(false)
 
   // Chapters search state
   const [chapterQuery, setChapterQuery] = useState('')
   const [chapterLoading, setChapterLoading] = useState(false)
   const [chapterResults, setChapterResults] = useState<Array<{ id: string; name: string; slug: string }>>([])
+  const [chaptersPrefetched, setChaptersPrefetched] = useState(false)
 
   // Events search state (endpoint has no search param, so client-filter)
   const [eventQuery, setEventQuery] = useState('')
   const [eventLoading, setEventLoading] = useState(false)
   const [eventsAll, setEventsAll] = useState<Array<{ id: string; title: string; location?: string; date?: string; month?: string; year?: string }>>([])
+  const [eventsPrefetched, setEventsPrefetched] = useState(false)
 
   useEffect(() => {
     // Lock scroll when menu is open
@@ -97,10 +101,7 @@ export default function MobileMenu({ isOpen, onClose, navigationItems }: MobileM
   // Debounced project search (server-side)
   const fetchProjects = useDebouncedCallback(async (term: string) => {
     const t = term.trim()
-    if (!t) {
-      setProjectResults([])
-      return
-    }
+    if (!t) { return }
     try {
       setProjectLoading(true)
       const params = new URLSearchParams()
@@ -125,6 +126,27 @@ export default function MobileMenu({ isOpen, onClose, navigationItems }: MobileM
 
   useEffect(() => { fetchProjects(projectQuery) }, [projectQuery, fetchProjects])
 
+  // Prefetch default projects so the tab is pre-populated
+  const prefetchDefaultProjects = async () => {
+    try {
+      setProjectLoading(true)
+      const params = new URLSearchParams()
+      params.set('limit', '12')
+      const res = await fetch(`/api/public/projects/list?${params.toString()}`, { next: { revalidate: 60 } })
+      if (res.ok) {
+        const json = await res.json()
+        setProjectResults((json.projects as Project[]) || [])
+      } else {
+        setProjectResults(sampleProjects.slice(0, 12))
+      }
+    } catch {
+      setProjectResults(sampleProjects.slice(0, 12))
+    } finally {
+      setProjectLoading(false)
+      setProjectsPrefetched(true)
+    }
+  }
+
   // Debounced chapters search (server-side)
   const fetchChapters = useDebouncedCallback(async (term: string) => {
     const params = new URLSearchParams()
@@ -145,27 +167,48 @@ export default function MobileMenu({ isOpen, onClose, navigationItems }: MobileM
   }, 250)
 
   useEffect(() => {
-    if (openSection === 'Chapters') fetchChapters(chapterQuery)
-  }, [chapterQuery, openSection, fetchChapters])
+    if (activeTab === 'Chapters') fetchChapters(chapterQuery)
+  }, [chapterQuery, activeTab, fetchChapters])
+
+  const prefetchDefaultChapters = async () => {
+    try {
+      setChapterLoading(true)
+      const res = await fetch('/api/public/chapters/list?limit=30', { next: { revalidate: 60 } })
+      if (res.ok) {
+        const json = await res.json()
+        const list = (json.chapters as any[]) || []
+        setChapterResults(list.map(c => ({ id: c.id, name: c.name, slug: c.slug })))
+      }
+    } catch {}
+    finally {
+      setChapterLoading(false)
+      setChaptersPrefetched(true)
+    }
+  }
 
   // Events load once then client-filter
-  useEffect(() => {
-    const load = async () => {
-      if (openSection !== 'Events' || eventsAll.length > 0) return
-      try {
-        setEventLoading(true)
-        const res = await fetch('/api/public/events/list?limit=30', { next: { revalidate: 60 } })
-        if (!res.ok) throw new Error('Failed to fetch events')
+  const prefetchDefaultEvents = async () => {
+    try {
+      setEventLoading(true)
+      const res = await fetch('/api/public/events/list?limit=30', { next: { revalidate: 60 } })
+      if (res.ok) {
         const json = await res.json()
         setEventsAll((json.events as any[]) || [])
-      } catch {
-        setEventsAll([])
-      } finally {
-        setEventLoading(false)
       }
+    } catch {}
+    finally {
+      setEventLoading(false)
+      setEventsPrefetched(true)
     }
-    load()
-  }, [openSection, eventsAll.length])
+  }
+
+  // Prefetch defaults when the menu opens
+  useEffect(() => {
+    if (!isOpen) return
+    if (!projectsPrefetched) prefetchDefaultProjects()
+    if (!chaptersPrefetched) prefetchDefaultChapters()
+    if (!eventsPrefetched) prefetchDefaultEvents()
+  }, [isOpen])
 
   const eventResults = useMemo(() => {
     const t = eventQuery.trim().toLowerCase()
@@ -228,26 +271,11 @@ export default function MobileMenu({ isOpen, onClose, navigationItems }: MobileM
             ))}
           </div>
 
-          {/* Accordions with in-section search/results */}
-          <div className="divide-y divide-white/10 rounded-lg overflow-hidden border border-white/10">
-            {navigationItems.map((item) => {
-              const isOpenSection = openSection === item.label
-              return (
-                <div key={item.href} className="bg-[#0b1218]">
-                  <button
-                    onClick={() => setOpenSection(isOpenSection ? null : item.label)}
-                    className="w-full flex items-center justify-between px-4 py-3 text-white/90 hover:bg-white/5"
-                  >
-                    <span className="font-['Poppins'] text-sm">{item.label}</span>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className={`transition-transform ${isOpenSection ? 'rotate-180' : ''}`}>
-                      <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  </button>
-                  {isOpenSection && (
-                    <div className="px-4 pb-4 pt-0 text-sm">
-                      {/* Projects content */}
-                      {item.label === 'Projects' && (
-                        <div>
+          {/* Stage content by active tab */}
+          <div className="bg-[#0b1218] border border-white/10 rounded-lg p-3">
+            {activeTab === 'Projects' && (
+              <div className="text-sm">
+                <div>
                           <div className="flex items-center bg-white/10 rounded-lg p-2 gap-2 mb-3">
                             <Image src={searchIcon} alt="" width={18} height={18} className="opacity-60" />
                             <input
@@ -281,12 +309,13 @@ export default function MobileMenu({ isOpen, onClose, navigationItems }: MobileM
                               View all projects{projectQuery.trim() ? ` for "${projectQuery}"` : ''}
                             </Link>
                           </div>
-                        </div>
-                      )}
+                </div>
+              </div>
+            )}
 
-                      {/* Chapters content */}
-                      {item.label === 'Chapters' && (
-                        <div>
+            {activeTab === 'Chapters' && (
+              <div className="text-sm">
+                <div>
                           <div className="flex items-center bg-white/10 rounded-lg p-2 gap-2 mb-3">
                             <Image src={searchIcon} alt="" width={18} height={18} className="opacity-60" />
                             <input
@@ -313,12 +342,13 @@ export default function MobileMenu({ isOpen, onClose, navigationItems }: MobileM
                               View all chapters
                             </Link>
                           </div>
-                        </div>
-                      )}
+                </div>
+              </div>
+            )}
 
-                      {/* Events content */}
-                      {item.label === 'Events' && (
-                        <div>
+            {activeTab === 'Events' && (
+              <div className="text-sm">
+                <div>
                           <div className="flex items-center bg-white/10 rounded-lg p-2 gap-2 mb-3">
                             <Image src={searchIcon} alt="" width={18} height={18} className="opacity-60" />
                             <input
@@ -346,21 +376,16 @@ export default function MobileMenu({ isOpen, onClose, navigationItems }: MobileM
                               View all events
                             </Link>
                           </div>
-                        </div>
-                      )}
-
-                      {/* About content */}
-                      {item.label === 'About' && (
-                        <div className="space-y-1">
-                          <Link href="/about" onClick={onClose} className="block px-3 py-2 rounded-md text-white/80 hover:text-white hover:bg-white/5">About OWASP</Link>
-                          <Link href="/join-community" onClick={onClose} className="block px-3 py-2 rounded-md text-white/80 hover:text-white hover:bg-white/5">Join Community</Link>
-                        </div>
-                      )}
-                    </div>
-                  )}
                 </div>
-              )
-            })}
+              </div>
+            )}
+
+            {activeTab === 'About' && (
+              <div className="text-sm space-y-1">
+                <Link href="/about" onClick={onClose} className="block px-3 py-2 rounded-md text-white/80 hover:text-white hover:bg-white/5">About OWASP</Link>
+                <Link href="/join-community" onClick={onClose} className="block px-3 py-2 rounded-md text-white/80 hover:text-white hover:bg-white/5">Join Community</Link>
+              </div>
+            )}
           </div>
 
           {/* Action buttons */}
@@ -379,6 +404,21 @@ export default function MobileMenu({ isOpen, onClose, navigationItems }: MobileM
                 Secure My App
               </button>
             </Link>
+          </div>
+        </div>
+        {/* Bottom tabs bar */}
+        <div className="border-t border-white/10 p-2 bg-[#0b1218]">
+          <div className="grid grid-cols-4 gap-2">
+            <button onClick={() => { window.location.href = '/'; onClose() }} className="px-3 py-2 rounded-md text-white/90 bg-white/5 hover:bg-white/10 text-xs font-medium">Home</button>
+            <button onClick={() => setActiveTab('Projects')} className={`px-3 py-2 rounded-md text-xs font-medium ${activeTab === 'Projects' ? 'bg-[#003594] text-white' : 'bg-white/5 text-white/90 hover:bg-white/10'}`}>Projects</button>
+            <button onClick={() => setActiveTab('Chapters')} className={`px-3 py-2 rounded-md text-xs font-medium ${activeTab === 'Chapters' ? 'bg-[#003594] text-white' : 'bg-white/5 text-white/90 hover:bg-white/10'}`}>Chapters</button>
+            <button onClick={() => setActiveTab('Events')} className={`px-3 py-2 rounded-md text-xs font-medium ${activeTab === 'Events' ? 'bg-[#003594] text-white' : 'bg-white/5 text-white/90 hover:bg-white/10'}`}>Events</button>
+          </div>
+          <div className="mt-2 grid grid-cols-4 gap-2">
+            <button onClick={() => setActiveTab('About')} className={`px-3 py-2 rounded-md text-xs font-medium ${activeTab === 'About' ? 'bg-[#003594] text-white' : 'bg-white/5 text-white/90 hover:bg-white/10'}`}>About</button>
+            <Link href="/projects" onClick={onClose} className="px-3 py-2 rounded-md text-xs font-medium bg-white/5 text-white/90 hover:bg-white/10 text-center">All Projects</Link>
+            <Link href="/chapters" onClick={onClose} className="px-3 py-2 rounded-md text-xs font-medium bg-white/5 text-white/90 hover:bg-white/10 text-center">All Chapters</Link>
+            <Link href="/events" onClick={onClose} className="px-3 py-2 rounded-md text-xs font-medium bg-white/5 text-white/90 hover:bg-white/10 text-center">All Events</Link>
           </div>
         </div>
       </div>
