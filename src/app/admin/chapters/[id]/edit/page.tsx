@@ -370,12 +370,12 @@ export default function EditChapterPage({ params }: EditChapterPageProps) {
               <div className="space-y-6">
                 {ensureTabs().map((tab, tIdx) => (
                   <div key={tab.id} className="border rounded-lg p-4">
-                    <div className="flex items-center gap-3 mb-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 mb-3">
                       <input
                         type="text"
                         value={tab.name}
                         onChange={(e) => updateTab(tIdx, { name: e.target.value })}
-                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg"
+                        className="px-3 py-2 border border-gray-300 rounded-lg min-w-0 sm:col-span-7"
                       />
                       <input
                         type="number"
@@ -385,16 +385,16 @@ export default function EditChapterPage({ params }: EditChapterPageProps) {
                         step={1}
                         aria-label="Tab order"
                         title="Tab display order"
-                        className="w-16 px-3 py-2 border border-gray-300 rounded-lg"
+                        className="w-full sm:w-20 px-3 py-2 border border-gray-300 rounded-lg sm:col-span-1"
                       />
-                      <div className="flex gap-1">
+                      <div className="flex gap-1 flex-wrap justify-start sm:justify-center sm:col-span-2">
                         <button type="button" onClick={() => moveTab(tIdx, 'up')} className="px-2 py-2 border rounded">↑</button>
                         <button type="button" onClick={() => moveTab(tIdx, 'down')} className="px-2 py-2 border rounded">↓</button>
                       </div>
-                      <button type="button" onClick={() => deleteTab(tIdx)} className="px-3 py-2 border border-red-300 text-red-700 rounded-lg">Delete</button>
+                      <button type="button" onClick={() => deleteTab(tIdx)} className="px-3 py-2 border border-red-300 text-red-700 rounded-lg sm:col-span-2 justify-self-end">Delete</button>
                     </div>
 
-                    <div className="flex items-center justify-between mb-2">
+                    <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
                       <h3 className="font-semibold text-gray-900">Sections</h3>
                       <button type="button" onClick={() => addSection(tIdx)} className="px-2 py-1 border rounded">Add Section</button>
                     </div>
@@ -404,20 +404,20 @@ export default function EditChapterPage({ params }: EditChapterPageProps) {
                       <div className="space-y-4">
                         {(tab.sections || []).map((sec, sIdx) => (
                           <div key={sIdx} className="rounded border p-3">
-                            <div className="flex items-center gap-3 mb-2">
+                            <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 mb-2 items-center">
                               <input
                                 type="text"
                                 placeholder="Section title"
                                 value={sec.title || ''}
                                 onChange={(e) => updateSection(tIdx, sIdx, { title: e.target.value })}
-                                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg"
+                                className="px-3 py-2 border border-gray-300 rounded-lg min-w-0 sm:col-span-7"
                               />
-                              <div className="flex gap-1">
+                              <div className="flex gap-1 flex-wrap sm:col-span-3">
                                 <button type="button" onClick={() => moveSection(tIdx, sIdx, 'up')} className="px-2 py-1 border rounded">↑</button>
                                 <button type="button" onClick={() => moveSection(tIdx, sIdx, 'down')} className="px-2 py-1 border rounded">↓</button>
                                 <button type="button" onClick={() => insertSectionAt(tIdx, sIdx + 1)} className="px-2 py-1 border rounded">+ Below</button>
                               </div>
-                              <button type="button" onClick={() => deleteSection(tIdx, sIdx)} className="px-2 py-1 border border-red-300 text-red-700 rounded-lg">Remove</button>
+                              <button type="button" onClick={() => deleteSection(tIdx, sIdx)} className="px-2 py-1 border border-red-300 text-red-700 rounded-lg sm:justify-self-end">Remove</button>
                             </div>
                             <textarea
                               rows={4}
