@@ -133,6 +133,7 @@ function AllProjectsContent() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalProjects, setTotalProjects] = useState(0);
   const projectsPerPage = 24;
+  const categoryParam = (searchParams.get('category') || '').trim();
 
   useEffect(() => {
     const view = searchParams.get('view') || 'all';
@@ -157,6 +158,7 @@ function AllProjectsContent() {
           params.set('project_type', selectedLevel);
         }
         if (searchQuery) params.set('search', searchQuery);
+        if (categoryParam) params.set('category', categoryParam);
 
         const res = await fetch(`/api/public/projects/list?${params.toString()}`, { next: { revalidate: 60 } });
         if (!res.ok) throw new Error('Failed');
@@ -173,7 +175,7 @@ function AllProjectsContent() {
     };
 
     fetchProjects();
-  }, [searchQuery, currentPage, filterType, selectedLevel, selectedType]);
+  }, [searchQuery, currentPage, filterType, selectedLevel, selectedType, categoryParam]);
 
   const getCategoryFromType = (category: string) => {
     if (['Code', 'Tool', 'Framework', 'Testing', 'Security', 'Vulnerability Management', 'Web Application Security', 'Mobile Security', 'API Security', 'Cloud Security', 'DevSecOps', 'Authentication', 'Authorization', 'Cryptography', 'Threat Modeling', 'Asset Discovery', 'Penetration Testing', 'Static Analysis', 'Dynamic Analysis'].includes(category)) {

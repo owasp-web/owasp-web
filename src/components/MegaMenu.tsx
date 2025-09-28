@@ -334,7 +334,7 @@ export default function MegaMenu({ isOpen, onClose, menuType }: MegaMenuProps) {
             {[...new Set(featuredProjects.map(p => p.category))].slice(0,6).map((cat) => (
               <Link
                 key={cat}
-                href={`/projects?category=${encodeURIComponent(cat)}`}
+                href={`/projects?view=all&category=${encodeURIComponent(cat || '')}`}
                 onClick={onClose}
                 className="flex items-center gap-3 p-3 rounded-lg hover:bg-white/10 transition-all duration-200 group"
               >
