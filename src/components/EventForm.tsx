@@ -32,15 +32,33 @@ export default function EventForm({ initialData, onSubmit, loading }: EventFormP
   const [file, setFile] = useState<File | null>(null)
   const [uploading, setUploading] = useState(false)
 
+  // Single date input (replaces separate month/year for UX) but we still derive fields for DB
+  const monthMap: Record<string, string> = { JAN: '01', FEB: '02', MAR: '03', APR: '04', MAY: '05', JUN: '06', JUL: '07', AUG: '08', SEP: '09', OCT: '10', NOV: '11', DEC: '12' }
+  const abbrevByIndex = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC']
+  const deriveInitialDateValue = () => {
+    try {
+      const y = (initialData as any)?.year as string | undefined
+      const mAbbrev = (initialData as any)?.month as string | undefined
+      const dRaw = (initialData as any)?.date as string | undefined
+      if (y && mAbbrev && dRaw) {
+        const mm = monthMap[mAbbrev as keyof typeof monthMap]
+        if (!mm) return ''
+        const dayNum = (dRaw.match(/\d+/)?.[0]) || dRaw
+        const dd = String(parseInt(dayNum, 10)).padStart(2, '0')
+        return `${y}-${mm}-${dd}`
+      }
+    } catch {}
+    return ''
+  }
+  const [dateInput, setDateInput] = useState<string>(deriveInitialDateValue())
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
     // Basic validation
     const newErrors: Record<string, string> = {}
     if (!formData.title.trim()) newErrors.title = 'Title is required'
-    if (!formData.date.trim()) newErrors.date = 'Date is required'
-    if (!formData.month.trim()) newErrors.month = 'Month is required'
-    if (!formData.year.trim()) newErrors.year = 'Year is required'
+    if (!dateInput && (!formData.date.trim() || !formData.month.trim() || !formData.year.trim())) newErrors.date = 'Date is required'
     if (!formData.time.trim()) newErrors.time = 'Time is required'
     if (!formData.location.trim()) newErrors.location = 'Location is required'
     // Image is optional; if provided via upload we'll attach the public URL
@@ -51,6 +69,14 @@ export default function EventForm({ initialData, onSubmit, loading }: EventFormP
     }
 
     setErrors({})
+    // If dateInput provided, derive date/month/year
+    let payload: EventFormData = { ...formData }
+    if (dateInput) {
+      const dt = new Date(dateInput)
+      payload.year = String(dt.getFullYear())
+      payload.month = abbrevByIndex[dt.getMonth()]
+      payload.date = String(dt.getDate())
+    }
     let imageUrl = formData.image
     if (file) {
       try {
@@ -71,7 +97,7 @@ export default function EventForm({ initialData, onSubmit, loading }: EventFormP
         setUploading(false)
       }
     }
-    await onSubmit({ ...formData, image: imageUrl })
+    await onSubmit({ ...payload, image: imageUrl })
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -129,16 +155,14 @@ export default function EventForm({ initialData, onSubmit, loading }: EventFormP
         </div>
 
         <div>
-          <label htmlFor="date" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="event_date" className="block text-sm font-medium text-gray-700">
             Date *
           </label>
           <input
-            type="text"
-            name="date"
-            id="date"
-            placeholder="e.g., 3-7 or 19"
-            value={formData.date}
-            onChange={handleChange}
+            id="event_date"
+            type="date"
+            value={dateInput}
+            onChange={(e) => setDateInput(e.target.value)}
             className={`mt-1 block w-full border rounded-md px-3 py-2 ${
               errors.date ? 'border-red-300' : 'border-gray-300'
             } focus:outline-none focus:ring-[#003594] focus:border-[#003594]`}
@@ -146,47 +170,7 @@ export default function EventForm({ initialData, onSubmit, loading }: EventFormP
           {errors.date && <p className="mt-1 text-sm text-red-600">{errors.date}</p>}
         </div>
 
-        <div>
-          <label htmlFor="month" className="block text-sm font-medium text-gray-700">
-            Month *
-          </label>
-          <select
-            name="month"
-            id="month"
-            value={formData.month}
-            onChange={handleChange}
-            className={`mt-1 block w-full border rounded-md px-3 py-2 ${
-              errors.month ? 'border-red-300' : 'border-gray-300'
-            } focus:outline-none focus:ring-[#003594] focus:border-[#003594]`}
-          >
-            <option value="">Select Month</option>
-            {months.map(month => (
-              <option key={month} value={month}>{month}</option>
-            ))}
-          </select>
-          {errors.month && <p className="mt-1 text-sm text-red-600">{errors.month}</p>}
-        </div>
-
-        <div>
-          <label htmlFor="year" className="block text-sm font-medium text-gray-700">
-            Year *
-          </label>
-          <select
-            name="year"
-            id="year"
-            value={formData.year}
-            onChange={handleChange}
-            className={`mt-1 block w-full border rounded-md px-3 py-2 ${
-              errors.year ? 'border-red-300' : 'border-gray-300'
-            } focus:outline-none focus:ring-[#003594] focus:border-[#003594]`}
-          >
-            <option value="">Select Year</option>
-            {years.map(year => (
-              <option key={year} value={year.toString()}>{year}</option>
-            ))}
-          </select>
-          {errors.year && <p className="mt-1 text-sm text-red-600">{errors.year}</p>}
-        </div>
+        {/* Month/Year inputs removed from UI; derived from dateInput on submit */}
 
         <div>
           <label htmlFor="time" className="block text-sm font-medium text-gray-700">
