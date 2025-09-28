@@ -584,10 +584,14 @@ export default function EditChapterPage({ params }: EditChapterPageProps) {
             <ul className="divide-y divide-gray-200">
               {chapterEvents.map(ev => (
                 <li key={ev.id} className="py-3 flex items-center justify-between">
-                  <div>
-                    <div className="text-sm font-medium text-gray-900">{ev.title}</div>
+                  <button
+                    type="button"
+                    onClick={() => router.push(`/admin/events/${ev.id}/edit`)}
+                    className="text-left"
+                  >
+                    <div className="text-sm font-medium text-gray-900 hover:underline">{ev.title}</div>
                     <div className="text-xs text-gray-500">{ev.month} {ev.date}, {ev.year} • {ev.location}</div>
-                  </div>
+                  </button>
                   <div className="flex gap-2">
                     <button
                       type="button"
