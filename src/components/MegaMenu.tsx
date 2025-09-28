@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { createClientComponentClient } from '@/lib/supabase'
-import type { Event } from '@/lib/types'
+import type { Event, Chapter } from '@/lib/types'
 
 interface MegaMenuProps {
   isOpen: boolean
@@ -15,13 +15,14 @@ interface MegaMenuProps {
 export default function MegaMenu({ isOpen, onClose, menuType }: MegaMenuProps) {
   const [events, setEvents] = useState<Event[]>([])
   const [loading, setLoading] = useState(false)
+  const [chapters, setChapters] = useState<Chapter[]>([])
   const menuRef = useRef<HTMLDivElement>(null)
 
-  // Fetch events data when events menu is opened
+  // Fetch data when menu opens
   useEffect(() => {
-    if (isOpen && menuType === 'events') {
-      fetchEvents()
-    }
+    if (!isOpen) return
+    if (menuType === 'events') fetchEvents()
+    if (menuType === 'chapters') fetchChapters()
   }, [isOpen, menuType])
 
   // Close menu when clicking outside
@@ -55,6 +56,23 @@ export default function MegaMenu({ isOpen, onClose, menuType }: MegaMenuProps) {
       console.error('Failed to fetch events:', err)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const fetchChapters = async () => {
+    try {
+      const supabase = createClientComponentClient()
+      const { data, error } = await supabase
+        .from('chapters')
+        .select('*')
+        .eq('is_active', true)
+        .order('name', { ascending: true })
+        .limit(30)
+      if (error) throw error
+      setChapters((data as unknown as Chapter[]) || [])
+    } catch (err) {
+      console.error('Failed to fetch chapters:', err)
+      setChapters([])
     }
   }
 
@@ -315,49 +333,19 @@ export default function MegaMenu({ isOpen, onClose, menuType }: MegaMenuProps) {
   const renderChaptersMenu = () => (
     <div className="w-full max-w-6xl mx-auto p-4 sm:p-6 md:p-7 lg:p-8">
       <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-6 lg:gap-8">
-        {/* Regional Chapters */}
+        {/* Dynamic Chapters */}
         <div className="md:col-span-8">
-          <h3 className="font-['Barlow'] font-medium text-lg text-white mb-6">Chapters by Region</h3>
+          <h3 className="font-['Barlow'] font-medium text-lg text-white mb-6">Chapters</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-            <div>
-              <h4 className="text-[#00A7E1] font-medium text-sm mb-3">Africa</h4>
-              <div className="space-y-2">
-                <Link href="/chapters/lagos" onClick={onClose} className="block text-white/80 hover:text-white text-sm transition-colors">Lagos</Link>
-                <Link href="/chapters/nairobi" onClick={onClose} className="block text-white/80 hover:text-white text-sm transition-colors">Nairobi</Link>
-                <Link href="/chapters/cairo" onClick={onClose} className="block text-white/80 hover:text-white text-sm transition-colors">Cairo</Link>
-                <Link href="/chapters/cape-town" onClick={onClose} className="block text-white/80 hover:text-white text-sm transition-colors">Cape Town</Link>
-              </div>
-            </div>
-            
-            <div>
-              <h4 className="text-[#00A7E1] font-medium text-sm mb-3">Europe</h4>
-              <div className="space-y-2">
-                <Link href="/chapters/london" onClick={onClose} className="block text-white/80 hover:text-white text-sm transition-colors">London</Link>
-                <Link href="/chapters/berlin" onClick={onClose} className="block text-white/80 hover:text-white text-sm transition-colors">Berlin</Link>
-                <Link href="/chapters/paris" onClick={onClose} className="block text-white/80 hover:text-white text-sm transition-colors">Paris</Link>
-                <Link href="/chapters/amsterdam" onClick={onClose} className="block text-white/80 hover:text-white text-sm transition-colors">Amsterdam</Link>
-              </div>
-            </div>
-
-            <div>
-              <h4 className="text-[#00A7E1] font-medium text-sm mb-3">North America</h4>
-              <div className="space-y-2">
-                <Link href="/chapters/new-york" onClick={onClose} className="block text-white/80 hover:text-white text-sm transition-colors">New York</Link>
-                <Link href="/chapters/san-francisco" onClick={onClose} className="block text-white/80 hover:text-white text-sm transition-colors">San Francisco</Link>
-                <Link href="/chapters/toronto" onClick={onClose} className="block text-white/80 hover:text-white text-sm transition-colors">Toronto</Link>
-                <Link href="/chapters/chicago" onClick={onClose} className="block text-white/80 hover:text-white text-sm transition-colors">Chicago</Link>
-              </div>
-            </div>
-
-            <div>
-              <h4 className="text-[#00A7E1] font-medium text-sm mb-3">Asia Pacific</h4>
-              <div className="space-y-2">
-                <Link href="/chapters/singapore" onClick={onClose} className="block text-white/80 hover:text-white text-sm transition-colors">Singapore</Link>
-                <Link href="/chapters/sydney" onClick={onClose} className="block text-white/80 hover:text-white text-sm transition-colors">Sydney</Link>
-                <Link href="/chapters/tokyo" onClick={onClose} className="block text-white/80 hover:text-white text-sm transition-colors">Tokyo</Link>
-                <Link href="/chapters/mumbai" onClick={onClose} className="block text-white/80 hover:text-white text-sm transition-colors">Mumbai</Link>
-              </div>
-            </div>
+            {chapters.length === 0 ? (
+              <div className="text-white/70 text-sm">No chapters available.</div>
+            ) : (
+              chapters.slice(0, 20).map((c) => (
+                <Link key={c.id} href={`/chapters/${c.slug}`} onClick={onClose} className="block text-white/80 hover:text-white text-sm transition-colors">
+                  {c.name}
+                </Link>
+              ))
+            )}
           </div>
         </div>
 
