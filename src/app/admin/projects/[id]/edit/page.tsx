@@ -188,6 +188,14 @@ export default function ProjectEditPage({ params }: ProjectEditPageProps) {
   const [projAdminsError, setProjAdminsError] = useState<string | null>(null)
   const [newProjAdminEmail, setNewProjAdminEmail] = useState<string>('')
 
+  // Video modal state (for section videoUrl)
+  const [videoModalOpen, setVideoModalOpen] = useState<{ tabId: string; sectionIndex: number } | null>(null)
+  const [videoMode, setVideoMode] = useState<'upload' | 'url'>('upload')
+  const [videoFile, setVideoFile] = useState<File | null>(null)
+  const [videoUrlInput, setVideoUrlInput] = useState('')
+  const [videoPreviewUrl, setVideoPreviewUrl] = useState<string>('')
+  const [videoError, setVideoError] = useState<string | null>(null)
+
   const fetchProjectAdmins = async () => {
     try {
       setProjAdminsLoading(true)
@@ -223,6 +231,81 @@ export default function ProjectEditPage({ params }: ProjectEditPageProps) {
       fetchProjectAdmins()
     } catch (e: any) {
       setProjAdminsError(e?.message || 'Failed to add admin')
+    }
+  }
+
+  const openVideoModal = (tabId: string, sectionIndex: number) => {
+    setVideoModalOpen({ tabId, sectionIndex })
+    setVideoMode('upload')
+    setVideoFile(null)
+    setVideoUrlInput('')
+    setVideoPreviewUrl('')
+    setVideoError(null)
+  }
+
+  const closeVideoModal = () => {
+    setVideoModalOpen(null)
+    setVideoFile(null)
+    setVideoUrlInput('')
+    setVideoPreviewUrl('')
+    setVideoError(null)
+  }
+
+  const handleVideoFileChange = (file: File | null) => {
+    setVideoFile(file)
+    setVideoError(null)
+    if (file) {
+      try {
+        const url = URL.createObjectURL(file)
+        setVideoPreviewUrl(url)
+      } catch (e: any) {
+        setVideoPreviewUrl('')
+        setVideoError('Failed to create preview for this file')
+      }
+    } else {
+      setVideoPreviewUrl('')
+    }
+  }
+
+  const handleVideoUrlChange = (url: string) => {
+    setVideoUrlInput(url)
+    setVideoError(null)
+    setVideoPreviewUrl(url)
+  }
+
+  const saveVideoToSection = async () => {
+    if (!videoModalOpen || !project) return
+    try {
+      let finalUrl = ''
+      if (videoMode === 'upload') {
+        if (!videoFile) {
+          setVideoError('Select a video file to upload')
+          return
+        }
+        const supabase = createClientComponentClient()
+        const { data: { session } } = await supabase.auth.getSession()
+        const form = new FormData()
+        form.append('file', videoFile)
+        form.append('folder', `projects/${project.id}/videos`)
+        const res = await fetch('/api/admin/upload', {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${session?.access_token || ''}` },
+          body: form
+        })
+        if (!res.ok) throw new Error((await res.json()).error || 'Upload failed')
+        const json = await res.json()
+        finalUrl = json.url as string
+      } else {
+        if (!videoUrlInput.trim()) {
+          setVideoError('Enter a valid video URL')
+          return
+        }
+        finalUrl = videoUrlInput.trim()
+      }
+      updateSection(videoModalOpen.tabId, videoModalOpen.sectionIndex, 'videoUrl', finalUrl)
+      closeVideoModal()
+    } catch (e: any) {
+      setVideoError(e?.message || 'Failed to set video')
     }
   }
 
@@ -546,7 +629,10 @@ export default function ProjectEditPage({ params }: ProjectEditPageProps) {
                                 <input value={section.imageAlt || ''} onChange={(e) => updateSection(tab.id, idx, 'imageAlt', e.target.value)} placeholder="Image alt text" className="border rounded px-2 py-1" />
                               </div>
                               <input value={section.imageCaption || ''} onChange={(e) => updateSection(tab.id, idx, 'imageCaption', e.target.value)} placeholder="Image caption (optional)" className="border rounded px-2 py-1 w-full mt-2" />
-                              <input value={section.videoUrl || ''} onChange={(e) => updateSection(tab.id, idx, 'videoUrl', e.target.value)} placeholder="Video URL (YouTube or MP4)" className="border rounded px-2 py-1 w-full mt-2" />
+                              <div className="flex items-center gap-2 mt-2">
+                                <input value={section.videoUrl || ''} onChange={(e) => updateSection(tab.id, idx, 'videoUrl', e.target.value)} placeholder="Video URL (YouTube or MP4)" className="border rounded px-2 py-1 w-full" />
+                                <button type="button" onClick={() => openVideoModal(tab.id, idx)} className="px-3 py-2 border rounded">Upload/URL…</button>
+                              </div>
 
                               <div className="mt-3">
                                 <div className="flex items-center justify-between mb-2">
@@ -650,6 +736,52 @@ export default function ProjectEditPage({ params }: ProjectEditPageProps) {
                 )}
               </div>
               <p className="text-xs text-gray-500">Admins can edit this project via RLS. Super admins can always edit.</p>
+            </div>
+          )}
+
+          {/* Video upload / URL modal */}
+          {videoModalOpen && (
+            <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center" onClick={closeVideoModal}>
+              <div className="bg-white rounded-lg shadow-xl w-full max-w-lg mx-4" onClick={(e) => e.stopPropagation()}>
+                <div className="px-4 py-3 border-b flex items-center justify-between">
+                  <h3 className="font-semibold">Add Video</h3>
+                  <button onClick={closeVideoModal} className="text-gray-500 hover:text-gray-700">✕</button>
+                </div>
+                <div className="p-4 space-y-4">
+                  <div className="flex gap-2 text-sm">
+                    <button className={`px-3 py-1 rounded border ${videoMode === 'upload' ? 'bg-[#003594] text-white border-[#003594]' : ''}`} onClick={() => setVideoMode('upload')}>Upload from computer</button>
+                    <button className={`px-3 py-1 rounded border ${videoMode === 'url' ? 'bg-[#003594] text-white border-[#003594]' : ''}`} onClick={() => setVideoMode('url')}>Enter URL</button>
+                  </div>
+                  {videoMode === 'upload' ? (
+                    <div className="space-y-2">
+                      <input type="file" accept="video/*" onChange={(e) => handleVideoFileChange(e.target.files?.[0] || null)} />
+                      {videoPreviewUrl && (
+                        <div className="relative aspect-video border rounded overflow-hidden">
+                          <video src={videoPreviewUrl} controls className="w-full h-full" />
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <input type="url" value={videoUrlInput} onChange={(e) => handleVideoUrlChange(e.target.value)} placeholder="https://... (YouTube or MP4)" className="w-full border rounded px-3 py-2" />
+                      {videoPreviewUrl && (/youtube\.com|youtu\.be/i.test(videoPreviewUrl) ? (
+                        <div className="relative aspect-video border rounded overflow-hidden">
+                          <iframe className="w-full h-full" src={videoPreviewUrl.includes('embed') ? videoPreviewUrl : videoPreviewUrl.replace('watch?v=', 'embed/')} allowFullScreen />
+                        </div>
+                      ) : (
+                        <div className="relative aspect-video border rounded overflow-hidden">
+                          <video src={videoPreviewUrl} controls className="w-full h-full" onError={() => setVideoError('Unable to preview this URL; please try a different link.')} />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {videoError && <div className="text-sm text-red-600">{videoError}</div>}
+                </div>
+                <div className="px-4 py-3 border-t flex items-center justify-end gap-2">
+                  <button onClick={closeVideoModal} className="px-3 py-2 border rounded">Cancel</button>
+                  <button onClick={saveVideoToSection} className="px-3 py-2 bg-[#003594] text-white rounded hover:bg-[#0056b3]">Use Video</button>
+                </div>
+              </div>
             </div>
           )}
 
