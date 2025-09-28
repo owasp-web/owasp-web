@@ -142,13 +142,25 @@ export class AdminService {
     const supabase = this.getSupabase()
     const { data: { session } } = await supabase.auth.getSession()
     if (!session) throw new Error('Not authenticated')
+    // Remove undefined keys to avoid PostgREST errors
+    const sanitized: Record<string, any> = {}
+    Object.entries(changes).forEach(([k, v]) => {
+      if (v !== undefined) sanitized[k] = v
+    })
+
     const { data, error } = await supabase
       .from('chapters')
-      .update(changes)
+      .update(sanitized)
       .eq('id', chapterId)
       .select('*')
       .single()
-    if (error) throw error
+    if (error) {
+      const msg = String(error.message || '')
+      if (msg.includes('column') && msg.includes('tabs')) {
+        throw new Error('Tabs not enabled in database. Please run add-chapter-tabs-schema.sql in Supabase.')
+      }
+      throw error
+    }
     return data
   }
 
