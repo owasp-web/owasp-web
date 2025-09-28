@@ -71,14 +71,10 @@ export default function EditChapterPage({ params }: EditChapterPageProps) {
   const fetchEvents = async () => {
     try {
       setEventsLoading(true);
-      const supabase = createClientComponentClient();
-      const { data, error } = await supabase
-        .from('events')
-        .select('*')
-        .eq('chapter_id', params.id)
-        .order('created_at', { ascending: false });
-      if (error) throw error;
-      setChapterEvents((data as unknown as Event[]) || []);
+      const res = await fetch(`/api/public/chapters/${params.id}/events`)
+      if (!res.ok) throw new Error((await res.json()).error || 'Failed to load events')
+      const json = await res.json()
+      setChapterEvents((json.events as Event[]) || []);
     } catch (err) {
       console.error(err);
     } finally {
