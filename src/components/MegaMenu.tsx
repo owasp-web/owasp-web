@@ -121,7 +121,22 @@ export default function MegaMenu({ isOpen, onClose, menuType }: MegaMenuProps) {
       <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-6 lg:gap-8">
         {/* Left Column - Event Categories */}
         <div className="md:col-span-4">
-          <h3 className="font-['Barlow'] font-medium text-lg text-white mb-6">Browse Events</h3>
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="font-['Barlow'] font-medium text-lg text-white">Browse Events</h3>
+            <div className="hidden md:block">
+              <input
+                type="text"
+                placeholder="Search events..."
+                onKeyDown={(e) => {
+                  if (e.key !== 'Enter') return
+                  const q = (e.currentTarget as HTMLInputElement).value.trim()
+                  const url = q ? `/events?query=${encodeURIComponent(q)}` : '/events'
+                  window.location.href = url
+                }}
+                className="px-3 py-2 rounded-lg bg-white/10 placeholder-white/70 text-white text-sm outline-none border border-white/20 focus:border-[#00A7E1]"
+              />
+            </div>
+          </div>
           <div className="space-y-4">
             <Link 
               href="/events" 
@@ -323,12 +338,27 @@ export default function MegaMenu({ isOpen, onClose, menuType }: MegaMenuProps) {
       <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-6 lg:gap-8">
         {/* Dynamic Chapters */}
         <div className="md:col-span-8">
-          <h3 className="font-['Barlow'] font-medium text-lg text-white mb-6">Chapters</h3>
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="font-['Barlow'] font-medium text-lg text-white">Chapters</h3>
+            <div className="hidden md:block">
+              <input
+                type="text"
+                placeholder="Search chapters..."
+                onKeyDown={(e) => {
+                  if (e.key !== 'Enter') return
+                  const q = (e.currentTarget as HTMLInputElement).value.trim()
+                  const url = q ? `/chapters?query=${encodeURIComponent(q)}` : '/chapters'
+                  window.location.href = url
+                }}
+                className="px-3 py-2 rounded-lg bg-white/10 placeholder-white/70 text-white text-sm outline-none border border-white/20 focus:border-[#00A7E1]"
+              />
+            </div>
+          </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
             {chapters.length === 0 ? (
               <div className="text-white/70 text-sm">No chapters available.</div>
             ) : (
-              chapters.slice(0, 20).map((c) => (
+              chapters.slice(0, 6).map((c) => (
                 <Link key={c.id} href={`/chapters/${c.slug}`} onClick={onClose} className="block text-white/80 hover:text-white text-sm transition-colors">
                   {c.name}
                 </Link>

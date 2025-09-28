@@ -46,6 +46,7 @@ export default function ChaptersPage() {
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [query, setQuery] = useState<string>('');
+  const searchParams = useSearchParams();
 
   const toggleRegion = (region: string) => {
     const newExpandedRegions = new Set(expandedRegions);
@@ -79,6 +80,12 @@ export default function ChaptersPage() {
     };
     load();
   }, []);
+
+  // Initialize query from URL (e.g., /chapters?query=cairo)
+  useEffect(() => {
+    const q = (searchParams?.get('query') || '').trim();
+    if (q) setQuery(q);
+  }, [searchParams]);
 
   const regions = [
     "Africa",
