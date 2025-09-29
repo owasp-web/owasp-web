@@ -282,17 +282,23 @@ export default function ProjectEditPage({ params }: ProjectEditPageProps) {
       if (videoMode === 'upload') {
         if (!videoFile) { setVideoError('Select a video file to upload'); return }
         const supabase = createClientComponentClient()
-        // Prefer server upload first (service role)
+        // Prefer signed upload (service role)
         const { data: { session } } = await supabase.auth.getSession()
-        const form = new FormData()
-        form.append('file', videoFile)
-        form.append('folder', `projects/${project.id}/videos`)
-        const res = await fetch('/api/admin/upload', { method: 'POST', headers: { Authorization: `Bearer ${session?.access_token || ''}` }, body: form })
-        if (res.ok) {
-          const json = await res.json()
-          finalUrl = json.url
+        const signRes = await fetch('/api/admin/upload/signed', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token || ''}` },
+          body: JSON.stringify({ folder: `projects/${project.id}/videos`, filename: videoFile.name })
+        })
+        if (signRes.ok) {
+          const { token, path } = await signRes.json()
+          const { error } = await supabase.storage.from('project-media').uploadToSignedUrl(path, token, videoFile, {
+            contentType: videoFile.type || 'video/mp4', upsert: false
+          })
+          if (error) throw new Error(error.message)
+          const { data: s } = await supabase.storage.from('project-media').createSignedUrl(path, 60 * 60 * 24 * 365)
+          finalUrl = s?.signedUrl || ''
         } else {
-          // Fallback to client upload if server route unavailable
+          // Fallback to direct client upload
           const ext = (videoFile.name.split('.').pop() || 'bin').toLowerCase()
           const objectPath = `projects/${project.id}/videos/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
           const { error: upErr } = await supabase.storage.from('project-media').upload(objectPath, videoFile, {
