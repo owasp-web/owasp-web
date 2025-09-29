@@ -13,7 +13,21 @@ export default function ImageUploadButton({ onUploaded, label = 'Upload…', fol
     setBusy(true)
     setError(null)
     try {
+      // Prefer server route first (service role) so super/global admins always succeed
       const supabase = createClientComponentClient()
+      const { data: { session } } = await supabase.auth.getSession()
+      const form = new FormData()
+      form.append('file', file)
+      form.append('folder', folderHint)
+      const serverRes = await fetch('/api/admin/upload', { method: 'POST', headers: { Authorization: `Bearer ${session?.access_token || ''}` }, body: form })
+      if (serverRes.ok) {
+        const json = await serverRes.json()
+        onUploaded(json.url)
+        setBusy(false)
+        return
+      }
+
+      // Fallback to client upload if server route unavailable/misconfigured
       const ext = (file.name.split('.').pop() || 'bin').toLowerCase()
       const objectPath = `${folderHint.replace(/^\/+|\/+$/g, '')}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
       const { error: upErr } = await supabase.storage.from('project-media').upload(objectPath, file, {
@@ -21,21 +35,7 @@ export default function ImageUploadButton({ onUploaded, label = 'Upload…', fol
         contentType: file.type || 'application/octet-stream',
         upsert: false
       })
-      if (upErr) {
-        // Fallback to server upload (service role) to bypass RLS if needed
-        const { data: { session } } = await supabase.auth.getSession()
-        const form = new FormData()
-        form.append('file', file)
-        form.append('folder', folderHint)
-        const res = await fetch('/api/admin/upload', {
-          method: 'POST', headers: { Authorization: `Bearer ${session?.access_token || ''}` }, body: form
-        })
-        const json = await res.json().catch(() => ({ error: 'Upload failed' }))
-        if (!res.ok || !json.url) throw new Error(json.error || upErr.message)
-        onUploaded(json.url)
-        setBusy(false)
-        return
-      }
+      if (upErr) throw new Error(upErr.message)
       const { data: signed, error: signErr } = await supabase.storage.from('project-media').createSignedUrl(objectPath, 60 * 60 * 24 * 365)
       if (signErr) throw new Error(signErr.message)
       onUploaded(signed?.signedUrl || '')

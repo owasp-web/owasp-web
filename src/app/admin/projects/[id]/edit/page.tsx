@@ -282,24 +282,23 @@ export default function ProjectEditPage({ params }: ProjectEditPageProps) {
       if (videoMode === 'upload') {
         if (!videoFile) { setVideoError('Select a video file to upload'); return }
         const supabase = createClientComponentClient()
-        const ext = (videoFile.name.split('.').pop() || 'bin').toLowerCase()
-        const objectPath = `projects/${project.id}/videos/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
-        const { error: upErr } = await supabase.storage.from('project-media').upload(objectPath, videoFile, {
-          cacheControl: '3600', contentType: videoFile.type || 'video/mp4', upsert: false
-        })
-        if (upErr) {
-          // Fallback to server upload using service role
-          const { data: { session } } = await supabase.auth.getSession()
-          const form = new FormData()
-          form.append('file', videoFile)
-          form.append('folder', `projects/${project.id}/videos`)
-          const res = await fetch('/api/admin/upload', {
-            method: 'POST', headers: { Authorization: `Bearer ${session?.access_token || ''}` }, body: form
-          })
-          const json = await res.json().catch(() => ({ error: 'Upload failed' }))
-          if (!res.ok || !json.url) throw new Error(json.error || upErr.message)
+        // Prefer server upload first (service role)
+        const { data: { session } } = await supabase.auth.getSession()
+        const form = new FormData()
+        form.append('file', videoFile)
+        form.append('folder', `projects/${project.id}/videos`)
+        const res = await fetch('/api/admin/upload', { method: 'POST', headers: { Authorization: `Bearer ${session?.access_token || ''}` }, body: form })
+        if (res.ok) {
+          const json = await res.json()
           finalUrl = json.url
         } else {
+          // Fallback to client upload if server route unavailable
+          const ext = (videoFile.name.split('.').pop() || 'bin').toLowerCase()
+          const objectPath = `projects/${project.id}/videos/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+          const { error: upErr } = await supabase.storage.from('project-media').upload(objectPath, videoFile, {
+            cacheControl: '3600', contentType: videoFile.type || 'video/mp4', upsert: false
+          })
+          if (upErr) throw new Error(upErr.message)
           const { data: signed, error: signErr } = await supabase.storage.from('project-media').createSignedUrl(objectPath, 60 * 60 * 24 * 365)
           if (signErr) throw new Error(signErr.message)
           finalUrl = signed?.signedUrl || ''
@@ -536,7 +535,7 @@ export default function ProjectEditPage({ params }: ProjectEditPageProps) {
                     className="w-full border border-gray-300 rounded-md px-3 py-2"
                     placeholder="https://.../logo-or-hero-image.png"
                   />
-                  <ImageUploadButton onUploaded={(url) => updateProject('image', url)} label="Upload…" folderHint="projects/hero" />
+                  <ImageUploadButton onUploaded={(url) => updateProject('image', url)} label="Upload…" folderHint={`projects/${project.id}/hero`} />
                 </div>
                 <p className="text-xs text-gray-500 mt-1">
                   Optional. When provided, it appears in the project hero next to details and as a thumbnail in listings.
