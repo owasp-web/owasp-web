@@ -8,6 +8,7 @@ import { getProjectById } from '@/lib/projects';
 import { createClientComponentClient } from '@/lib/supabase';
 import { Project } from '@/lib/types';
 import Image from 'next/image';
+import ImageUploadButton from './ImageUploadButton';
 
 interface ProjectEditPageProps {
   params: {
