@@ -12,8 +12,8 @@ export async function POST(req: NextRequest) {
     const authToken = getBearerToken(req)
     if (!authToken) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    const { folder, filename } = await req.json()
-    if (!folder || !filename) return NextResponse.json({ error: 'folder and filename are required' }, { status: 400 })
+    const body = await req.json()
+    const { folder, filename, action, path } = body || {}
 
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL
     const key = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -32,15 +32,21 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
+    // Branch: sign read URL after upload
+    if (action === 'sign-read' && typeof path === 'string') {
+      const { data: signed, error: signErr } = await svc.storage.from('project-media').createSignedUrl(String(path), 60 * 60 * 24 * 365)
+      if (signErr) return NextResponse.json({ error: signErr.message }, { status: 500 })
+      return NextResponse.json({ url: signed?.signedUrl })
+    }
+
+    // Branch: create signed upload URL
+    if (!folder || !filename) return NextResponse.json({ error: 'folder and filename are required' }, { status: 400 })
     const ext = (String(filename).split('.').pop() || 'bin').toLowerCase()
     const objectPath = `${String(folder).replace(/^\/+|\/+$/g, '')}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
-
     const { data, error } = await svc.storage.from('project-media').createSignedUploadUrl(objectPath)
     if (error || !data) return NextResponse.json({ error: error?.message || 'Failed to create signed upload' }, { status: 500 })
-
     const uploadToken = (data as any).token
     const signedUrl = (data as any).signedUrl
-
     return NextResponse.json({ path: objectPath, token: uploadToken, signedUrl })
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || 'Failed' }, { status: 500 })

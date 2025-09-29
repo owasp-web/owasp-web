@@ -31,8 +31,14 @@ export default function ImageUploadButton({ onUploaded, label = 'Upload…', fol
           body: file
         })
         if (!putRes.ok) throw new Error('Failed to PUT to signed URL')
-        const { data: s } = await supabase.storage.from('project-media').createSignedUrl(path, 60 * 60 * 24 * 365)
-        onUploaded(s?.signedUrl || '')
+        // Ask server to sign a long-lived read URL (service role)
+        const readRes = await fetch('/api/admin/upload/signed', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token || ''}` },
+          body: JSON.stringify({ action: 'sign-read', path })
+        })
+        const readJson = await readRes.json()
+        onUploaded(readJson.url || '')
         setBusy(false)
         return
       }

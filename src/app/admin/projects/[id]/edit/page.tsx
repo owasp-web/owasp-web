@@ -294,8 +294,13 @@ export default function ProjectEditPage({ params }: ProjectEditPageProps) {
           // Always PUT to signed URL for consistency
           const putRes = await fetch(signedUrl, { method: 'PUT', headers: { 'Content-Type': videoFile.type || 'video/mp4' }, body: videoFile })
           if (!putRes.ok) throw new Error('Failed to PUT to signed URL')
-          const { data: s } = await supabase.storage.from('project-media').createSignedUrl(path, 60 * 60 * 24 * 365)
-          finalUrl = s?.signedUrl || ''
+          const readRes = await fetch('/api/admin/upload/signed', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token || ''}` },
+            body: JSON.stringify({ action: 'sign-read', path })
+          })
+          const readJson = await readRes.json()
+          finalUrl = readJson.url || ''
         } else {
           // Fallback to direct client upload
           const ext = (videoFile.name.split('.').pop() || 'bin').toLowerCase()
