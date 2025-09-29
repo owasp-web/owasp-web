@@ -475,12 +475,8 @@ export default function ProjectDetailPageWithTabs({ project }: ProjectPageProps)
             {project.image && (
               <div className="w-full lg:w-80 h-48 lg:h-80 relative bg-white/10 backdrop-blur-sm rounded-lg p-8 flex items-center justify-center">
                 <div className="relative w-full h-full">
-                  <Image
-                    src={project.image}
-                    alt={project.title}
-                    fill
-                    className="object-contain"
-                  />
+                  {/* Use native img to avoid Next/Image proxy issues with signed URLs */}
+                  <img src={project.image} alt={project.title} className="object-contain w-full h-full" />
                 </div>
               </div>
             )}
@@ -541,12 +537,7 @@ export default function ProjectDetailPageWithTabs({ project }: ProjectPageProps)
                   {project.screenshots.map((screenshot, index) => (
                     <div key={index} className="space-y-2">
                       <div className="relative aspect-video rounded-lg overflow-hidden border border-gray-200">
-                        <Image 
-                          src={screenshot.url} 
-                          alt={screenshot.alt_text}
-                          fill
-                          className="object-cover"
-                        />
+                        <img src={screenshot.url} alt={screenshot.alt_text} className="object-cover w-full h-full" />
                       </div>
                       {screenshot.caption && (
                         <p className="text-sm text-gray-600 text-center">{screenshot.caption}</p>
