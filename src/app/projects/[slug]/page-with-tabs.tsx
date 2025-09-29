@@ -475,7 +475,7 @@ export default function ProjectDetailPageWithTabs({ project }: ProjectPageProps)
             {(() => {
               const shots: any[] = (project as any)?.screenshots || []
               const firstShotHttp: string | undefined = (shots.find(s => typeof s?.url === 'string' && /^https?:\/\//i.test(s.url)) || {}).url
-              const heroUrl = (project.image as any) || (project as any).logo || (project as any).hero_image || firstShotHttp || '/logo.svg'
+              const heroUrl = (project.image as any) || (project as any).hero_image || (project as any).image_url || (project as any).logo || firstShotHttp || '/logo.svg'
               return heroUrl
             })() && (
               <div className="w-full lg:w-80 h-48 lg:h-80 relative bg-white/10 backdrop-blur-sm rounded-lg p-8 flex items-center justify-center">

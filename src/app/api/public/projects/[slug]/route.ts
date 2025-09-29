@@ -13,7 +13,13 @@ export async function GET(_req: NextRequest, context: { params: { slug: string }
       .single()
     if (error) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
-    // If image is missing but we have screenshots, promote the first absolute (http/https) screenshot URL
+    // Normalize possible image columns from legacy data
+    const legacyImage = (data as any)?.hero_image || (data as any)?.image_url
+    if (!(data as any).image && typeof legacyImage === 'string') {
+      (data as any).image = legacyImage
+    }
+
+    // If image is still missing but we have screenshots, promote the first absolute (http/https) screenshot URL
     if ((data as any) && !(data as any).image && Array.isArray((data as any).screenshots)) {
       const firstAbsolute = (data as any).screenshots.find((s: any) => typeof s?.url === 'string' && /^https?:\/\//i.test(s.url))
       if (firstAbsolute?.url) {
