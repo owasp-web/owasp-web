@@ -79,6 +79,22 @@ export default function ProjectEditPage({ params }: ProjectEditPageProps) {
     setProject({ ...project, [field]: value });
   };
 
+  // Persist a subset of fields immediately (service role route)
+  const persistPartial = async (partial: Partial<Project>) => {
+    try {
+      const supabase = createClientComponentClient()
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.access_token || !project) return
+      await fetch(`/api/admin/projects/${project.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify(partial)
+      })
+    } catch (e) {
+      console.warn('Partial save failed', e)
+    }
+  }
+
   // Custom Tabs Editor helpers
   const ensureTabsArray = () => {
     if (!project) return;
@@ -551,10 +567,11 @@ export default function ProjectEditPage({ params }: ProjectEditPageProps) {
                     type="url"
                     value={project.image || ''}
                     onChange={(e) => updateProject('image', e.target.value)}
+                    onBlur={(e) => { if ((e.target.value || '') !== '') persistPartial({ image: e.target.value }) }}
                     className="w-full border border-gray-300 rounded-md px-3 py-2"
                     placeholder="https://.../logo-or-hero-image.png"
                   />
-                  <ImageUploadButton onUploaded={(url) => updateProject('image', url)} label="Upload…" folderHint={`projects/${project.id}/hero`} />
+                  <ImageUploadButton onUploaded={(url) => { updateProject('image', url); persistPartial({ image: url }) }} label="Upload…" folderHint={`projects/${project.id}/hero`} />
                   <button
                     type="button"
                     onClick={async () => {
@@ -562,6 +579,7 @@ export default function ProjectEditPage({ params }: ProjectEditPageProps) {
                       const confirmed = confirm('Remove hero image?' + (current.includes('/storage/v1/object') ? '\n(Optional) Also delete from storage?' : ''))
                       if (!confirmed) return
                       updateProject('image', '')
+                      persistPartial({ image: '' })
                     }}
                     className="px-3 py-2 border rounded-md text-sm text-red-700 border-red-300 hover:bg-red-50"
                   >

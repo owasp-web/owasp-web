@@ -23,5 +23,10 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
     notFound();
   }
 
-  return <ProjectDetailPageWithTabs project={data as any} />;
+  // Normalize hero from legacy aliases to ensure hero displays
+  const proj: any = { ...data }
+  if (!proj.image && (proj.hero_image || proj.image_url)) {
+    proj.image = proj.hero_image || proj.image_url
+  }
+  return <ProjectDetailPageWithTabs project={proj as any} />;
 }
