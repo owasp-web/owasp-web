@@ -290,11 +290,16 @@ export default function ProjectEditPage({ params }: ProjectEditPageProps) {
           body: JSON.stringify({ folder: `projects/${project.id}/videos`, filename: videoFile.name })
         })
         if (signRes.ok) {
-          const { token, path } = await signRes.json()
-          const { error } = await supabase.storage.from('project-media').uploadToSignedUrl(path, token, videoFile, {
-            contentType: videoFile.type || 'video/mp4', upsert: false
-          })
-          if (error) throw new Error(error.message)
+          const { token, path, signedUrl } = await signRes.json()
+          try {
+            const { error } = await supabase.storage.from('project-media').uploadToSignedUrl(path, token, videoFile, {
+              contentType: videoFile.type || 'video/mp4', upsert: false
+            })
+            if (error) throw error
+          } catch (e) {
+            const putRes = await fetch(signedUrl, { method: 'PUT', headers: { 'Content-Type': videoFile.type || 'video/mp4' }, body: videoFile })
+            if (!putRes.ok) throw new Error('Failed to PUT to signed URL')
+          }
           const { data: s } = await supabase.storage.from('project-media').createSignedUrl(path, 60 * 60 * 24 * 365)
           finalUrl = s?.signedUrl || ''
         } else {

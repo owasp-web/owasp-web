@@ -9,8 +9,8 @@ function getBearerToken(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const token = getBearerToken(req)
-    if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const authToken = getBearerToken(req)
+    if (!authToken) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const { folder, filename } = await req.json()
     if (!folder || !filename) return NextResponse.json({ error: 'folder and filename are required' }, { status: 400 })
@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
     if (!url || !key) return NextResponse.json({ error: 'Server not configured' }, { status: 500 })
 
     const svc = createClient(url, key)
-    const { data: userData, error: userErr } = await svc.auth.getUser(token)
+    const { data: userData, error: userErr } = await svc.auth.getUser(authToken)
     if (userErr || !userData?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     const email = (userData.user as any)?.email || ''
     const { data: rows } = await svc
@@ -38,10 +38,10 @@ export async function POST(req: NextRequest) {
     const { data, error } = await svc.storage.from('project-media').createSignedUploadUrl(objectPath)
     if (error || !data) return NextResponse.json({ error: error?.message || 'Failed to create signed upload' }, { status: 500 })
 
-    const token = (data as any).token
+    const uploadToken = (data as any).token
     const signedUrl = (data as any).signedUrl
 
-    return NextResponse.json({ path: objectPath, token, signedUrl })
+    return NextResponse.json({ path: objectPath, token: uploadToken, signedUrl })
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || 'Failed' }, { status: 500 })
   }
