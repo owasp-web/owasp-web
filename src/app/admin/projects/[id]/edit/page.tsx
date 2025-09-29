@@ -7,6 +7,7 @@ import Footer from '@/components/Footer';
 import { getProjectById } from '@/lib/projects';
 import { createClientComponentClient } from '@/lib/supabase';
 import { Project } from '@/lib/types';
+import Image from 'next/image';
 
 interface ProjectEditPageProps {
   params: {
@@ -278,23 +279,15 @@ export default function ProjectEditPage({ params }: ProjectEditPageProps) {
     try {
       let finalUrl = ''
       if (videoMode === 'upload') {
-        if (!videoFile) {
-          setVideoError('Select a video file to upload')
-          return
-        }
+        if (!videoFile) { setVideoError('Select a video file to upload'); return }
         const supabase = createClientComponentClient()
-        const { data: { session } } = await supabase.auth.getSession()
-        const form = new FormData()
-        form.append('file', videoFile)
-        form.append('folder', `projects/${project.id}/videos`)
-        const res = await fetch('/api/admin/upload', {
-          method: 'POST',
-          headers: { Authorization: `Bearer ${session?.access_token || ''}` },
-          body: form
-        })
-        if (!res.ok) throw new Error((await res.json()).error || 'Upload failed')
-        const json = await res.json()
-        finalUrl = json.url as string
+        const ext = (videoFile.name.split('.').pop() || 'bin').toLowerCase()
+        const objectPath = `projects/${project.id}/videos/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+        const { error: upErr } = await supabase.storage.from('project-media').upload(objectPath, videoFile, { upsert: false })
+        if (upErr) throw new Error(upErr.message)
+        const { data: signed, error: signErr } = await supabase.storage.from('project-media').createSignedUrl(objectPath, 60 * 60 * 24 * 365)
+        if (signErr) throw new Error(signErr.message)
+        finalUrl = signed?.signedUrl || ''
       } else {
         if (!videoUrlInput.trim()) {
           setVideoError('Enter a valid video URL')
@@ -305,7 +298,8 @@ export default function ProjectEditPage({ params }: ProjectEditPageProps) {
       updateSection(videoModalOpen.tabId, videoModalOpen.sectionIndex, 'videoUrl', finalUrl)
       closeVideoModal()
     } catch (e: any) {
-      setVideoError(e?.message || 'Failed to set video')
+      const msg = typeof e?.message === 'string' ? e.message : 'Failed to set video'
+      setVideoError(msg.includes('413') ? 'File too large for upload. Try a smaller file.' : msg)
     }
   }
 
@@ -518,13 +512,16 @@ export default function ProjectEditPage({ params }: ProjectEditPageProps) {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Hero Image URL (used in hero and previews)
                 </label>
-                <input
-                  type="url"
-                  value={project.image || ''}
-                  onChange={(e) => updateProject('image', e.target.value)}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2"
-                  placeholder="https://.../logo-or-hero-image.png"
-                />
+                <div className="flex items-center gap-2">
+                  <input
+                    type="url"
+                    value={project.image || ''}
+                    onChange={(e) => updateProject('image', e.target.value)}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2"
+                    placeholder="https://.../logo-or-hero-image.png"
+                  />
+                  <ImageUploadButton onUploaded={(url) => updateProject('image', url)} label="Upload…" folderHint="projects/hero" />
+                </div>
                 <p className="text-xs text-gray-500 mt-1">
                   Optional. When provided, it appears in the project hero next to details and as a thumbnail in listings.
                   If left blank, the page uses the default dark blue gradient background.
