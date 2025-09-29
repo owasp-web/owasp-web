@@ -542,7 +542,12 @@ export default function ProjectDetailPageWithTabs({ project }: ProjectPageProps)
                   {project.screenshots.map((screenshot, index) => (
                     <div key={index} className="space-y-2">
                       <div className="relative aspect-video rounded-lg overflow-hidden border border-gray-200">
-                        <img src={screenshot.url} alt={screenshot.alt_text} className="object-cover w-full h-full" />
+                        <img
+                          src={screenshot.url}
+                          alt={screenshot.alt_text}
+                          className="object-cover w-full h-full"
+                          onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/images/logo.svg' }}
+                        />
                       </div>
                       {screenshot.caption && (
                         <p className="text-sm text-gray-600 text-center">{screenshot.caption}</p>
