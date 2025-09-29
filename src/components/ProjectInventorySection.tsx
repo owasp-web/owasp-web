@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { getProjects, type ProjectsResponse } from '@/lib/projects';
+// Use public API routes for consistency with SSR pages and to avoid client counting quirks
 import { Project } from '@/lib/types';
 
 interface ButtonProps {
@@ -97,25 +97,30 @@ export default function ProjectInventorySection() {
       try {
         setLoading(true);
         setError(null);
-        
-        // Fetch total count and featured projects
-        const [allProjectsResponse, featuredResponse] = await Promise.all([
-          getProjects({ limit: 1 }), // Just to get total count
-          getProjects({ featured: true, limit: 6 }) // Get featured projects for display
-        ]);
-        
-        setTotalCount(allProjectsResponse.total);
-        setFeaturedProjects(featuredResponse.projects);
+
+        const [totalRes, featuredRes] = await Promise.all([
+          fetch('/api/public/projects/list?limit=1', { next: { revalidate: 60 } }),
+          fetch('/api/public/projects/featured', { next: { revalidate: 60 } })
+        ])
+
+        if (!totalRes.ok) throw new Error('Failed to fetch total projects')
+        if (!featuredRes.ok) throw new Error('Failed to fetch featured projects')
+
+        const totalJson = await totalRes.json()
+        const featuredJson = await featuredRes.json()
+
+        setTotalCount(Number(totalJson.total || (totalJson.projects?.length ?? 0)))
+        setFeaturedProjects((featuredJson.projects as Project[]) || [])
       } catch (err) {
         console.error('Error fetching projects:', err);
         setError('Failed to load projects');
       } finally {
         setLoading(false);
       }
-    };
+    }
 
-    fetchProjects();
-  }, []);
+    fetchProjects()
+  }, [])
 
   if (loading) {
     return (
