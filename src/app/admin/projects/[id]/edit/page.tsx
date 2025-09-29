@@ -284,7 +284,11 @@ export default function ProjectEditPage({ params }: ProjectEditPageProps) {
         const supabase = createClientComponentClient()
         const ext = (videoFile.name.split('.').pop() || 'bin').toLowerCase()
         const objectPath = `projects/${project.id}/videos/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
-        const { error: upErr } = await supabase.storage.from('project-media').upload(objectPath, videoFile, { upsert: false })
+        const { error: upErr } = await supabase.storage.from('project-media').upload(objectPath, videoFile, {
+          cacheControl: '3600',
+          contentType: videoFile.type || 'video/mp4',
+          upsert: false
+        })
         if (upErr) throw new Error(upErr.message)
         const { data: signed, error: signErr } = await supabase.storage.from('project-media').createSignedUrl(objectPath, 60 * 60 * 24 * 365)
         if (signErr) throw new Error(signErr.message)
@@ -623,7 +627,10 @@ export default function ProjectEditPage({ params }: ProjectEditPageProps) {
 
                               {/* Media inputs */}
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-3">
-                                <input value={section.imageUrl || ''} onChange={(e) => updateSection(tab.id, idx, 'imageUrl', e.target.value)} placeholder="Image URL (optional)" className="border rounded px-2 py-1" />
+                                <div className="flex items-center gap-2">
+                                  <input value={section.imageUrl || ''} onChange={(e) => updateSection(tab.id, idx, 'imageUrl', e.target.value)} placeholder="Image URL (optional)" className="border rounded px-2 py-1 w-full" />
+                                  <ImageUploadButton onUploaded={(url) => updateSection(tab.id, idx, 'imageUrl', url)} label="Upload…" folderHint={`projects/${project!.id}/images`} />
+                                </div>
                                 <input value={section.imageAlt || ''} onChange={(e) => updateSection(tab.id, idx, 'imageAlt', e.target.value)} placeholder="Image alt text" className="border rounded px-2 py-1" />
                               </div>
                               <input value={section.imageCaption || ''} onChange={(e) => updateSection(tab.id, idx, 'imageCaption', e.target.value)} placeholder="Image caption (optional)" className="border rounded px-2 py-1 w-full mt-2" />

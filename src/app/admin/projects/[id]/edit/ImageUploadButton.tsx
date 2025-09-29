@@ -16,7 +16,11 @@ export default function ImageUploadButton({ onUploaded, label = 'Upload…', fol
       const supabase = createClientComponentClient()
       const ext = (file.name.split('.').pop() || 'bin').toLowerCase()
       const objectPath = `${folderHint.replace(/^\/+|\/+$/g, '')}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
-      const { error: upErr } = await supabase.storage.from('project-media').upload(objectPath, file, { upsert: false })
+      const { error: upErr } = await supabase.storage.from('project-media').upload(objectPath, file, {
+        cacheControl: '3600',
+        contentType: file.type || 'application/octet-stream',
+        upsert: false
+      })
       if (upErr) throw new Error(upErr.message)
       const { data: signed, error: signErr } = await supabase.storage.from('project-media').createSignedUrl(objectPath, 60 * 60 * 24 * 365)
       if (signErr) throw new Error(signErr.message)
