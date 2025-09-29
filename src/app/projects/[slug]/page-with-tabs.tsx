@@ -318,6 +318,8 @@ function TabContent({ content }: TabContentProps) {
 
 export default function ProjectDetailPageWithTabs({ project }: ProjectPageProps) {
   const [activeTab, setActiveTab] = useState('overview');
+  // Hero image should come only from explicit fields set by admins
+  const heroUrl = (project as any).image || (project as any).hero_image || (project as any).image_url || ''
 
   const getProjectTypeColor = (type: string) => {
     switch (type) {
@@ -471,16 +473,13 @@ export default function ProjectDetailPageWithTabs({ project }: ProjectPageProps)
               </div>
             </div>
 
-            {/* Project Image/Logo (optional). When absent, hero uses gradient background */}
-            {(() => {
-              const heroUrl = (project.image as any) || (project as any).hero_image || (project as any).image_url || '/logo.svg'
-              return heroUrl
-            })() && (
+            {/* Project Image (optional). When absent, hero uses gradient background */}
+            {heroUrl && (
               <div className="w-full lg:w-80 h-48 lg:h-80 relative bg-white/10 backdrop-blur-sm rounded-lg p-8 flex items-center justify-center">
                 <div
                   className="w-full h-full bg-no-repeat bg-center bg-contain rounded"
                   style={{
-                    backgroundImage: `url('${(project.image as any) || (project as any).logo || (project as any).hero_image || (project as any)?.screenshots?.[0]?.url || '/logo.svg'}')`
+                    backgroundImage: `url('${heroUrl}')`
                   }}
                 />
               </div>
