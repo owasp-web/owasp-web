@@ -534,6 +534,18 @@ export default function ProjectEditPage({ params }: ProjectEditPageProps) {
                     placeholder="https://.../logo-or-hero-image.png"
                   />
                   <ImageUploadButton onUploaded={(url) => updateProject('image', url)} label="Upload…" folderHint={`projects/${project.id}/hero`} />
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      const current = project.image || ''
+                      const confirmed = confirm('Remove hero image?' + (current.includes('/storage/v1/object') ? '\n(Optional) Also delete from storage?' : ''))
+                      if (!confirmed) return
+                      updateProject('image', '')
+                    }}
+                    className="px-3 py-2 border rounded-md text-sm text-red-700 border-red-300 hover:bg-red-50"
+                  >
+                    Remove
+                  </button>
                 </div>
                 <p className="text-xs text-gray-500 mt-1">
                   Optional. When provided, it appears in the project hero next to details and as a thumbnail in listings.
