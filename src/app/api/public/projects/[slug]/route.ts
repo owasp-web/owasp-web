@@ -12,7 +12,15 @@ export async function GET(_req: NextRequest, context: { params: { slug: string }
       .eq('status', 'active')
       .single()
     if (error) return NextResponse.json({ error: 'Not found' }, { status: 404 })
-    return NextResponse.json({ project: data }, { headers: { 'Cache-Control': 's-maxage=60, stale-while-revalidate=300' } })
+
+    // If image is missing but we have screenshots, promote first screenshot as image for public consumption
+    if ((data as any) && !(data as any).image && Array.isArray((data as any).screenshots) && (data as any).screenshots.length > 0) {
+      const first = (data as any).screenshots[0]
+      if (first?.url) {
+        (data as any).image = first.url
+      }
+    }
+    return NextResponse.json({ project: data }, { headers: { 'Cache-Control': 'no-store' } })
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || 'Failed' }, { status: 500 })
   }

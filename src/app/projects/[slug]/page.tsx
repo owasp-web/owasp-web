@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'
 import { notFound } from 'next/navigation';
 import ProjectDetailPageWithTabs from './page-with-tabs';
 import { createServerComponentClient } from '@/lib/supabase';

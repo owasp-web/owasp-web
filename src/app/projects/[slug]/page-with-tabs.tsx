@@ -473,14 +473,14 @@ export default function ProjectDetailPageWithTabs({ project }: ProjectPageProps)
 
             {/* Project Image/Logo (optional). When absent, hero uses gradient background */}
             {(() => {
-              const heroUrl = (project.image as any) || (project as any).logo || (project as any).hero_image || (project as any)?.screenshots?.[0]?.url
+              const heroUrl = (project.image as any) || (project as any).logo || (project as any).hero_image || (project as any)?.screenshots?.[0]?.url || '/images/logo.svg'
               return heroUrl
             })() && (
               <div className="w-full lg:w-80 h-48 lg:h-80 relative bg-white/10 backdrop-blur-sm rounded-lg p-8 flex items-center justify-center">
                 <div
                   className="w-full h-full bg-no-repeat bg-center bg-contain rounded"
                   style={{
-                    backgroundImage: `url('${(project.image as any) || (project as any).logo || (project as any).hero_image || (project as any)?.screenshots?.[0]?.url}')`
+                    backgroundImage: `url('${(project.image as any) || (project as any).logo || (project as any).hero_image || (project as any)?.screenshots?.[0]?.url || '/images/logo.svg'}')`
                   }}
                 />
               </div>
