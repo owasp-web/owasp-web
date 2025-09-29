@@ -308,7 +308,28 @@ export default function ProjectEditPage({ params }: ProjectEditPageProps) {
         }
         finalUrl = videoUrlInput.trim()
       }
+      // Update local state
       updateSection(videoModalOpen.tabId, videoModalOpen.sectionIndex, 'videoUrl', finalUrl)
+
+      // Autosave tabs to persist immediately
+      try {
+        const supabase = createClientComponentClient()
+        const { data: { session } } = await supabase.auth.getSession()
+        if (session?.access_token) {
+          const res = await fetch(`/api/admin/projects/${project.id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+            body: JSON.stringify({ tabs: project.tabs })
+          })
+          if (!res.ok) {
+            // Non-fatal: keep UI updated but inform user
+            console.warn('Autosave tabs failed')
+          }
+        }
+      } catch (e) {
+        console.warn('Autosave error', e)
+      }
+
       closeVideoModal()
     } catch (e: any) {
       const msg = typeof e?.message === 'string' ? e.message : 'Failed to set video'
