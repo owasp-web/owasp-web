@@ -301,3 +301,18 @@ export interface ChapterPartnership {
 export type EventFormData = Omit<Event, 'id' | 'created_at'>
 export type ProjectFormData = Omit<Project, 'id' | 'created_at'>  
 export type ChapterFormData = Omit<Chapter, 'id' | 'created_at'> 
+
+// Finance documents
+export type FinanceCategory = 'Annual Budget' | 'Tax Return' | 'Audited Financial Statement' | 'Other'
+
+export interface FinanceDocument {
+  id: string
+  created_at: string
+  updated_at?: string
+  name: string
+  category: FinanceCategory
+  year?: number
+  file_url: string
+  storage_path?: string
+  display_order?: number
+}

@@ -80,6 +80,9 @@ export default function Footer() {
                   <Link href="/about" className="font-['Barlow'] font-medium text-[#ffffff] text-[16px] sm:text-[18px] lg:text-[20px] tracking-[-0.32px] sm:tracking-[-0.36px] lg:tracking-[-0.4px] leading-[22px] sm:leading-[24px] lg:leading-[26px] hover:text-[#ffb81b] transition-colors">
                     About
                   </Link>
+                  <Link href="/finance" className="font-['Barlow'] font-medium text-[#ffffff] text-[16px] sm:text-[18px] lg:text-[20px] tracking-[-0.32px] sm:tracking-[-0.36px] lg:tracking-[-0.4px] leading-[22px] sm:leading-[24px] lg:leading-[26px] hover:text-[#ffb81b] transition-colors">
+                    Finance
+                  </Link>
                   <a href="#" className="font-['Barlow'] font-medium text-[#ffffff] text-[16px] sm:text-[18px] lg:text-[20px] tracking-[-0.32px] sm:tracking-[-0.36px] lg:tracking-[-0.4px] leading-[22px] sm:leading-[24px] lg:leading-[26px] hover:text-[#ffb81b] transition-colors">
                     Visit Store
                   </a>
