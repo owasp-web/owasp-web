@@ -472,11 +472,11 @@ export default function ProjectDetailPageWithTabs({ project }: ProjectPageProps)
             </div>
 
             {/* Project Image/Logo (optional). When absent, hero uses gradient background */}
-            {project.image && (
+            {(project.image || (project as any).logo || (project as any).hero_image) && (
               <div className="w-full lg:w-80 h-48 lg:h-80 relative bg-white/10 backdrop-blur-sm rounded-lg p-8 flex items-center justify-center">
                 <div className="relative w-full h-full">
-                  {/* Use native img to avoid Next/Image proxy issues with signed URLs */}
-                  <img src={project.image} alt={project.title} className="object-contain w-full h-full" />
+                  {/* Use native img to avoid Next/Image proxy issues with signed URLs; fall back to other common fields */}
+                  <img src={(project.image as any) || (project as any).logo || (project as any).hero_image} alt={project.title} className="object-contain w-full h-full" />
                 </div>
               </div>
             )}
