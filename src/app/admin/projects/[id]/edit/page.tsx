@@ -285,14 +285,25 @@ export default function ProjectEditPage({ params }: ProjectEditPageProps) {
         const ext = (videoFile.name.split('.').pop() || 'bin').toLowerCase()
         const objectPath = `projects/${project.id}/videos/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
         const { error: upErr } = await supabase.storage.from('project-media').upload(objectPath, videoFile, {
-          cacheControl: '3600',
-          contentType: videoFile.type || 'video/mp4',
-          upsert: false
+          cacheControl: '3600', contentType: videoFile.type || 'video/mp4', upsert: false
         })
-        if (upErr) throw new Error(upErr.message)
-        const { data: signed, error: signErr } = await supabase.storage.from('project-media').createSignedUrl(objectPath, 60 * 60 * 24 * 365)
-        if (signErr) throw new Error(signErr.message)
-        finalUrl = signed?.signedUrl || ''
+        if (upErr) {
+          // Fallback to server upload using service role
+          const { data: { session } } = await supabase.auth.getSession()
+          const form = new FormData()
+          form.append('file', videoFile)
+          form.append('folder', `projects/${project.id}/videos`)
+          const res = await fetch('/api/admin/upload', {
+            method: 'POST', headers: { Authorization: `Bearer ${session?.access_token || ''}` }, body: form
+          })
+          const json = await res.json().catch(() => ({ error: 'Upload failed' }))
+          if (!res.ok || !json.url) throw new Error(json.error || upErr.message)
+          finalUrl = json.url
+        } else {
+          const { data: signed, error: signErr } = await supabase.storage.from('project-media').createSignedUrl(objectPath, 60 * 60 * 24 * 365)
+          if (signErr) throw new Error(signErr.message)
+          finalUrl = signed?.signedUrl || ''
+        }
       } else {
         if (!videoUrlInput.trim()) {
           setVideoError('Enter a valid video URL')

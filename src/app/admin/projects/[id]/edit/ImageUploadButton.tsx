@@ -21,7 +21,21 @@ export default function ImageUploadButton({ onUploaded, label = 'Upload…', fol
         contentType: file.type || 'application/octet-stream',
         upsert: false
       })
-      if (upErr) throw new Error(upErr.message)
+      if (upErr) {
+        // Fallback to server upload (service role) to bypass RLS if needed
+        const { data: { session } } = await supabase.auth.getSession()
+        const form = new FormData()
+        form.append('file', file)
+        form.append('folder', folderHint)
+        const res = await fetch('/api/admin/upload', {
+          method: 'POST', headers: { Authorization: `Bearer ${session?.access_token || ''}` }, body: form
+        })
+        const json = await res.json().catch(() => ({ error: 'Upload failed' }))
+        if (!res.ok || !json.url) throw new Error(json.error || upErr.message)
+        onUploaded(json.url)
+        setBusy(false)
+        return
+      }
       const { data: signed, error: signErr } = await supabase.storage.from('project-media').createSignedUrl(objectPath, 60 * 60 * 24 * 365)
       if (signErr) throw new Error(signErr.message)
       onUploaded(signed?.signedUrl || '')
