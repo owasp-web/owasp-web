@@ -58,25 +58,13 @@ export default function ProjectEditPage({ params }: ProjectEditPageProps) {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('Not authenticated');
 
-      // Ensure only valid columns are sent
-      const { data: currentRow, error: selectError } = await supabase
-        .from('projects')
-        .select('*')
-        .eq('id', project.id)
-        .single();
-      if (selectError) throw selectError;
-
-      const allowedKeys = new Set(Object.keys(currentRow || {}));
-      const sanitized: Record<string, any> = {};
-      Object.entries(project).forEach(([k, v]) => {
-        if (allowedKeys.has(k) && v !== undefined) sanitized[k] = v;
-      });
-
-      const { error } = await supabase
-        .from('projects')
-        .update(sanitized)
-        .eq('id', project.id);
-      if (error) throw error;
+      // Save via admin API (service role) to avoid RLS and 406 errors
+      const res = await fetch(`/api/admin/projects/${project.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify(project)
+      })
+      if (!res.ok) throw new Error((await res.json()).error || 'Failed to save')
       alert('Project saved successfully.');
     } catch (error) {
       console.error('Error saving project:', error);
