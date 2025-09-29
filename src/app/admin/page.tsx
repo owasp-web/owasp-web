@@ -267,6 +267,32 @@ export default function AdminPage() {
                 </div>
               )}
 
+              {isSuperAdmin && (
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow duration-300">
+                  <div className="p-4 sm:p-6 lg:p-8">
+                    <div className="flex items-center mb-4 sm:mb-6">
+                      <div className="bg-[#003594] p-2 sm:p-3 rounded-lg">
+                        <Image src="/images/icons/file.svg" alt="" width={24} height={24} className="filter brightness-0 invert" />
+                      </div>
+                      <div className="ml-3 sm:ml-4">
+                        <h3 className="font-['Barlow'] font-medium text-[#101820] text-lg sm:text-[20px] leading-tight sm:leading-[24px] tracking-[-0.36px] sm:tracking-[-0.4px]">
+                          Finance
+                        </h3>
+                        <p className="font-['Poppins'] text-[#757575] text-sm leading-[18px] sm:leading-[20px]">
+                          Upload budgets, audits, and 990 tax returns
+                        </p>
+                      </div>
+                    </div>
+                    <Button 
+                      text="Manage Finance" 
+                      variant="primary" 
+                      size="40"
+                      onClick={() => router.push('/admin/finance')}
+                    />
+                  </div>
+                </div>
+              )}
+
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow duration-300">
                 <div className="p-4 sm:p-6 lg:p-8">
                   <div className="flex items-center mb-4 sm:mb-6">

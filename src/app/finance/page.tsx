@@ -1,10 +1,20 @@
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
+import { createClient } from '@supabase/supabase-js'
 
 async function getDocs() {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || ''}/api/public/finance-docs/list`, { cache: 'no-store' })
-  const json = await res.json().catch(() => ({ documents: [] }))
-  return Array.isArray(json?.documents) ? json.documents : []
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  if (!url || !anon) return []
+  const supabase = createClient(url, anon)
+  const { data, error } = await supabase
+    .from('finance_documents')
+    .select('*')
+    .order('display_order', { ascending: true })
+    .order('year', { ascending: false })
+    .order('created_at', { ascending: false })
+  if (error) return []
+  return data || []
 }
 
 export default async function FinancePage() {
