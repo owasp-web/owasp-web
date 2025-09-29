@@ -23,13 +23,22 @@ export default function ImageUploadButton({ onUploaded, label = 'Upload…', fol
       })
       if (signRes.ok) {
         const signed = await signRes.json()
-        const { token, path } = signed
-        const { data, error } = await supabase.storage.from('project-media').uploadToSignedUrl(path, token, file, {
-          contentType: file.type || 'application/octet-stream',
-          upsert: false
-        })
-        if (error) throw new Error(error.message)
-        // Get signed URL for display
+        const { token, path, signedUrl } = signed
+        try {
+          const { error } = await supabase.storage.from('project-media').uploadToSignedUrl(path, token, file, {
+            contentType: file.type || 'application/octet-stream',
+            upsert: false
+          })
+          if (error) throw error
+        } catch (e) {
+          // PUT directly to signedUrl as a fallback
+          const putRes = await fetch(signedUrl, {
+            method: 'PUT',
+            headers: { 'Content-Type': file.type || 'application/octet-stream' },
+            body: file
+          })
+          if (!putRes.ok) throw new Error('Failed to PUT to signed URL')
+        }
         const { data: s } = await supabase.storage.from('project-media').createSignedUrl(path, 60 * 60 * 24 * 365)
         onUploaded(s?.signedUrl || '')
         setBusy(false)

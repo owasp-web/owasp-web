@@ -38,7 +38,10 @@ export async function POST(req: NextRequest) {
     const { data, error } = await svc.storage.from('project-media').createSignedUploadUrl(objectPath)
     if (error || !data) return NextResponse.json({ error: error?.message || 'Failed to create signed upload' }, { status: 500 })
 
-    return NextResponse.json({ path: objectPath, token: (data as any).token })
+    const token = (data as any).token
+    const signedUrl = (data as any).signedUrl
+
+    return NextResponse.json({ path: objectPath, token, signedUrl })
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || 'Failed' }, { status: 500 })
   }
