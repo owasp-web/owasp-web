@@ -31,7 +31,8 @@ export default function AdminLegalPage() {
   }, [])
 
   const loadData = async () => {
-    const res = await fetch('/api/admin/legal')
+    const { data: { session } } = await supabase.auth.getSession()
+    const res = await fetch('/api/admin/legal', { headers: { Authorization: `Bearer ${session?.access_token || ''}` } })
     const json = await res.json()
     setPages(json?.pages || [])
   }
@@ -44,7 +45,9 @@ export default function AdminLegalPage() {
 
   const updatePage = async (p: LegalPage) => {
     const { data: { session } } = await supabase.auth.getSession()
-    await fetch('/api/admin/legal', { method: 'PUT', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token || ''}` }, body: JSON.stringify(p) })
+    const res = await fetch('/api/admin/legal', { method: 'PUT', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token || ''}` }, body: JSON.stringify(p) })
+    if (!res.ok) return
+    await loadData()
   }
 
   const deletePage = async (id: string) => {

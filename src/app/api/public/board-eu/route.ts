@@ -1,16 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClientComponentClient } from '@/lib/supabase'
+import { createClient } from '@supabase/supabase-js'
 
 export async function GET(req: NextRequest) {
   try {
-    const supabase = createClientComponentClient()
-    const { data: tabsData, error: tabsErr } = await supabase
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY
+    if (!url || !key) return NextResponse.json({ error: 'Server not configured' }, { status: 500 })
+    const svc = createClient(url, key)
+    const { data: tabsData, error: tabsErr } = await svc
       .from('board_eu_tabs')
       .select('*')
       .order('display_order', { ascending: true })
     if (tabsErr) return NextResponse.json({ error: tabsErr.message }, { status: 400 })
 
-    const { data: membersData, error: membersErr } = await supabase
+    const { data: membersData, error: membersErr } = await svc
       .from('board_eu_members')
       .select('*')
       .eq('is_active', true)
