@@ -287,9 +287,17 @@ export default function EditChapterPage({ params }: EditChapterPageProps) {
 
     setSaving(true);
     try {
-      // Ensure tabs default structure is an array
       const payload = { ...chapter, tabs: (chapter as any).tabs || [] } as Partial<Chapter>
-      await adminService.updateChapter(params.id, payload);
+      // Prefer service role admin API to avoid PostgREST 406/column errors and simplify RLS
+      const supabase = createClientComponentClient()
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) throw new Error('Not authenticated')
+      const res = await fetch(`/api/admin/chapters/${params.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify(payload)
+      })
+      if (!res.ok) throw new Error((await res.json()).error || 'Failed to update chapter')
       alert('Chapter updated successfully!');
     } catch (error) {
       console.error('Error updating chapter:', error);
@@ -362,7 +370,37 @@ export default function EditChapterPage({ params }: EditChapterPageProps) {
           <div className="bg-white rounded-lg shadow p-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold text-gray-900">Custom Tabs</h2>
-              <button type="button" onClick={addTab} className="px-3 py-2 bg-[#003594] text-white rounded-lg hover:bg-[#002d7a]">Add Tab</button>
+              <div className="flex gap-2">
+                <button type="button" onClick={addTab} className="px-3 py-2 bg-[#003594] text-white rounded-lg hover:bg-[#002d7a]">Add Tab</button>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    // Quick save for tabs without scrolling
+                    if (!chapter) return
+                    setSaving(true)
+                    try {
+                      const payload = { tabs: (chapter as any).tabs || [] } as Partial<Chapter>
+                      const supabase = createClientComponentClient()
+                      const { data: { session } } = await supabase.auth.getSession()
+                      if (!session) throw new Error('Not authenticated')
+                      const res = await fetch(`/api/admin/chapters/${params.id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+                        body: JSON.stringify(payload)
+                      })
+                      if (!res.ok) throw new Error((await res.json()).error || 'Failed to save tabs')
+                    } catch (e) {
+                      console.error(e)
+                      alert('Failed to save tabs')
+                    } finally {
+                      setSaving(false)
+                    }
+                  }}
+                  className="px-3 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                >
+                  Save Tabs
+                </button>
+              </div>
             </div>
             {(ensureTabs()).length === 0 ? (
               <p className="text-gray-600">No tabs yet. Click "Add Tab" to create one.</p>

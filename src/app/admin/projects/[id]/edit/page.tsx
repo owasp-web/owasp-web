@@ -193,6 +193,7 @@ export default function ProjectEditPage({ params }: ProjectEditPageProps) {
   const [projAdminsLoading, setProjAdminsLoading] = useState<boolean>(false)
   const [projAdminsError, setProjAdminsError] = useState<string | null>(null)
   const [newProjAdminEmail, setNewProjAdminEmail] = useState<string>('')
+  const [newAdminTemp, setNewAdminTemp] = useState<{ email: string; password: string } | null>(null)
 
   // Video modal state (for section videoUrl)
   const [videoModalOpen, setVideoModalOpen] = useState<{ tabId: string; sectionIndex: number } | null>(null)
@@ -232,7 +233,13 @@ export default function ProjectEditPage({ params }: ProjectEditPageProps) {
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token || ''}` },
         body: JSON.stringify({ email: newProjAdminEmail.trim() })
       })
-      if (!res.ok) throw new Error((await res.json()).error || 'Failed')
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error || 'Failed')
+      if (json?.tempPassword) {
+        setNewAdminTemp({ email: json?.admin?.email || newProjAdminEmail.trim(), password: json.tempPassword })
+      } else {
+        setNewAdminTemp(null)
+      }
       setNewProjAdminEmail('')
       fetchProjectAdmins()
     } catch (e: any) {
@@ -771,6 +778,31 @@ export default function ProjectEditPage({ params }: ProjectEditPageProps) {
                   </button>
                 </div>
               </div>
+              {newAdminTemp && (
+                <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-3 py-2 rounded">
+                  <div className="font-medium">Temporary password created</div>
+                  <div className="text-sm">Email: {newAdminTemp.email}</div>
+                  <div className="text-sm flex items-center gap-2">
+                    <span>Password:</span>
+                    <code className="px-2 py-1 bg-white/80 border border-yellow-200 rounded break-all">{newAdminTemp.password}</code>
+                    <button
+                      type="button"
+                      onClick={() => navigator.clipboard.writeText(newAdminTemp.password)}
+                      className="text-xs px-2 py-1 border border-yellow-300 rounded hover:bg-yellow-100"
+                    >
+                      Copy
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setNewAdminTemp(null)}
+                      className="text-xs px-2 py-1 border border-yellow-300 rounded hover:bg-yellow-100"
+                    >
+                      Hide
+                    </button>
+                  </div>
+                  <div className="text-xs mt-1">Copy and send this to the admin now; it won't be shown again.</div>
+                </div>
+              )}
               {projAdminsError && (
                 <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded">{projAdminsError}</div>
               )}
