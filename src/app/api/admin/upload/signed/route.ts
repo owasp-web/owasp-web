@@ -28,12 +28,30 @@ export async function POST(req: NextRequest) {
       .select('id')
       .or(`user_id.eq.${userData.user.id},email.eq.${email}`)
       .limit(1)
-    if (!rows || rows.length === 0) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+
+    const isSuperAdmin = !!(rows && rows.length > 0)
+
+    // Helper: determine if user is project admin for project contained in given storage path
+    const isAllowedForTarget = async (target: string | null | undefined) => {
+      if (isSuperAdmin) return true
+      const s = String(target || '')
+      // Expecting patterns like: projects/{projectId}/...
+      const m = s.match(/(^|\/)projects\/(\b[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\b)\//i)
+      const projectId = m ? m[2] : null
+      if (!projectId) return false
+      const { data: paRows } = await svc
+        .from('project_admins')
+        .select('id')
+        .eq('project_id', projectId)
+        .or(`user_id.eq.${userData.user.id},email.eq.${email}`)
+        .limit(1)
+      return !!(paRows && paRows.length > 0)
     }
 
     // Branch: sign read URL after upload
     if (action === 'sign-read' && typeof path === 'string') {
+      const allowed = await isAllowedForTarget(path)
+      if (!allowed) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
       const { data: signed, error: signErr } = await svc.storage.from('project-media').createSignedUrl(String(path), 60 * 60 * 24 * 365)
       if (signErr) return NextResponse.json({ error: signErr.message }, { status: 500 })
       return NextResponse.json({ url: signed?.signedUrl })
@@ -41,6 +59,8 @@ export async function POST(req: NextRequest) {
 
     // Branch: create signed upload URL
     if (!folder || !filename) return NextResponse.json({ error: 'folder and filename are required' }, { status: 400 })
+    const allowed = await isAllowedForTarget(folder)
+    if (!allowed) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     const ext = (String(filename).split('.').pop() || 'bin').toLowerCase()
     const objectPath = `${String(folder).replace(/^\/+|\/+$/g, '')}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
     const { data, error } = await svc.storage.from('project-media').createSignedUploadUrl(objectPath)
