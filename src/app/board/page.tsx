@@ -3,7 +3,7 @@ import Footer from '@/components/Footer'
 
 async function getBoardData() {
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || ''}/api/public/board`, { cache: 'no-store' })
+    const res = await fetch(`/api/public/board`, { cache: 'no-store' })
     if (!res.ok) return { tabs: [], members: [] }
     return await res.json()
   } catch {
