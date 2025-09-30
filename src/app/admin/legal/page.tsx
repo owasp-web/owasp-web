@@ -6,7 +6,15 @@ import Footer from '@/components/Footer'
 import Button from '@/components/Button'
 import { createClientComponentClient } from '@/lib/supabase'
 
-type LegalPage = { id: string, title: string, slug: string, content?: string, display_order?: number, is_active: boolean }
+type LegalPage = { id?: string, title: string, slug: string, content?: string, display_order?: number, is_active: boolean }
+
+const DEFAULT_POLICIES: { title: string, slug: string }[] = [
+  { title: 'Code of Conduct', slug: 'code-of-conduct' },
+  { title: 'Conflict of Interest', slug: 'conflict-of-interest' },
+  { title: 'Event Attendee Policy', slug: 'event-attendee-policy' },
+  { title: 'General Disclaimer', slug: 'general-disclaimer' },
+  { title: 'Privacy Policy', slug: 'privacy-policy' },
+]
 
 export default function AdminLegalPage() {
   const [loading, setLoading] = useState(true)
@@ -34,20 +42,27 @@ export default function AdminLegalPage() {
     const { data: { session } } = await supabase.auth.getSession()
     const res = await fetch('/api/admin/legal', { headers: { Authorization: `Bearer ${session?.access_token || ''}` } })
     const json = await res.json()
-    setPages(json?.pages || [])
+    const existing: LegalPage[] = json?.pages || []
+    const merged: LegalPage[] = DEFAULT_POLICIES.map((d, idx) => {
+      const match = existing.find((p: any) => p.slug === d.slug)
+      return match ? match : { title: d.title, slug: d.slug, content: '', display_order: idx + 1, is_active: true }
+    })
+    setPages(merged)
   }
 
-  const addPage = async () => {
-    const { data: { session } } = await supabase.auth.getSession()
-    await fetch('/api/admin/legal', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token || ''}` }, body: JSON.stringify({ title: 'New Policy', slug: `policy-${Date.now()}`, content: '', display_order: (pages?.length || 0) + 1, is_active: true }) })
-    await loadData()
-  }
+  const addPage = async () => {}
 
   const updatePage = async (p: LegalPage) => {
     const { data: { session } } = await supabase.auth.getSession()
-    const res = await fetch('/api/admin/legal', { method: 'PUT', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token || ''}` }, body: JSON.stringify(p) })
-    if (!res.ok) return
-    await loadData()
+    if (p.id) {
+      const res = await fetch('/api/admin/legal', { method: 'PUT', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token || ''}` }, body: JSON.stringify(p) })
+      if (!res.ok) return
+      await loadData()
+    } else {
+      const res = await fetch('/api/admin/legal', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token || ''}` }, body: JSON.stringify({ title: p.title, slug: p.slug, content: p.content || '', display_order: p.display_order || 0, is_active: p.is_active }) })
+      if (!res.ok) return
+      await loadData()
+    }
   }
 
   const deletePage = async (id: string) => {
@@ -95,23 +110,22 @@ export default function AdminLegalPage() {
           <section>
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-semibold">Policies</h2>
-              <Button text="Add Policy" variant="primary" size="40" onClick={addPage} />
             </div>
             <div className="grid gap-4">
               {pages.map((p) => (
-                <div key={p.id} className="bg-white border border-gray-200 rounded-lg p-4">
+                <div key={p.slug} className="bg-white border border-gray-200 rounded-lg p-4">
                   <div className="grid grid-cols-1 lg:grid-cols-6 gap-3 mb-3">
-                    <input value={p.title} onChange={(e) => setPages(pages.map(x => x.id === p.id ? { ...x, title: e.target.value } : x))} className="border px-3 py-2 rounded w-full lg:col-span-2" placeholder="Title" />
-                    <input value={p.slug} onChange={(e) => setPages(pages.map(x => x.id === p.id ? { ...x, slug: e.target.value } : x))} className="border px-3 py-2 rounded w-full lg:col-span-2" placeholder="Slug" />
-                    <input type="number" value={p.display_order || 0} onChange={(e) => setPages(pages.map(x => x.id === p.id ? { ...x, display_order: Number(e.target.value) } : x))} className="border px-3 py-2 rounded w-full" placeholder="Order" />
+                    <input value={p.title} readOnly className="border px-3 py-2 rounded w-full lg:col-span-2 bg-gray-50" placeholder="Title" />
+                    <input value={p.slug} readOnly className="border px-3 py-2 rounded w-full lg:col-span-2 bg-gray-50" placeholder="Slug" />
+                    <input type="number" value={p.display_order || 0} onChange={(e) => setPages(pages.map(x => x.slug === p.slug ? { ...x, display_order: Number(e.target.value) } : x))} className="border px-3 py-2 rounded w-full" placeholder="Order" />
                     <label className="inline-flex items-center gap-2 text-sm text-gray-700">
-                      <input type="checkbox" checked={p.is_active} onChange={(e) => setPages(pages.map(x => x.id === p.id ? { ...x, is_active: e.target.checked } : x))} /> Active
+                      <input type="checkbox" checked={!!p.is_active} onChange={(e) => setPages(pages.map(x => x.slug === p.slug ? { ...x, is_active: e.target.checked } : x))} /> Active
                     </label>
                   </div>
-                  <textarea value={p.content || ''} onChange={(e) => setPages(pages.map(x => x.id === p.id ? { ...x, content: e.target.value } : x))} className="border px-3 py-2 rounded w-full h-52 font-mono text-sm" placeholder='Policy content (HTML supported)' />
+                  <textarea value={p.content || ''} onChange={(e) => setPages(pages.map(x => x.slug === p.slug ? { ...x, content: e.target.value } : x))} className="border px-3 py-2 rounded w-full h-52 font-mono text-sm" placeholder='Policy content (HTML supported)' />
                   <div className="flex gap-2 mt-3">
                     <Button text="Save" variant="ghost-dark" size="40" onClick={() => updatePage(p)} />
-                    <Button text="Delete" variant="ghost-dark" size="40" onClick={() => deletePage(p.id)} />
+                    {p.id && <Button text="Delete" variant="ghost-dark" size="40" onClick={() => deletePage(p.id as string)} />}
                   </div>
                 </div>
               ))}
