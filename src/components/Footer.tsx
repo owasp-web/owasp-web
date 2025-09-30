@@ -83,6 +83,15 @@ export default function Footer() {
                   <Link href="/finance" className="font-['Barlow'] font-medium text-[#ffffff] text-[16px] sm:text-[18px] lg:text-[20px] tracking-[-0.32px] sm:tracking-[-0.36px] lg:tracking-[-0.4px] leading-[22px] sm:leading-[24px] lg:leading-[26px] hover:text-[#ffb81b] transition-colors">
                     Finance
                   </Link>
+                  <Link href="/board" className="font-['Barlow'] font-medium text-[#ffffff] text-[16px] sm:text-[18px] lg:text-[20px] tracking-[-0.32px] sm:tracking-[-0.36px] lg:tracking-[-0.4px] leading-[22px] sm:leading-[24px] lg:leading-[26px] hover:text-[#ffb81b] transition-colors">
+                    Board
+                  </Link>
+                  <Link href="/board-eu" className="font-['Barlow'] font-medium text-[#ffffff] text-[16px] sm:text-[18px] lg:text-[20px] tracking-[-0.32px] sm:tracking-[-0.36px] lg:tracking-[-0.4px] leading-[22px] sm:leading-[24px] lg:leading-[26px] hover:text-[#ffb81b] transition-colors">
+                    Board EU
+                  </Link>
+                  <Link href="/community" className="font-['Barlow'] font-medium text-[#ffffff] text-[16px] sm:text-[18px] lg:text-[20px] tracking-[-0.32px] sm:tracking-[-0.36px] lg:tracking-[-0.4px] leading-[22px] sm:leading-[24px] lg:leading-[26px] hover:text-[#ffb81b] transition-colors">
+                    Community
+                  </Link>
                   <a href="#" className="font-['Barlow'] font-medium text-[#ffffff] text-[16px] sm:text-[18px] lg:text-[20px] tracking-[-0.32px] sm:tracking-[-0.36px] lg:tracking-[-0.4px] leading-[22px] sm:leading-[24px] lg:leading-[26px] hover:text-[#ffb81b] transition-colors">
                     Visit Store
                   </a>
@@ -95,15 +104,12 @@ export default function Footer() {
                   Legal
                 </div>
                 <div className="flex flex-col gap-3">
-                  <a href="#" className="font-['Barlow'] font-medium text-[#ffffff] text-[16px] sm:text-[18px] lg:text-[20px] tracking-[-0.32px] sm:tracking-[-0.36px] lg:tracking-[-0.4px] leading-[22px] sm:leading-[24px] lg:leading-[26px] hover:text-[#ffb81b] transition-colors">
-                    Privacy
-                  </a>
-                  <a href="#" className="font-['Barlow'] font-medium text-[#ffffff] text-[16px] sm:text-[18px] lg:text-[20px] tracking-[-0.32px] sm:tracking-[-0.36px] lg:tracking-[-0.4px] leading-[22px] sm:leading-[24px] lg:leading-[26px] hover:text-[#ffb81b] transition-colors">
-                    Sitemap
-                  </a>
-                  <a href="#" className="font-['Barlow'] font-medium text-[#ffffff] text-[16px] sm:text-[18px] lg:text-[20px] tracking-[-0.32px] sm:tracking-[-0.36px] lg:tracking-[-0.4px] leading-[22px] sm:leading-[24px] lg:leading-[26px] hover:text-[#ffb81b] transition-colors">
-                    Contact
-                  </a>
+                  <Link href="/legal" className="font-['Barlow'] font-medium text-[#ffffff] text-[16px] sm:text-[18px] lg:text-[20px] tracking-[-0.32px] sm:tracking-[-0.36px] lg:tracking-[-0.4px] leading-[22px] sm:leading-[24px] lg:leading-[26px] hover:text-[#ffb81b] transition-colors">
+                    Legal
+                  </Link>
+                  <Link href="/legal/privacy-policy" className="font-['Barlow'] font-medium text-[#ffffff] text-[16px] sm:text-[18px] lg:text-[20px] tracking-[-0.32px] sm:tracking-[-0.36px] lg:tracking-[-0.4px] leading-[22px] sm:leading-[24px] lg:leading-[26px] hover:text-[#ffb81b] transition-colors">
+                    Privacy Policy
+                  </Link>
                 </div>
               </div>
 

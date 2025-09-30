@@ -196,6 +196,51 @@ export interface SecurityAdvisory {
   fixed_in_version?: string
 }
 
+// Board page types
+export interface BoardTabSectionButton {
+  label: string
+  url: string
+  style?: 'primary' | 'secondary' | 'link'
+}
+
+export interface BoardTabSection {
+  title?: string
+  content?: string
+  imageUrl?: string
+  imageAlt?: string
+  imageCaption?: string
+  videoUrl?: string
+  buttons?: BoardTabSectionButton[]
+}
+
+export interface BoardTab {
+  id: string
+  name: string
+  order: number
+  sections: BoardTabSection[]
+}
+
+export interface BoardMemberLink {
+  title: string
+  url: string
+  icon?: string
+}
+
+export interface BoardMember {
+  id: string
+  created_at: string
+  updated_at?: string
+  name: string
+  title?: string
+  description?: string
+  image_url?: string
+  storage_path?: string
+  links: BoardMemberLink[]
+  country?: string
+  display_order?: number
+  is_active: boolean
+}
+
 export interface Chapter {
   id: string
   created_at: string

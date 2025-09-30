@@ -266,6 +266,56 @@ export default function AdminPage() {
                   </div>
                 </div>
               )}
+              {isSuperAdmin && (
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow duration-300">
+                  <div className="p-4 sm:p-6 lg:p-8">
+                    <div className="flex items-center mb-4 sm:mb-6">
+                      <div className="bg-[#003594] p-2 sm:p-3 rounded-lg">
+                        <Image src="/images/icons/users.svg" alt="" width={24} height={24} className="filter brightness-0 invert" />
+                      </div>
+                      <div className="ml-3 sm:ml-4">
+                        <h3 className="font-['Barlow'] font-medium text-[#101820] text-lg sm:text-[20px] leading-tight sm:leading-[24px] tracking-[-0.36px] sm:tracking-[-0.4px]">Community</h3>
+                        <p className="font-['Poppins'] text-[#757575] text-sm leading-[18px] sm:leading-[20px]">Manage community tabs and content</p>
+                      </div>
+                    </div>
+                    <Button text="Manage Community" variant="primary" size="40" onClick={() => router.push('/admin/community')} />
+                  </div>
+                </div>
+              )}
+
+              {isSuperAdmin && (
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow duration-300">
+                  <div className="p-4 sm:p-6 lg:p-8">
+                    <div className="flex items-center mb-4 sm:mb-6">
+                      <div className="bg-[#003594] p-2 sm:p-3 rounded-lg">
+                        <Image src="/images/icons/users.svg" alt="" width={24} height={24} className="filter brightness-0 invert" />
+                      </div>
+                      <div className="ml-3 sm:ml-4">
+                        <h3 className="font-['Barlow'] font-medium text-[#101820] text-lg sm:text-[20px] leading-tight sm:leading-[24px] tracking-[-0.36px] sm:tracking-[-0.4px]">Board EU</h3>
+                        <p className="font-['Poppins'] text-[#757575] text-sm leading-[18px] sm:leading-[20px]">Manage EU board tabs and members</p>
+                      </div>
+                    </div>
+                    <Button text="Manage Board EU" variant="primary" size="40" onClick={() => router.push('/admin/board-eu')} />
+                  </div>
+                </div>
+              )}
+
+              {isSuperAdmin && (
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow duration-300">
+                  <div className="p-4 sm:p-6 lg:p-8">
+                    <div className="flex items-center mb-4 sm:mb-6">
+                      <div className="bg-[#003594] p-2 sm:p-3 rounded-lg">
+                        <Image src="/images/icons/file.svg" alt="" width={24} height={24} className="filter brightness-0 invert" />
+                      </div>
+                      <div className="ml-3 sm:ml-4">
+                        <h3 className="font-['Barlow'] font-medium text-[#101820] text-lg sm:text-[20px] leading-tight sm:leading-[24px] tracking-[-0.36px] sm:tracking-[-0.4px]">Policies</h3>
+                        <p className="font-['Poppins'] text-[#757575] text-sm leading-[18px] sm:leading-[20px]">Manage legal and policy pages</p>
+                      </div>
+                    </div>
+                    <Button text="Manage Policies" variant="primary" size="40" onClick={() => router.push('/admin/legal')} />
+                  </div>
+                </div>
+              )}
 
               {isSuperAdmin && (
                 <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow duration-300">
@@ -288,6 +338,32 @@ export default function AdminPage() {
                       variant="primary" 
                       size="40"
                       onClick={() => router.push('/admin/finance')}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {isSuperAdmin && (
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow duration-300">
+                  <div className="p-4 sm:p-6 lg:p-8">
+                    <div className="flex items-center mb-4 sm:mb-6">
+                      <div className="bg-[#003594] p-2 sm:p-3 rounded-lg">
+                        <Image src="/images/icons/users.svg" alt="" width={24} height={24} className="filter brightness-0 invert" />
+                      </div>
+                      <div className="ml-3 sm:ml-4">
+                        <h3 className="font-['Barlow'] font-medium text-[#101820] text-lg sm:text-[20px] leading-tight sm:leading-[24px] tracking-[-0.36px] sm:tracking-[-0.4px]">
+                          Board
+                        </h3>
+                        <p className="font-['Poppins'] text-[#757575] text-sm leading-[18px] sm:leading-[20px]">
+                          Manage board tabs and members
+                        </p>
+                      </div>
+                    </div>
+                    <Button 
+                      text="Manage Board" 
+                      variant="primary" 
+                      size="40"
+                      onClick={() => router.push('/admin/board')}
                     />
                   </div>
                 </div>
