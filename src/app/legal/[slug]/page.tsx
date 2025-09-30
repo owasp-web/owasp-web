@@ -3,8 +3,7 @@ import Footer from '@/components/Footer'
 
 async function getPage(slug: string) {
   try {
-    const base = process.env.NEXT_PUBLIC_BASE_URL || ''
-    const res = await fetch(`${base}/api/public/legal?slug=${encodeURIComponent(slug)}`, { cache: 'no-store' })
+    const res = await fetch(`/api/public/legal?slug=${encodeURIComponent(slug)}`, { cache: 'no-store' })
     if (!res.ok) return { page: null }
     return await res.json()
   } catch {
