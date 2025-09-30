@@ -1,11 +1,26 @@
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
+import { createClient } from '@supabase/supabase-js'
 
 async function getBoardData() {
   try {
-    const res = await fetch(`/api/public/board`, { cache: 'no-store' })
-    if (!res.ok) return { tabs: [], members: [] }
-    return await res.json()
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    if (!url || !anon) return { tabs: [], members: [] }
+    const supabase = createClient(url, anon)
+    const { data: tabs } = await supabase
+      .from('board_tabs')
+      .select('*')
+      .order('display_order', { ascending: true })
+
+    const { data: members } = await supabase
+      .from('board_members')
+      .select('*')
+      .eq('is_active', true)
+      .order('display_order', { ascending: true })
+      .order('created_at', { ascending: false })
+
+    return { tabs: tabs || [], members: members || [] }
   } catch {
     return { tabs: [], members: [] }
   }

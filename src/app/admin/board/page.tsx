@@ -95,6 +95,8 @@ export default function AdminBoardPage() {
       setError(j?.error || 'Failed to save member')
       return
     }
+    // Mild success feedback
+    setError('Saved successfully')
     // Refresh members after save to reflect any DB defaults/changes
     await loadData()
   }
