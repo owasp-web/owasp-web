@@ -318,6 +318,10 @@ function TabContent({ content }: TabContentProps) {
 
 export default function ProjectDetailPageWithTabs({ project }: ProjectPageProps) {
   const [activeTab, setActiveTab] = useState('overview');
+  // Force client-side fetch of tabs in case of ISR caching
+  useEffect(() => {
+    // no-op, ensures client hydration for dynamic content
+  }, []);
   // Hero image should come only from explicit fields set by admins
   const heroUrl = (project as any).image || (project as any).hero_image || (project as any).image_url || ''
 

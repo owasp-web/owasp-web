@@ -660,9 +660,26 @@ export default function ProjectEditPage({ params }: ProjectEditPageProps) {
                     return (
                       <div key={tab.id} className="border rounded-lg p-4">
                         <div className="flex items-center justify-between mb-3">
-                          <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-3">
                             <input value={tab.name} onChange={(e) => renameCustomTab(tab.id, e.target.value)} className="border rounded px-2 py-1" />
                             <span className="text-xs text-gray-500">order {tab.order}</span>
+                          <button
+                            type="button"
+                            className="px-2 py-1 border rounded bg-[#003594] text-white text-xs"
+                            onClick={async () => {
+                              try {
+                                const supabase = createClientComponentClient();
+                                const { data: { session } } = await supabase.auth.getSession();
+                                if (!session?.access_token || !project) return;
+                                const res = await fetch(`/api/admin/projects/${project.id}`, {
+                                  method: 'PUT',
+                                  headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+                                  body: JSON.stringify({ tabs: project.tabs })
+                                });
+                                if (!res.ok) alert('Failed to save this tab');
+                              } catch {}
+                            }}
+                          >Save Tab</button>
                           </div>
                           <div className="flex items-center gap-2">
                             <button onClick={() => moveCustomTab(tab.id, -1)} className="px-2 py-1 border rounded">↑</button>
