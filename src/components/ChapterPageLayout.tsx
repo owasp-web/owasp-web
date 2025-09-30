@@ -137,6 +137,39 @@ export default function ChapterPageLayout({ chapter }: ChapterPageLayoutProps) {
                     {(current.sections || []).map((sec, idx) => (
                       <div key={idx} className="bg-white border border-gray-200 rounded-lg p-6">
                         {sec.title && <h3 className="text-xl font-semibold text-[#003594] mb-3">{sec.title}</h3>}
+
+                        {/* Optional image */}
+                        {sec.imageUrl && (
+                          <div className="my-4">
+                            <div className="relative rounded-lg overflow-hidden border border-gray-200">
+                              <img src={sec.imageUrl} alt={sec.imageAlt || ''} className="w-full h-auto" />
+                            </div>
+                            {sec.imageCaption && (
+                              <p className="text-sm text-gray-600 text-center mt-2 italic">{sec.imageCaption}</p>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Optional video */}
+                        {sec.videoUrl && (
+                          <div className="my-4">
+                            <div className="relative aspect-video rounded-lg overflow-hidden border border-gray-200">
+                              {/youtube\.com|youtu\.be/i.test(sec.videoUrl)
+                                ? (
+                                  <iframe
+                                    src={sec.videoUrl.includes('embed') ? sec.videoUrl : sec.videoUrl.replace('watch?v=', 'embed/')}
+                                    title={sec.title || 'Video'}
+                                    className="w-full h-full"
+                                    allowFullScreen
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                  />
+                                ) : (
+                                  <video src={sec.videoUrl} controls className="w-full h-full" />
+                                )}
+                            </div>
+                          </div>
+                        )}
+
                         {sec.content && (
                           <div className="space-y-4 text-gray-700">
                             {sec.content.split('\n\n').map((p, i) => (
@@ -144,6 +177,7 @@ export default function ChapterPageLayout({ chapter }: ChapterPageLayoutProps) {
                             ))}
                           </div>
                         )}
+
                         {(sec.buttons && sec.buttons.length > 0) && (
                           <div className="mt-4 flex flex-wrap gap-3">
                             {sec.buttons.map((btn, bIdx) => {
