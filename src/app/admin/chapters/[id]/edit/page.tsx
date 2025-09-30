@@ -394,6 +394,15 @@ export default function EditChapterPage({ params }: EditChapterPageProps) {
                       alert('Failed to save tabs')
                     } finally {
                       setSaving(false)
+                      // Provide success feedback when not failing
+                      try {
+                        // Lightweight success toast
+                        const el = document.createElement('div')
+                        el.textContent = 'Tabs saved'
+                        el.className = 'fixed top-3 right-3 z-50 bg-green-600 text-white px-3 py-2 rounded shadow'
+                        document.body.appendChild(el)
+                        setTimeout(() => { try { document.body.removeChild(el) } catch {} }, 1500)
+                      } catch {}
                     }
                   }}
                   className="px-3 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
@@ -464,6 +473,117 @@ export default function EditChapterPage({ params }: EditChapterPageProps) {
                               onChange={(e) => updateSection(tIdx, sIdx, { content: e.target.value })}
                               className="w-full px-3 py-2 border border-gray-300 rounded-lg mb-3"
                             />
+                            {/* Media inputs */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-3">
+                              <div className="flex items-center gap-2">
+                                <input
+                                  type="url"
+                                  placeholder="Image URL (optional)"
+                                  value={sec.imageUrl || ''}
+                                  onChange={(e) => updateSection(tIdx, sIdx, { imageUrl: e.target.value })}
+                                  className="border rounded px-2 py-1 w-full"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={async () => {
+                                    try {
+                                      const input = document.createElement('input')
+                                      input.type = 'file'
+                                      input.accept = 'image/*'
+                                      input.onchange = async () => {
+                                        const file = (input.files && input.files[0]) || null
+                                        if (!file) return
+                                        const supabase = createClientComponentClient()
+                                        const { data: { session } } = await supabase.auth.getSession()
+                                        const signRes = await fetch('/api/admin/upload/signed', {
+                                          method: 'POST',
+                                          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token || ''}` },
+                                          body: JSON.stringify({ folder: `chapters/${params.id}/images`, filename: file.name })
+                                        })
+                                        if (!signRes.ok) throw new Error('Failed to sign upload')
+                                        const { path, signedUrl } = await signRes.json()
+                                        const putRes = await fetch(signedUrl, { method: 'PUT', headers: { 'Content-Type': file.type || 'application/octet-stream' }, body: file })
+                                        if (!putRes.ok) throw new Error('Failed to upload image')
+                                        const readRes = await fetch('/api/admin/upload/signed', {
+                                          method: 'POST',
+                                          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token || ''}` },
+                                          body: JSON.stringify({ action: 'sign-read', path })
+                                        })
+                                        const readJson = await readRes.json()
+                                        updateSection(tIdx, sIdx, { imageUrl: readJson.url || '' })
+                                      }
+                                      input.click()
+                                    } catch (e) {
+                                      alert('Image upload failed')
+                                    }
+                                  }}
+                                  className="px-3 py-2 border rounded"
+                                >
+                                  Upload…
+                                </button>
+                              </div>
+                              <input
+                                type="text"
+                                placeholder="Image alt text"
+                                value={sec.imageAlt || ''}
+                                onChange={(e) => updateSection(tIdx, sIdx, { imageAlt: e.target.value })}
+                                className="border rounded px-2 py-1"
+                              />
+                            </div>
+                            <input
+                              type="text"
+                              placeholder="Image caption (optional)"
+                              value={sec.imageCaption || ''}
+                              onChange={(e) => updateSection(tIdx, sIdx, { imageCaption: e.target.value })}
+                              className="border rounded px-2 py-1 w-full mb-3"
+                            />
+                            <div className="flex items-center gap-2 mb-3">
+                              <input
+                                type="url"
+                                placeholder="Video URL (YouTube or MP4)"
+                                value={sec.videoUrl || ''}
+                                onChange={(e) => updateSection(tIdx, sIdx, { videoUrl: e.target.value })}
+                                className="border rounded px-2 py-1 w-full"
+                              />
+                              <button
+                                type="button"
+                                onClick={async () => {
+                                  try {
+                                    const input = document.createElement('input')
+                                    input.type = 'file'
+                                    input.accept = 'video/*'
+                                    input.onchange = async () => {
+                                      const file = (input.files && input.files[0]) || null
+                                      if (!file) return
+                                      const supabase = createClientComponentClient()
+                                      const { data: { session } } = await supabase.auth.getSession()
+                                      const signRes = await fetch('/api/admin/upload/signed', {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token || ''}` },
+                                        body: JSON.stringify({ folder: `chapters/${params.id}/videos`, filename: file.name })
+                                      })
+                                      if (!signRes.ok) throw new Error('Failed to sign upload')
+                                      const { path, signedUrl } = await signRes.json()
+                                      const putRes = await fetch(signedUrl, { method: 'PUT', headers: { 'Content-Type': file.type || 'video/mp4' }, body: file })
+                                      if (!putRes.ok) throw new Error('Failed to upload video')
+                                      const readRes = await fetch('/api/admin/upload/signed', {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token || ''}` },
+                                        body: JSON.stringify({ action: 'sign-read', path })
+                                      })
+                                      const readJson = await readRes.json()
+                                      updateSection(tIdx, sIdx, { videoUrl: readJson.url || '' })
+                                    }
+                                    input.click()
+                                  } catch (e) {
+                                    alert('Video upload failed')
+                                  }
+                                }}
+                                className="px-3 py-2 border rounded"
+                              >
+                                Upload/URL…
+                              </button>
+                            </div>
                             <div className="flex items-center justify-between mb-2">
                               <div className="font-medium text-gray-900">Buttons</div>
                               <button type="button" onClick={() => addButton(tIdx, sIdx)} className="px-2 py-1 border rounded">Add Button</button>

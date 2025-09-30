@@ -123,6 +123,10 @@ export interface ChapterTabButton {
 export interface ChapterTabSection {
   title?: string
   content?: string
+  imageUrl?: string
+  imageAlt?: string
+  imageCaption?: string
+  videoUrl?: string
   buttons?: ChapterTabButton[]
 }
 

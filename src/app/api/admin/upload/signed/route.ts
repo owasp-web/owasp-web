@@ -36,16 +36,30 @@ export async function POST(req: NextRequest) {
       if (isSuperAdmin) return true
       const s = String(target || '')
       // Expecting patterns like: projects/{projectId}/...
-      const m = s.match(/(^|\/)projects\/(\b[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\b)\//i)
-      const projectId = m ? m[2] : null
-      if (!projectId) return false
-      const { data: paRows } = await svc
-        .from('project_admins')
-        .select('id')
-        .eq('project_id', projectId)
-        .or(`user_id.eq.${userData.user.id},email.eq.${email}`)
-        .limit(1)
-      return !!(paRows && paRows.length > 0)
+      const pm = s.match(/(^|\/)projects\/(\b[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\b)\//i)
+      if (pm) {
+        const projectId = pm[2]
+        const { data: paRows } = await svc
+          .from('project_admins')
+          .select('id')
+          .eq('project_id', projectId)
+          .or(`user_id.eq.${userData.user.id},email.eq.${email}`)
+          .limit(1)
+        return !!(paRows && paRows.length > 0)
+      }
+      // Or chapters/{chapterId}/...
+      const cm = s.match(/(^|\/)chapters\/(\b[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\b)\//i)
+      if (cm) {
+        const chapterId = cm[2]
+        const { data: caRows } = await svc
+          .from('chapter_admins')
+          .select('id')
+          .eq('chapter_id', chapterId)
+          .or(`user_id.eq.${userData.user.id},email.eq.${email}`)
+          .limit(1)
+        return !!(caRows && caRows.length > 0)
+      }
+      return false
     }
 
     // Branch: sign read URL after upload
