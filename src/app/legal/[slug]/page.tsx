@@ -1,11 +1,22 @@
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
+import { createClient } from '@supabase/supabase-js'
 
 async function getPage(slug: string) {
   try {
-    const res = await fetch(`/api/public/legal?slug=${encodeURIComponent(slug)}`, { cache: 'no-store' })
-    if (!res.ok) return { page: null }
-    return await res.json()
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    if (!url || !anon) return { page: null }
+    const supabase = createClient(url, anon)
+    const { data, error } = await supabase
+      .from('legal_pages')
+      .select('*')
+      .eq('slug', slug)
+      .eq('is_active', true)
+      .limit(1)
+      .maybeSingle()
+    if (error) return { page: null }
+    return { page: data }
   } catch {
     return { page: null }
   }
