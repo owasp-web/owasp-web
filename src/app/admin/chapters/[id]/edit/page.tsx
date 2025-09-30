@@ -388,21 +388,21 @@ export default function EditChapterPage({ params }: EditChapterPageProps) {
                         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
                         body: JSON.stringify(payload)
                       })
-                      if (!res.ok) throw new Error((await res.json()).error || 'Failed to save tabs')
-                    } catch (e) {
-                      console.error(e)
-                      alert('Failed to save tabs')
-                    } finally {
-                      setSaving(false)
-                      // Provide success feedback when not failing
+                      const json = await res.json().catch(() => ({}))
+                      if (!res.ok) throw new Error(json.error || 'Failed to save tabs')
+                      // Success toast
                       try {
-                        // Lightweight success toast
                         const el = document.createElement('div')
                         el.textContent = 'Tabs saved'
                         el.className = 'fixed top-3 right-3 z-50 bg-green-600 text-white px-3 py-2 rounded shadow'
                         document.body.appendChild(el)
                         setTimeout(() => { try { document.body.removeChild(el) } catch {} }, 1500)
                       } catch {}
+                    } catch (e) {
+                      console.error(e)
+                      alert('Failed to save tabs')
+                    } finally {
+                      setSaving(false)
                     }
                   }}
                   className="px-3 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
@@ -510,7 +510,8 @@ export default function EditChapterPage({ params }: EditChapterPageProps) {
                                           body: JSON.stringify({ action: 'sign-read', path })
                                         })
                                         const readJson = await readRes.json()
-                                        updateSection(tIdx, sIdx, { imageUrl: readJson.url || '' })
+                                        const finalUrl = readJson.url || ''
+                                        updateSection(tIdx, sIdx, { imageUrl: finalUrl })
                                       }
                                       input.click()
                                     } catch (e) {
