@@ -83,12 +83,20 @@ export default function AdminBoardPage() {
   }
 
   const updateMember = async (member: BoardMember) => {
+    setError(null)
     const { data: { session } } = await supabase.auth.getSession()
-    await fetch('/api/admin/board', {
+    const res = await fetch('/api/admin/board', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token || ''}` },
       body: JSON.stringify({ entity: 'member', ...member })
     })
+    if (!res.ok) {
+      const j = await res.json().catch(() => ({}))
+      setError(j?.error || 'Failed to save member')
+      return
+    }
+    // Refresh members after save to reflect any DB defaults/changes
+    await loadData()
   }
 
   const deleteMember = async (id: string) => {

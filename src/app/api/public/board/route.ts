@@ -1,18 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClientComponentClient } from '@/lib/supabase'
+import { createClient } from '@supabase/supabase-js'
 
 export async function GET(req: NextRequest) {
   try {
-    const supabase = createClientComponentClient()
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY
+    if (!url || !key) return NextResponse.json({ error: 'Server not configured' }, { status: 500 })
+    const svc = createClient(url, key)
     const { searchParams } = new URL(req.url)
     const nocache = searchParams.get('nocache')
-    // Avoid stale cache in some hosts
-    const { data: tabsData } = await supabase
+    // Use service role to ensure visibility regardless of RLS setup
+    const { data: tabsData } = await svc
       .from('board_tabs')
       .select('*')
       .order('display_order', { ascending: true })
 
-    const { data: membersData } = await supabase
+    const { data: membersData } = await svc
       .from('board_members')
       .select('*')
       .eq('is_active', true)
