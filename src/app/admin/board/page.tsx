@@ -35,7 +35,8 @@ export default function AdminBoardPage() {
 
   const loadData = async () => {
     setError(null)
-    const res = await fetch('/api/admin/board')
+    const { data: { session } } = await supabase.auth.getSession()
+    const res = await fetch('/api/admin/board', { headers: { Authorization: `Bearer ${session?.access_token || ''}` } })
     const json = await res.json()
     setTabs(json?.tabs || [])
     setMembers(json?.members || [])
@@ -75,7 +76,9 @@ export default function AdminBoardPage() {
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token || ''}` },
       body: JSON.stringify({ entity: 'member', name: 'New Member', is_active: true, links: [], display_order: (members?.length || 0) + 1 })
     })
-    if (!res.ok) { setError('Failed to create member'); return }
+    const json = await res.json().catch(() => ({}))
+    if (!res.ok) { setError(json?.error || 'Failed to create member'); return }
+    if (json?.member) setMembers((prev) => [...prev, json.member])
     await loadData()
   }
 
@@ -181,7 +184,7 @@ export default function AdminBoardPage() {
               <Button text="Add Member" variant="primary" size="40" onClick={addMember} />
             </div>
             <div className="grid gap-4">
-              {members.map((m) => (
+              {members.length > 0 && members.map((m) => (
                 <div key={m.id} className="bg-white border border-gray-200 rounded-lg p-4">
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div className="md:col-span-3 space-y-3">
