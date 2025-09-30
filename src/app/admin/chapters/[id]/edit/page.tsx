@@ -523,13 +523,25 @@ export default function EditChapterPage({ params }: EditChapterPageProps) {
                                   Upload…
                                 </button>
                               </div>
-                              <input
-                                type="text"
-                                placeholder="Image alt text"
-                                value={sec.imageAlt || ''}
-                                onChange={(e) => updateSection(tIdx, sIdx, { imageAlt: e.target.value })}
-                                className="border rounded px-2 py-1"
-                              />
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                <input
+                                  type="text"
+                                  placeholder="Image alt text"
+                                  value={sec.imageAlt || ''}
+                                  onChange={(e) => updateSection(tIdx, sIdx, { imageAlt: e.target.value })}
+                                  className="border rounded px-2 py-1"
+                                />
+                                <select
+                                  value={(sec as any).imageSize || 'medium'}
+                                  onChange={(e) => updateSection(tIdx, sIdx, { imageSize: e.target.value as any })}
+                                  className="border rounded px-2 py-1"
+                                  title="Image size"
+                                >
+                                  <option value="small">small</option>
+                                  <option value="medium">medium</option>
+                                  <option value="large">large</option>
+                                </select>
+                              </div>
                             </div>
                             <input
                               type="text"

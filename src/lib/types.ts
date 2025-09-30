@@ -126,6 +126,7 @@ export interface ChapterTabSection {
   imageUrl?: string
   imageAlt?: string
   imageCaption?: string
+  imageSize?: 'small' | 'medium' | 'large'
   videoUrl?: string
   buttons?: ChapterTabButton[]
 }

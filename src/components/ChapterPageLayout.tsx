@@ -141,7 +141,9 @@ export default function ChapterPageLayout({ chapter }: ChapterPageLayoutProps) {
                         {/* Optional image */}
                         {sec.imageUrl && (
                           <div className="my-4">
-                            <div className="relative rounded-lg overflow-hidden border border-gray-200">
+                            <div className={`relative rounded-lg overflow-hidden border border-gray-200 ${
+                              (sec as any).imageSize === 'small' ? 'max-w-sm mx-auto' : (sec as any).imageSize === 'large' ? '' : 'max-w-2xl mx-auto'
+                            }`}>
                               <img src={sec.imageUrl} alt={sec.imageAlt || ''} className="w-full h-auto" />
                             </div>
                             {sec.imageCaption && (
