@@ -1,6 +1,8 @@
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 
+export const dynamic = 'force-dynamic'
+
 async function getDocs() {
   try {
     const res = await fetch('/api/public/finance-docs/list', { cache: 'no-store' })
