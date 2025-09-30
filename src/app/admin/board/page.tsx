@@ -206,7 +206,7 @@ export default function AdminBoardPage() {
                           </div>
                         ))}
                         <div className="flex gap-2">
-                          <Button text="Add Link" variant="ghost-dark" size="32" onClick={() => setMembers(members.map(x => x.id === m.id ? { ...x, links: [...(x.links || []), { title: 'Link', url: '' }] } : x))} />
+                          <Button text="Add Link" variant="ghost-dark" size="40" onClick={() => setMembers(members.map(x => x.id === m.id ? { ...x, links: [...(x.links || []), { title: 'Link', url: '' }] } : x))} />
                           <Button text="Save Member" variant="ghost-dark" size="40" onClick={() => updateMember(m)} />
                           <Button text="Delete" variant="ghost-dark" size="40" onClick={() => deleteMember(m.id)} />
                         </div>
