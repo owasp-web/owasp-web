@@ -436,23 +436,6 @@ export default function ProjectDetailPageWithTabs({ project }: ProjectPageProps)
     <div className="min-h-screen bg-gray-50">
       <Header />
       
-      {/* Breadcrumb Navigation */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-[120px] py-4">
-          <nav className="flex items-center gap-2 text-sm">
-            <Link href="/" className="text-[#003594] hover:text-[#0056b3] underline">
-              Home
-            </Link>
-            <span className="text-gray-400">/</span>
-            <Link href="/projects?view=all" className="text-[#003594] hover:text-[#0056b3] underline">
-              All Projects
-            </Link>
-            <span className="text-gray-400">/</span>
-            <span className="text-gray-600">{project.title}</span>
-          </nav>
-        </div>
-      </div>
-      
       {/* Hero Section */}
       <div className="bg-gradient-to-br from-[#1a237e] via-[#303f9f] to-[#42a5f5] relative overflow-hidden">
         <div className="max-w-[1440px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-[120px] py-12 sm:py-16 lg:py-20">
