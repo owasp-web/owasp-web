@@ -538,7 +538,6 @@ export default function ProjectDetailPageWithTabs({ project }: ProjectPageProps)
           )}
           </div>
         </div>
-      </div>
 
       {/* Main Content */}
       <div className="max-w-[1440px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-[120px] py-12 sm:py-16 lg:py-20">
