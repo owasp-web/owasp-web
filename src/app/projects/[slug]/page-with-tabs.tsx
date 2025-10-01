@@ -607,31 +607,7 @@ export default function ProjectDetailPageWithTabs({ project }: ProjectPageProps)
               </section>
             )}
 
-            {/* Screenshots Section */}
-            {project.screenshots && project.screenshots.length > 0 && (
-              <section>
-                <h2 className="font-['Barlow'] font-bold text-[#101820] text-[24px] lg:text-[32px] mb-6">
-                  Screenshots
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {project.screenshots.map((screenshot, index) => (
-                    <div key={index} className="space-y-2">
-                      <div className="relative aspect-video rounded-lg overflow-hidden border border-gray-200">
-                        <img
-                          src={screenshot.url}
-                          alt={screenshot.alt_text}
-                          className="object-cover w-full h-full"
-                          onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/images/logo.svg' }}
-                        />
-                      </div>
-                      {screenshot.caption && (
-                        <p className="text-sm text-gray-600 text-center">{screenshot.caption}</p>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </section>
-            )}
+            {/* Screenshots removed per product decision: screenshots must be managed via tabs/sections */}
 
             {/* Videos Section */}
             {project.videos && project.videos.length > 0 && (
