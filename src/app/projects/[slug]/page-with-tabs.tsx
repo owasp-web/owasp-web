@@ -329,8 +329,8 @@ export default function ProjectDetailPageWithTabs({ project }: ProjectPageProps)
   const [activeTab, setActiveTab] = useState(customTabsInit.length ? (customTabsInit[0]?.id || 'overview') : 'overview');
   // Force client-side hydration
   useEffect(() => {}, []);
-  // Hero image should come only from explicit fields set by admins
-  const heroImage = (project as any).hero_image || (project as any).image || (project as any).image_url || ''
+  // Hero image should come only from the explicit modern field
+  const heroImage = (project as any).image || ''
   const heroGifUrl = (project as any).hero_gif_url || ''
   const heroVideoUrl = (project as any).hero_video_url || ''
 
