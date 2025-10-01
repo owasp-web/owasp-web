@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import Header from '@/components/Header';
@@ -22,7 +22,7 @@ export default function ResourcesPage() {
   ];
 
   // Load from public API
-  React.useEffect(() => {
+  useEffect(() => {
     (async () => {
       try {
         const res = await fetch('/api/public/resources/list', { next: { revalidate: 60 } })
