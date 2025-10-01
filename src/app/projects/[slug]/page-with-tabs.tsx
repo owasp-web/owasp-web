@@ -331,8 +331,12 @@ export default function ProjectDetailPageWithTabs({ project }: ProjectPageProps)
   useEffect(() => {}, []);
   // Hero image should come only from the explicit modern field
   const heroImage = (project as any).image || ''
-  const heroGifUrl = (project as any).hero_gif_url || ''
-  const heroVideoUrl = (project as any).hero_video_url || ''
+  // Cache-busting: append a version query using updated_at or id so hero media reflects saves immediately
+  const rawGif = (project as any).hero_gif_url || ''
+  const rawVideo = (project as any).hero_video_url || ''
+  const version = ((project as any).updated_at || (project as any).id || '').toString()
+  const heroGifUrl = rawGif ? `${rawGif}${rawGif.includes('?') ? '&' : '?'}v=${encodeURIComponent(version)}` : ''
+  const heroVideoUrl = rawVideo ? `${rawVideo}${rawVideo.includes('?') ? '&' : '?'}v=${encodeURIComponent(version)}` : ''
 
   const getProjectTypeColor = (type: string) => {
     switch (type) {
