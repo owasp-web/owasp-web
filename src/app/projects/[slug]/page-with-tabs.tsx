@@ -407,10 +407,7 @@ export default function ProjectDetailPageWithTabs({ project }: ProjectPageProps)
           content: project.tab_support_content,
           icon: 'megaphone'
         }] : []),
-        // Legacy tabs for backward compatibility
-        ...(project.tab_translation_content ? [{ id: 'translation', label: 'Translation Efforts', content: project.tab_translation_content, icon: 'globe' }] : []),
-        ...(project.tab_sponsors_content ? [{ id: 'sponsors', label: 'Sponsors', content: project.tab_sponsors_content, icon: 'handshake' }] : []),
-        ...(project.tab_data_content ? [{ id: 'data', label: 'Data 2025', content: project.tab_data_content, icon: 'chart-projector' }] : []),
+        // Removed legacy Translation/Sponsors/Data tabs – use custom JSON tabs instead
       ];
 
   // Helper function to get appropriate icon for tab names
