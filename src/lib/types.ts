@@ -51,6 +51,9 @@ export interface Project {
   hero_image?: string
   hero_gif_url?: string
   hero_highlights?: Array<{ title: string; value?: string | number; url?: string }>
+
+  // Optional sections shown under hero on the project home/overview page
+  overview_sections?: any[]
   
   // Custom tabs - these will be the actual tab names from OWASP
   tabs?: ProjectTab[]

@@ -582,6 +582,50 @@ export default function ProjectDetailPageWithTabs({ project }: ProjectPageProps)
               <TabContent content={currentTabContent} />
             </section>
 
+            {/* Optional Overview Sections */}
+            {Array.isArray((project as any).overview_sections) && (project as any).overview_sections.length > 0 && (
+              <section>
+                <div className="space-y-6">
+                  {((project as any).overview_sections as any[]).map((section: any, index: number) => (
+                    <div key={index} className="bg-white rounded-lg border border-gray-200 p-6">
+                      {section.title && (
+                        <h3 className="font-['Barlow'] font-bold text-[#101820] text-xl mb-3">{section.title}</h3>
+                      )}
+                      {section.imageUrl && (
+                        <div className="my-4">
+                          <div className="relative rounded-lg overflow-hidden border border-gray-200">
+                            <img src={section.imageUrl} alt={section.imageAlt || ''} className="w-full h-auto" />
+                          </div>
+                          {section.imageCaption && (
+                            <p className="text-sm text-gray-600 text-center mt-2 italic">{section.imageCaption}</p>
+                          )}
+                        </div>
+                      )}
+                      {section.videoUrl && (
+                        <div className="my-4">
+                          <div className="relative rounded-lg overflow-hidden border border-gray-200">
+                            <iframe className="w-full aspect-video" src={section.videoUrl} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />
+                          </div>
+                        </div>
+                      )}
+                      {section.content && (
+                        <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: section.content }} />
+                      )}
+                      {Array.isArray(section.buttons) && section.buttons.length > 0 && (
+                        <div className="mt-4 flex flex-wrap gap-2">
+                          {section.buttons.map((btn: any, i: number) => (
+                            <a key={i} href={btn.url} target="_blank" rel="noopener noreferrer" className={`px-4 py-2 rounded border ${btn.style === 'secondary' ? 'bg-white text-[#003594] border-[#003594]' : btn.style === 'link' ? 'underline text-[#003594] border-transparent' : 'bg-[#003594] text-white border-[#003594]'}`}>
+                              {btn.label}
+                            </a>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
             {/* Screenshots Section */}
             {project.screenshots && project.screenshots.length > 0 && (
               <section>

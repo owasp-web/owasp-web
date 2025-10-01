@@ -735,6 +735,110 @@ export default function ProjectEditPage({ params }: ProjectEditPageProps) {
                 </div>
               </div>
 
+              {/* Overview Sections (optional) */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-lg font-semibold">Overview Sections</h3>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const list = Array.isArray((project as any).overview_sections) ? [...(project as any).overview_sections] : []
+                      list.push({ title: 'New Section', content: 'Add content…', buttons: [] })
+                      updateProject('overview_sections' as any, list)
+                    }}
+                    className="px-3 py-2 border rounded"
+                  >
+                    Add Section
+                  </button>
+                </div>
+                <p className="text-sm text-gray-600 mb-3">These render under the hero on the project overview page. Use for areas like Translation Efforts or How to Contribute.</p>
+                <div className="space-y-4">
+                  {(Array.isArray((project as any).overview_sections) ? (project as any).overview_sections : []).map((section: any, idx: number) => (
+                    <div key={idx} className="bg-gray-50 border rounded p-3">
+                      <div className="flex items-center justify-between mb-2">
+                        <input
+                          value={section.title || ''}
+                          onChange={(e) => {
+                            const list = [...((project as any).overview_sections || [])]
+                            list[idx] = { ...(list[idx] || {}), title: e.target.value }
+                            updateProject('overview_sections' as any, list)
+                          }}
+                          placeholder="Section title"
+                          className="border rounded px-2 py-1 w-1/2"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const list = [...((project as any).overview_sections || [])]
+                            list.splice(idx, 1)
+                            updateProject('overview_sections' as any, list)
+                          }}
+                          className="px-2 py-1 border rounded text-red-600"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                      <textarea
+                        value={section.content || ''}
+                        onChange={(e) => {
+                          const list = [...((project as any).overview_sections || [])]
+                          list[idx] = { ...(list[idx] || {}), content: e.target.value }
+                          updateProject('overview_sections' as any, list)
+                        }}
+                        rows={4}
+                        className="w-full border rounded px-2 py-1"
+                        placeholder="Section content (HTML allowed)."
+                      />
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-3">
+                        <div className="flex items-center gap-2">
+                          <input value={section.imageUrl || ''} onChange={(e) => { const list = [...((project as any).overview_sections || [])]; list[idx] = { ...(list[idx] || {}), imageUrl: e.target.value }; updateProject('overview_sections' as any, list) }} placeholder="Image URL (optional)" className="border rounded px-2 py-1 w-full" />
+                          <ImageUploadButton onUploaded={(url) => { const list = [...((project as any).overview_sections || [])]; list[idx] = { ...(list[idx] || {}), imageUrl: url }; updateProject('overview_sections' as any, list) }} label="Upload…" folderHint={`projects/${project!.id}/images`} />
+                        </div>
+                        <input value={section.imageAlt || ''} onChange={(e) => { const list = [...((project as any).overview_sections || [])]; list[idx] = { ...(list[idx] || {}), imageAlt: e.target.value }; updateProject('overview_sections' as any, list) }} placeholder="Image alt text" className="border rounded px-2 py-1" />
+                      </div>
+                      <input value={section.imageCaption || ''} onChange={(e) => { const list = [...((project as any).overview_sections || [])]; list[idx] = { ...(list[idx] || {}), imageCaption: e.target.value }; updateProject('overview_sections' as any, list) }} placeholder="Image caption (optional)" className="border rounded px-2 py-1 w-full mt-2" />
+                      <div className="flex items-center gap-2 mt-2">
+                        <input value={section.videoUrl || ''} onChange={(e) => { const list = [...((project as any).overview_sections || [])]; list[idx] = { ...(list[idx] || {}), videoUrl: e.target.value }; updateProject('overview_sections' as any, list) }} placeholder="Video URL (YouTube or MP4)" className="border rounded px-2 py-1 w-full" />
+                      </div>
+                      <div className="mt-3">
+                        <div className="flex items-center justify-between mb-2">
+                          <h4 className="font-medium">Buttons</h4>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const list = [...((project as any).overview_sections || [])]
+                              const buttons = Array.isArray(list[idx]?.buttons) ? list[idx].buttons : []
+                              buttons.push({ label: 'Learn More', url: 'https://example.com', style: 'primary' })
+                              list[idx] = { ...(list[idx] || {}), buttons }
+                              updateProject('overview_sections' as any, list)
+                            }}
+                            className="px-2 py-1 border rounded"
+                          >
+                            Add Button
+                          </button>
+                        </div>
+                        <div className="space-y-2">
+                          {((section.buttons || []) as any[]).map((btn: any, bIdx: number) => (
+                            <div key={bIdx} className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                              <input value={btn.label || ''} onChange={(e) => { const list = [...((project as any).overview_sections || [])]; const buttons = Array.isArray(list[idx]?.buttons) ? [...list[idx].buttons] : []; buttons[bIdx] = { ...(buttons[bIdx] || {}), label: e.target.value }; list[idx] = { ...(list[idx] || {}), buttons }; updateProject('overview_sections' as any, list) }} placeholder="Label" className="border rounded px-2 py-1" />
+                              <input value={btn.url || ''} onChange={(e) => { const list = [...((project as any).overview_sections || [])]; const buttons = Array.isArray(list[idx]?.buttons) ? [...list[idx].buttons] : []; buttons[bIdx] = { ...(buttons[bIdx] || {}), url: e.target.value }; list[idx] = { ...(list[idx] || {}), buttons }; updateProject('overview_sections' as any, list) }} placeholder="https://..." className="border rounded px-2 py-1" />
+                              <div className="flex items-center gap-2">
+                                <select value={btn.style || 'primary'} onChange={(e) => { const list = [...((project as any).overview_sections || [])]; const buttons = Array.isArray(list[idx]?.buttons) ? [...list[idx].buttons] : []; buttons[bIdx] = { ...(buttons[bIdx] || {}), style: e.target.value }; list[idx] = { ...(list[idx] || {}), buttons }; updateProject('overview_sections' as any, list) }} className="border rounded px-2 py-1">
+                                  <option value="primary">primary</option>
+                                  <option value="secondary">secondary</option>
+                                  <option value="link">link</option>
+                                </select>
+                                <button type="button" onClick={() => { const list = [...((project as any).overview_sections || [])]; const buttons = Array.isArray(list[idx]?.buttons) ? [...list[idx].buttons] : []; buttons.splice(bIdx, 1); list[idx] = { ...(list[idx] || {}), buttons }; updateProject('overview_sections' as any, list) }} className="px-2 py-1 border rounded text-red-600">Remove</button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
