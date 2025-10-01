@@ -369,12 +369,12 @@ export default function ProjectDetailPageWithTabs({ project }: ProjectPageProps)
           icon: getTabIcon(tab.name)
         }))
     : [
-        { 
+        ...(project.project_overview ? [{ 
           id: 'overview', 
           label: 'Overview', 
-          content: project.project_overview || project.long_description,
+          content: project.project_overview,
           icon: 'book-open'
-        },
+        }] : []),
         ...(project.tab_documentation_content || project.installation_guide ? [{ 
           id: 'documentation', 
           label: 'Documentation', 
@@ -424,7 +424,14 @@ export default function ProjectDetailPageWithTabs({ project }: ProjectPageProps)
     return 'book-open';
   }
 
-  const currentTabContent = tabs.find(tab => tab.id === activeTab)?.content || project.long_description || '';
+  // Ensure active tab is valid; if not, pick the first available tab
+  useEffect(() => {
+    if (!tabs.find(t => t.id === activeTab) && tabs.length > 0) {
+      setActiveTab(tabs[0].id)
+    }
+  }, [activeTab, tabs])
+
+  const currentTabContent = tabs.find(tab => tab.id === activeTab)?.content || '';
 
   return (
     <div className="min-h-screen bg-gray-50">
