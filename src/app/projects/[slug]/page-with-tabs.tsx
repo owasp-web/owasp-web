@@ -486,21 +486,15 @@ export default function ProjectDetailPageWithTabs({ project }: ProjectPageProps)
                 {project.description}
               </p>
               
-              <div className="flex flex-wrap gap-4">
-                {Array.isArray((project as any).hero_buttons) && (project as any).hero_buttons.length > 0 ? (
-                  ((project as any).hero_buttons as any[]).map((btn: any, idx: number) => (
+              {Array.isArray((project as any).hero_buttons) && (project as any).hero_buttons.length > 0 && (
+                <div className="flex flex-wrap gap-4">
+                  {((project as any).hero_buttons as any[]).map((btn: any, idx: number) => (
                     <Link key={idx} href={btn.url} target="_blank" rel="noopener noreferrer">
                       <Button text={btn.label || 'Learn More'} variant={btn.style === 'primary' ? 'primary' : 'ghost-white'} size="56" />
                     </Link>
-                  ))
-                ) : (
-                  project.github_url ? (
-                    <Link href={project.github_url} target="_blank" rel="noopener noreferrer">
-                      <Button text="View on GitHub" variant="ghost-white" size="56" />
-                    </Link>
-                  ) : null
-                )}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Hero Media: prefer video, then GIF, then image */}
