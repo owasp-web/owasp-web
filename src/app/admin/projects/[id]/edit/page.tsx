@@ -615,30 +615,52 @@ export default function ProjectEditPage({ params }: ProjectEditPageProps) {
                     placeholder="https://.../logo-or-hero-image.png"
                   />
                   <ImageUploadButton onUploaded={(url) => { updateProject('image', url); persistPartial({ image: url }) }} label="Upload…" folderHint={`projects/${project.id}/hero`} />
-                  <button
-                    type="button"
-                    onClick={async () => {
-                      const current = project.image || ''
-                      const confirmed = confirm('Remove hero image?' + (current.includes('/storage/v1/object') ? '\n(Optional) Also delete from storage?' : ''))
-                      if (!confirmed) return
-                      updateProject('image', '')
-                      persistPartial({ image: '' })
-                    }}
-                    className="px-3 py-2 border rounded-md text-sm text-red-700 border-red-300 hover:bg-red-50"
-                  >
-                    Remove
-                  </button>
+                  {(project.image || '').trim() !== '' && (
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        const current = project.image || ''
+                        const confirmed = confirm('Remove hero image?' + (current.includes('/storage/v1/object') ? '\n(Optional) Also delete from storage?' : ''))
+                        if (!confirmed) return
+                        updateProject('image', '')
+                        persistPartial({ image: '' })
+                      }}
+                      className="px-3 py-2 border rounded-md text-sm text-red-700 border-red-300 hover:bg-red-50"
+                    >
+                      Remove
+                    </button>
+                  )}
                 </div>
                 <p className="text-xs text-gray-500 mt-1">
                   Optional. When provided, it appears in the project hero next to details and as a thumbnail in listings.
                   If left blank, the page uses the default dark blue gradient background.
                 </p>
-                {project.image && (
-                  <div className="mt-3">
-                    <div className="relative h-40 w-40 border rounded bg-gray-50 overflow-hidden">
-                      {/* Use img for external URLs */}
-                      <img src={project.image} alt="Preview" className="object-contain w-full h-full" />
-                    </div>
+                {(project.image || (project as any).hero_gif_url || (project as any).hero_video_url) && (
+                  <div className="mt-3 grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {project.image && (
+                      <div>
+                        <div className="text-xs text-gray-600 mb-1">Image Preview</div>
+                        <div className="relative h-40 w-40 border rounded bg-gray-50 overflow-hidden">
+                          <img src={project.image} alt="Preview" className="object-contain w-full h-full" />
+                        </div>
+                      </div>
+                    )}
+                    {(project as any).hero_gif_url && (
+                      <div>
+                        <div className="text-xs text-gray-600 mb-1">GIF Preview</div>
+                        <div className="relative h-40 w-40 border rounded bg-gray-50 overflow-hidden">
+                          <img src={(project as any).hero_gif_url} alt="GIF" className="object-contain w-full h-full" />
+                        </div>
+                      </div>
+                    )}
+                    {(project as any).hero_video_url && (
+                      <div>
+                        <div className="text-xs text-gray-600 mb-1">Video Preview</div>
+                        <div className="relative h-40 w-40 border rounded bg-gray-50 overflow-hidden">
+                          <video src={(project as any).hero_video_url} className="object-contain w-full h-full" autoPlay loop muted />
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

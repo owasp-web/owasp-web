@@ -884,26 +884,7 @@ export default function ProjectDetailPageWithTabs({ project }: ProjectPageProps)
               </div>
             )}
 
-            {/* Related Projects */}
-            {project.related_projects && project.related_projects.length > 0 && (
-              <div className="bg-white rounded-lg p-6 shadow-sm">
-                <h3 className="font-['Barlow'] font-bold text-[#101820] text-xl mb-4">
-                  Related Projects
-                </h3>
-                <div className="space-y-2">
-                  {project.related_projects.map((relatedSlug, index) => (
-                    <div key={index}>
-                      <Link 
-                        href={`/projects/${relatedSlug}`}
-                        className="text-[#003594] hover:text-[#0056b3] font-medium text-sm underline block"
-                      >
-                        • {relatedSlug.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                      </Link>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+            {/* Related Projects (temporarily hidden) */}
 
             {/* Security Advisories */}
             {project.security_advisories && project.security_advisories.length > 0 && (
@@ -992,21 +973,7 @@ export default function ProjectDetailPageWithTabs({ project }: ProjectPageProps)
               </div>
             )}
 
-            {/* Tags */}
-            {project.tags && project.tags.length > 0 && (
-              <div className="bg-white rounded-lg p-6 shadow-sm">
-                <h3 className="font-['Barlow'] font-bold text-[#101820] text-xl mb-4">
-                  Tags
-                </h3>
-                <div className="flex flex-wrap gap-2">
-                  {project.tags.map((tag, index) => (
-                    <span key={index} className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
+            {/* Tags (temporarily hidden) */}
           </div>
         </div>
       </div>
