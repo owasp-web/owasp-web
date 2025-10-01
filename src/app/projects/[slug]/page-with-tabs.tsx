@@ -350,8 +350,19 @@ export default function ProjectDetailPageWithTabs({ project }: ProjectPageProps)
   };
 
   // Define available tabs - use custom tabs if available, otherwise fall back to default structure
-  const tabs = project.tabs && project.tabs.length > 0 
-    ? project.tabs
+  let customTabs: any[] = []
+  const tabsRaw: any = (project as any).tabs ?? (project as any).custom_tabs
+  if (Array.isArray(tabsRaw)) {
+    customTabs = tabsRaw
+  } else if (typeof tabsRaw === 'string') {
+    try {
+      const parsed = JSON.parse(tabsRaw)
+      if (Array.isArray(parsed)) customTabs = parsed
+    } catch {}
+  }
+
+  const tabs = customTabs && customTabs.length > 0 
+    ? customTabs
         .sort((a, b) => a.order - b.order)
         .map(tab => ({
           id: tab.id,
