@@ -317,11 +317,18 @@ function TabContent({ content }: TabContentProps) {
 }
 
 export default function ProjectDetailPageWithTabs({ project }: ProjectPageProps) {
-  const [activeTab, setActiveTab] = useState('overview');
-  // Force client-side fetch of tabs in case of ISR caching
-  useEffect(() => {
-    // no-op, ensures client hydration for dynamic content
-  }, []);
+  // Parse custom tabs early to choose initial tab
+  let customTabsInit: any[] = []
+  const tabsRawInit: any = (project as any).tabs ?? (project as any).custom_tabs
+  if (Array.isArray(tabsRawInit)) {
+    customTabsInit = tabsRawInit
+  } else if (typeof tabsRawInit === 'string') {
+    try { const parsed = JSON.parse(tabsRawInit); if (Array.isArray(parsed)) customTabsInit = parsed } catch {}
+  }
+
+  const [activeTab, setActiveTab] = useState(customTabsInit.length ? (customTabsInit[0]?.id || 'overview') : 'overview');
+  // Force client-side hydration
+  useEffect(() => {}, []);
   // Hero image should come only from explicit fields set by admins
   const heroUrl = (project as any).image || (project as any).hero_image || (project as any).image_url || ''
 
@@ -350,16 +357,7 @@ export default function ProjectDetailPageWithTabs({ project }: ProjectPageProps)
   };
 
   // Define available tabs - use custom tabs if available, otherwise fall back to default structure
-  let customTabs: any[] = []
-  const tabsRaw: any = (project as any).tabs ?? (project as any).custom_tabs
-  if (Array.isArray(tabsRaw)) {
-    customTabs = tabsRaw
-  } else if (typeof tabsRaw === 'string') {
-    try {
-      const parsed = JSON.parse(tabsRaw)
-      if (Array.isArray(parsed)) customTabs = parsed
-    } catch {}
-  }
+  let customTabs: any[] = customTabsInit
 
   const tabs = customTabs && customTabs.length > 0 
     ? customTabs
