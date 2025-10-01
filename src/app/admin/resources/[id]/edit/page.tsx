@@ -12,7 +12,7 @@ export default function EditResourcePage() {
   const id = params.id as string
   const router = useRouter()
 
-  const [form, setForm] = useState<any>({ title: '', category: '', type: '', image: '', downloads: '', url: '', download_url: '', description: '', is_featured: false, order_num: 0, status: 'active' })
+  const [form, setForm] = useState<any>({ title: '', image: '', url: '', description: '', status: 'active' })
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -61,19 +61,13 @@ export default function EditResourcePage() {
           <input className="border rounded px-3 py-2" placeholder="Title" value={form.title || ''} onChange={(e) => setForm({ ...form, title: e.target.value })} />
           <textarea className="border rounded px-3 py-2" placeholder="Description" value={form.description || ''} onChange={(e) => setForm({ ...form, description: e.target.value })} />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <input className="border rounded px-3 py-2" placeholder="Category" value={form.category || ''} onChange={(e) => setForm({ ...form, category: e.target.value })} />
-            <input className="border rounded px-3 py-2" placeholder="Type" value={form.type || ''} onChange={(e) => setForm({ ...form, type: e.target.value })} />
             <input className="border rounded px-3 py-2" placeholder="Image URL" value={form.image || ''} onChange={(e) => setForm({ ...form, image: e.target.value })} />
-            <input className="border rounded px-3 py-2" placeholder="Downloads (e.g., 2.5M+)" value={form.downloads || ''} onChange={(e) => setForm({ ...form, downloads: e.target.value })} />
             <input className="border rounded px-3 py-2" placeholder="Resource URL" value={form.url || ''} onChange={(e) => setForm({ ...form, url: e.target.value })} />
-            <input className="border rounded px-3 py-2" placeholder="Download URL" value={form.download_url || ''} onChange={(e) => setForm({ ...form, download_url: e.target.value })} />
-            <input className="border rounded px-3 py-2" placeholder="Order" type="number" value={form.order_num || 0} onChange={(e) => setForm({ ...form, order_num: Number(e.target.value) })} />
             <select className="border rounded px-3 py-2" value={form.status || 'active'} onChange={(e) => setForm({ ...form, status: e.target.value })}>
               <option value="active">active</option>
               <option value="inactive">inactive</option>
             </select>
           </div>
-          <label className="inline-flex items-center gap-2 text-sm"><input type="checkbox" checked={!!form.is_featured} onChange={(e) => setForm({ ...form, is_featured: e.target.checked })} /> Featured</label>
           <div className="flex gap-3">
             <Button text={saving ? 'Saving…' : 'Save'} size="40" variant="primary" onClick={save} />
             <Button text="Cancel" size="40" variant="ghost-dark" onClick={() => router.push('/admin/resources')} />
