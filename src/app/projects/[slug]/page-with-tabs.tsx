@@ -442,21 +442,7 @@ export default function ProjectDetailPageWithTabs({ project }: ProjectPageProps)
           <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 items-start justify-between">
             {/* Project Info */}
             <div className="flex-1 flex flex-col gap-6 lg:gap-8">
-              <div className="flex flex-wrap gap-3">
-                {project.project_type && (
-                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${getProjectTypeColor(project.project_type)}`}>
-                    {project.project_type.charAt(0).toUpperCase() + project.project_type.slice(1)} Project
-                  </span>
-                )}
-                {project.difficulty_level && (
-                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${getDifficultyColor(project.difficulty_level)}`}>
-                    {project.difficulty_level.charAt(0).toUpperCase() + project.difficulty_level.slice(1)}
-                  </span>
-                )}
-                <span className="px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
-                  {project.category}
-                </span>
-              </div>
+              {/* Project badges (project_type, difficulty, category) temporarily hidden */}
               
               <h1 className="font-['Barlow'] font-bold text-white text-[32px] sm:text-[40px] lg:text-[48px] leading-tight tracking-[-0.96px]">
                 {project.title}
