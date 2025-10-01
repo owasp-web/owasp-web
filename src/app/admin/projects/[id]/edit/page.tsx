@@ -994,6 +994,79 @@ export default function ProjectEditPage({ params }: ProjectEditPageProps) {
                   <option value="archived">Archived</option>
                 </select>
               </div>
+
+              {/* Sidebar: Project Information */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Language</label>
+                  <input
+                    type="text"
+                    value={project.language || ''}
+                    onChange={(e) => updateProject('language', e.target.value)}
+                    onBlur={(e) => persistPartial({ language: e.target.value })}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2"
+                    placeholder="e.g., Go"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">License</label>
+                  <input
+                    type="text"
+                    value={project.license || ''}
+                    onChange={(e) => updateProject('license', e.target.value)}
+                    onBlur={(e) => persistPartial({ license: e.target.value })}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2"
+                    placeholder="e.g., Apache 2.0"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Latest Version</label>
+                  <input
+                    type="text"
+                    value={project.version || ''}
+                    onChange={(e) => updateProject('version', e.target.value)}
+                    onBlur={(e) => persistPartial({ version: e.target.value })}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2"
+                    placeholder="e.g., 1.2.3"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Contributors (number)</label>
+                  <input
+                    type="number"
+                    value={(project.contributors as any) || ''}
+                    onChange={(e) => updateProject('contributors', Number(e.target.value))}
+                    onBlur={(e) => persistPartial({ contributors: Number((e.target as HTMLInputElement).value || 0) })}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2"
+                    placeholder="e.g., 50"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">GitHub Stars</label>
+                  <input
+                    type="number"
+                    value={(project.github_stars as any) || ''}
+                    onChange={(e) => updateProject('github_stars', Number(e.target.value))}
+                    onBlur={(e) => persistPartial({ github_stars: Number((e.target as HTMLInputElement).value || 0) })}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2"
+                    placeholder="e.g., 11000"
+                  />
+                </div>
+              </div>
+
+              {/* Sidebar: Requirements list */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Requirements (one per line)</label>
+                <textarea
+                  rows={6}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2"
+                  value={(project.requirements || []).join('\n')}
+                  onChange={(e) => updateProject('requirements', e.target.value.split('\n').map(s => s.trim()).filter(Boolean))}
+                  onBlur={(e) => persistPartial({ requirements: e.target.value.split('\n').map(s => s.trim()).filter(Boolean) })}
+                  placeholder="Go runtime\nNetwork connectivity\n..."
+                />
+                <p className="text-xs text-gray-500 mt-1">Leave empty to hide the Requirements box on the public page.</p>
+              </div>
             </div>
           )}
 
