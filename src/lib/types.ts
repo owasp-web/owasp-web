@@ -51,6 +51,7 @@ export interface Project {
   hero_image?: string
   hero_gif_url?: string
   hero_highlights?: Array<{ title: string; value?: string | number; url?: string }>
+  hero_buttons?: Array<{ label: string; url: string; style?: 'primary' | 'secondary' | 'link' }>
 
   // Optional sections shown under hero on the project home/overview page
   overview_sections?: any[]

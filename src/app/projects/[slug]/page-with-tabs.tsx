@@ -487,10 +487,18 @@ export default function ProjectDetailPageWithTabs({ project }: ProjectPageProps)
               </p>
               
               <div className="flex flex-wrap gap-4">
-                {project.github_url && (
-                  <Link href={project.github_url} target="_blank" rel="noopener noreferrer">
-                    <Button text="View on GitHub" variant="ghost-white" size="56" />
-                  </Link>
+                {Array.isArray((project as any).hero_buttons) && (project as any).hero_buttons.length > 0 ? (
+                  ((project as any).hero_buttons as any[]).map((btn: any, idx: number) => (
+                    <Link key={idx} href={btn.url} target="_blank" rel="noopener noreferrer">
+                      <Button text={btn.label || 'Learn More'} variant={btn.style === 'secondary' ? 'outline-white' : btn.style === 'link' ? 'link-white' : 'ghost-white'} size="56" />
+                    </Link>
+                  ))
+                ) : (
+                  project.github_url ? (
+                    <Link href={project.github_url} target="_blank" rel="noopener noreferrer">
+                      <Button text="View on GitHub" variant="ghost-white" size="56" />
+                    </Link>
+                  ) : null
                 )}
               </div>
             </div>

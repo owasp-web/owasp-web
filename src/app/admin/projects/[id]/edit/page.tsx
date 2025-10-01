@@ -568,6 +568,7 @@ export default function ProjectEditPage({ params }: ProjectEditPageProps) {
                   type="text"
                   value={project.title}
                   onChange={(e) => updateProject('title', e.target.value)}
+                  onBlur={(e) => persistPartial({ title: e.target.value })}
                   className="w-full border border-gray-300 rounded-md px-3 py-2"
                 />
               </div>
@@ -579,6 +580,7 @@ export default function ProjectEditPage({ params }: ProjectEditPageProps) {
                 <textarea
                   value={project.description}
                   onChange={(e) => updateProject('description', e.target.value)}
+                  onBlur={(e) => persistPartial({ description: (e.target as HTMLTextAreaElement).value })}
                   rows={3}
                   className="w-full border border-gray-300 rounded-md px-3 py-2"
                 />
@@ -591,6 +593,7 @@ export default function ProjectEditPage({ params }: ProjectEditPageProps) {
                 <textarea
                   value={project.project_overview || ''}
                   onChange={(e) => updateProject('project_overview', e.target.value)}
+                  onBlur={(e) => persistPartial({ project_overview: (e.target as HTMLTextAreaElement).value })}
                   rows={10}
                   className="w-full border border-gray-300 rounded-md px-3 py-2"
                   placeholder="Comprehensive project overview with markdown support..."
@@ -664,6 +667,40 @@ export default function ProjectEditPage({ params }: ProjectEditPageProps) {
                     className="w-full border border-gray-300 rounded-md px-3 py-2"
                     placeholder="https://.../animated.gif"
                   />
+                </div>
+              </div>
+
+              {/* Hero Buttons */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-medium text-gray-700">Hero Buttons</label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const buttons = Array.isArray((project as any).hero_buttons) ? [...(project as any).hero_buttons] : []
+                      buttons.push({ label: 'View on GitHub', url: project.github_url || 'https://github.com/', style: 'primary' })
+                      updateProject('hero_buttons' as any, buttons)
+                    }}
+                    className="px-2 py-1 border rounded"
+                  >
+                    Add Button
+                  </button>
+                </div>
+                <div className="space-y-2">
+                  {(Array.isArray((project as any).hero_buttons) ? (project as any).hero_buttons : []).map((btn: any, idx: number) => (
+                    <div key={idx} className="grid grid-cols-1 md:grid-cols-4 gap-2">
+                      <input value={btn.label || ''} onChange={(e) => { const buttons = [...((project as any).hero_buttons || [])]; buttons[idx] = { ...(buttons[idx] || {}), label: e.target.value }; updateProject('hero_buttons' as any, buttons) }} placeholder="Label" className="border rounded px-2 py-1" />
+                      <input value={btn.url || ''} onChange={(e) => { const buttons = [...((project as any).hero_buttons || [])]; buttons[idx] = { ...(buttons[idx] || {}), url: e.target.value }; updateProject('hero_buttons' as any, buttons) }} placeholder="https://..." className="border rounded px-2 py-1" />
+                      <select value={btn.style || 'primary'} onChange={(e) => { const buttons = [...((project as any).hero_buttons || [])]; buttons[idx] = { ...(buttons[idx] || {}), style: e.target.value }; updateProject('hero_buttons' as any, buttons) }} className="border rounded px-2 py-1">
+                        <option value="primary">primary</option>
+                        <option value="secondary">secondary</option>
+                        <option value="link">link</option>
+                      </select>
+                      <div className="flex items-center">
+                        <button type="button" onClick={() => { const buttons = [...((project as any).hero_buttons || [])]; buttons.splice(idx, 1); updateProject('hero_buttons' as any, buttons) }} className="px-2 py-1 border rounded text-red-600">Remove</button>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
 
