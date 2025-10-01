@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import Button from './Button';
+import React from 'react'
 
 // Local event images
 const eventImage1 = "/images/events/event-1.png";
@@ -54,50 +55,18 @@ const EventCard = ({ date, month, time, title, image }: EventCardProps) => (
 );
 
 export default function UpcomingEventsSection() {
-  const events = [
-    {
-      date: "19",
-      month: "MAY",
-      time: "12:00-12:45PM",
-      title: "OWASP London Chapter",
-      image: eventImage1
-    },
-    {
-      date: "22",
-      month: "MAY",
-      time: "2:00-3:30PM",
-      title: "OWASP Berlin Meetup",
-      image: eventImage2
-    },
-    {
-      date: "25",
-      month: "MAY",
-      time: "10:00-11:30AM",
-      title: "OWASP Tokyo Workshop",
-      image: eventImage3
-    },
-    {
-      date: "28",
-      month: "MAY",
-      time: "6:00-7:30PM",
-      title: "OWASP NYC Chapter",
-      image: eventImage4
-    },
-    {
-      date: "02",
-      month: "JUN",
-      time: "9:00-10:30AM",
-      title: "OWASP Sydney Chapter",
-      image: eventImage5
-    },
-    {
-      date: "05",
-      month: "JUN",
-      time: "3:00-4:30PM",
-      title: "OWASP Paris Security Day",
-      image: eventImage6
-    }
-  ];
+  const [events, setEvents] = React.useState<any[]>([])
+  React.useEffect(() => { (async () => {
+    try {
+      const res = await fetch('/api/public/events/list?limit=6', { next: { revalidate: 60 } })
+      if (res.ok) {
+        const json = await res.json()
+        setEvents(Array.isArray(json.events) ? json.events : [])
+      } else {
+        setEvents([])
+      }
+    } catch { setEvents([]) }
+  })() }, [])
 
   return (
     <div className="bg-[#f1f6fe] relative w-full">
@@ -115,15 +84,23 @@ export default function UpcomingEventsSection() {
                   upcoming conferences, chapter meetups, and training sessions.
                 </p>
               </div>
-              <button className="h-12 px-6 border-2 border-[#757575] text-[#101820] font-['Poppins'] font-semibold text-sm hover:bg-white hover:border-gray-400 transition-all duration-300 rounded-sm shrink-0">
+              <a href="/events" className="h-12 px-6 border-2 border-[#757575] text-[#101820] font-['Poppins'] font-semibold text-sm hover:bg-white hover:border-gray-400 transition-all duration-300 rounded-sm shrink-0 flex items-center">
                 See All Events
-              </button>
+              </a>
             </div>
             
             {/* Events Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 w-full">
               {events.map((event, index) => (
-                <EventCard key={index} {...event} />
+                <a key={index} href={`/events/${event.id || ''}`} className="block">
+                  <EventCard 
+                    date={(event.date || '').toString().split('-')[2] || ''}
+                    month={(new Date(event.date)).toLocaleString('en-US', { month: 'short' }).toUpperCase()}
+                    time={event.time || ''}
+                    title={event.title || ''}
+                    image={event.image || eventImage1}
+                  />
+                </a>
               ))}
             </div>
           </div>

@@ -1,3 +1,4 @@
+import React from 'react'
 import Image from 'next/image';
 import Link from 'next/link';
 import Button from './Button';
@@ -37,9 +38,8 @@ const ResourceCard = ({ title, description, image }: ResourceCardProps) => (
                 {description}
             </p>
           </div>
-          <button className="self-start mt-3 font-['Poppins'] text-[#ffb81b] text-sm underline decoration-skip-ink-none hover:text-[#ffc947] transition-colors">
-            Learn More
-          </button>
+          {/* Optional CTA if resource.url provided */}
+          {/* We purposely omit if missing to show nothing when list is empty */}
         </div>
       </div>
     </div>
@@ -47,23 +47,18 @@ const ResourceCard = ({ title, description, image }: ResourceCardProps) => (
 );
 
 export default function HighlightedResourcesSection() {
-  const resources = [
-    {
-      title: "Amass",
-      description: "In-depth attack surface mapping and asset discovery platform for security professionals and penetration testers.",
-      image: amassImage
-    },
-    {
-      title: "OWTF",
-      description: "Offensive Web Testing Framework that combines different testing strategies for efficient penetration testing workflows.",
-      image: owtfImage
-    },
-    {
-      title: "Dependency-Track",
-      description: "Intelligent component analysis platform for identifying and reducing risk from third-party components.",
-      image: dependencyTrackImage
-    }
-  ];
+  const [resources, setResources] = React.useState<any[]>([])
+  React.useEffect(() => { (async () => {
+    try {
+      const res = await fetch('/api/public/resources/list', { next: { revalidate: 60 } })
+      if (res.ok) {
+        const json = await res.json()
+        setResources(Array.isArray(json.resources) ? json.resources.slice(0, 3) : [])
+      } else {
+        setResources([])
+      }
+    } catch { setResources([]) }
+  })() }, [])
 
   return (
     <div className="bg-[#101820] relative shrink-0 w-full">

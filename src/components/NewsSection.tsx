@@ -1,4 +1,5 @@
 import Button from "./Button";
+import React from 'react'
 
 // Placeholder images - these should be replaced with actual OWASP news and conference images
 const newsImage = "/images/events/event-1.png";
@@ -22,59 +23,38 @@ interface Conference {
   hasEarlyBird?: boolean;
 }
 
-const newsArticles: NewsArticle[] = [
-  {
-    id: "1",
-    image: newsImage,
-    author: "Starr Brown",
-    date: "May 6",
-    title: "OWASP Enables AI Regulation That Works with OWASP AI Exchange"
-  },
-  {
-    id: "2", 
-    image: newsImage,
-    author: "Starr Brown",
-    date: "May 6",
-    title: "OWASP Enables AI Regulation That Works with OWASP AI Exchange"
-  },
-  {
-    id: "3",
-    image: newsImage,
-    author: "Starr Brown", 
-    date: "May 6",
-    title: "OWASP Enables AI Regulation That Works with OWASP AI Exchange"
-  }
-];
+// Load from public API (blogs/news) – until admin exists, this will be empty
+const useNews = () => {
+  const [items, setItems] = React.useState<NewsArticle[]>([])
+  React.useEffect(() => { (async () => {
+    try {
+      const res = await fetch('/api/public/news/list?limit=3', { next: { revalidate: 60 } })
+      if (res.ok) {
+        const json = await res.json()
+        setItems(Array.isArray(json.news) ? json.news : [])
+      } else { setItems([]) }
+    } catch { setItems([]) }
+  })() }, [])
+  return items
+}
 
-const conferences: Conference[] = [
-  {
-    id: "1",
-    image: conferenceImage,
-    dates: "26-30",
-    month: "MAY",
-    year: "2025",
-    title: "OWASP Global AppSec EU 2025"
-  },
-  {
-    id: "2",
-    image: conferenceImage,
-    dates: "3-7",
-    month: "NOV",
-    year: "2025", 
-    title: "OWASP Global AppSec USA 2025",
-    hasEarlyBird: true
-  },
-  {
-    id: "3",
-    image: conferenceImage,
-    dates: "2-6",
-    month: "NOV",
-    year: "2026",
-    title: "OWASP Global AppSec USA 2026"
-  }
-];
+const useConferences = () => {
+  const [items, setItems] = React.useState<Conference[]>([])
+  React.useEffect(() => { (async () => {
+    try {
+      const res = await fetch('/api/public/conferences/list?limit=3', { next: { revalidate: 60 } })
+      if (res.ok) {
+        const json = await res.json()
+        setItems(Array.isArray(json.conferences) ? json.conferences : [])
+      } else { setItems([]) }
+    } catch { setItems([]) }
+  })() }, [])
+  return items
+}
 
 export default function NewsSection() {
+  const newsArticles = useNews()
+  const conferences = useConferences()
   return (
     <section className="bg-[#f1f6fe] px-4 py-20 lg:px-[120px]">
       <div className="w-full max-w-none">

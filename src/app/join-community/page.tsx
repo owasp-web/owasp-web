@@ -63,16 +63,16 @@ export default function JoinCommunityPage() {
       
       {/* Hero Section */}
       <div className="bg-[#101820] relative">
-        <div className="max-w-[1440px] mx-auto px-[120px] py-24">
+        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-[120px] py-12 sm:py-16 lg:py-24">
           <div className="max-w-4xl">
-            <h1 className="font-['Barlow'] font-medium text-[56px] text-white leading-[56px] tracking-[-1.12px] mb-6">
+            <h1 className="font-['Barlow'] font-medium text-[32px] sm:text-[40px] lg:text-[56px] text-white leading-tight lg:leading-[56px] tracking-[-0.64px] lg:tracking-[-1.12px] mb-4 sm:mb-6">
               Join the OWASP Community
             </h1>
-            <p className="font-['Poppins'] text-[#f4f4f4] text-lg leading-7 mb-8">
+            <p className="font-['Poppins'] text-[#f4f4f4] text-base sm:text-lg leading-7 mb-6 sm:mb-8">
               Connect with 50,000+ security professionals worldwide. Whether you're a developer, security researcher, 
               or just passionate about application security, there's a place for you in the OWASP community.
             </p>
-            <div className="flex gap-4">
+            <div className="flex gap-3 sm:gap-4 flex-wrap">
               <Button text="Start Your Journey" variant="light-blue" size="56" />
               <Button text="Find Local Chapter" variant="ghost-white" size="56" />
             </div>
@@ -81,12 +81,12 @@ export default function JoinCommunityPage() {
       </div>
 
       {/* Benefits Section */}
-      <div className="max-w-[1440px] mx-auto px-[120px] py-20">
-        <div className="text-center mb-16">
-          <h2 className="font-['Barlow'] font-medium text-[48px] text-[#101820] leading-[48px] tracking-[-0.96px] mb-6">
+      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-[120px] py-12 sm:py-16 lg:py-20">
+        <div className="text-center mb-10 lg:mb-16">
+          <h2 className="font-['Barlow'] font-medium text-[28px] sm:text-[36px] lg:text-[48px] text-[#101820] leading-tight lg:leading-[48px] tracking-[-0.56px] lg:tracking-[-0.96px] mb-4 lg:mb-6">
             Why Join OWASP?
           </h2>
-          <p className="font-['Poppins'] text-[#757575] text-lg leading-8 max-w-3xl mx-auto">
+          <p className="font-['Poppins'] text-[#757575] text-sm sm:text-base lg:text-lg leading-6 lg:leading-8 max-w-3xl mx-auto">
             OWASP membership is free and open to all. Join our global movement to make software security visible.
           </p>
         </div>
@@ -125,12 +125,12 @@ export default function JoinCommunityPage() {
 
       {/* Membership Types */}
       <div className="bg-white">
-        <div className="max-w-[1440px] mx-auto px-[120px] py-20">
-          <div className="text-center mb-16">
-            <h2 className="font-['Barlow'] font-medium text-[48px] text-[#101820] leading-[48px] tracking-[-0.96px] mb-6">
+        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-[120px] py-12 sm:py-16 lg:py-20">
+          <div className="text-center mb-10 lg:mb-16">
+            <h2 className="font-['Barlow'] font-medium text-[28px] sm:text-[36px] lg:text-[48px] text-[#101820] leading-tight lg:leading-[48px] tracking-[-0.56px] lg:tracking-[-0.96px] mb-4 lg:mb-6">
               How You Can Participate
             </h2>
-            <p className="font-['Poppins'] text-[#757575] text-lg leading-8 max-w-3xl mx-auto">
+            <p className="font-['Poppins'] text-[#757575] text-sm sm:text-base lg:text-lg leading-6 lg:leading-8 max-w-3xl mx-auto">
               Choose the level of involvement that fits your interests and schedule.
             </p>
           </div>
@@ -158,9 +158,9 @@ export default function JoinCommunityPage() {
       </div>
 
       {/* Registration Form */}
-      <div className="max-w-[1440px] mx-auto px-[120px] py-20">
+      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-[120px] py-12 sm:py-16 lg:py-20">
         <div className="max-w-2xl mx-auto">
-          <div className="bg-white rounded-lg shadow-sm p-12">
+          <div className="bg-white rounded-lg shadow-sm p-6 sm:p-8 lg:p-12">
             <div className="text-center mb-8">
               <h2 className="font-['Barlow'] font-medium text-[32px] text-[#101820] mb-4">
                 Join OWASP Today
