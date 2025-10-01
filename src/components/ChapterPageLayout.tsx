@@ -109,8 +109,8 @@ export default function ChapterPageLayout({ chapter }: ChapterPageLayoutProps) {
         </section>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          {/* Custom Tabs (if present) */}
-          {(chapter.tabs && chapter.tabs.length > 0) && (
+          {/* Custom Tabs (if present) - data-driven only */}
+          {Array.isArray(chapter.tabs) && chapter.tabs.length > 0 && (
             <section className="mb-16">
               <div className="flex flex-wrap gap-2 border-b border-gray-200 mb-6">
                 {(chapter.tabs as ChapterTab[])

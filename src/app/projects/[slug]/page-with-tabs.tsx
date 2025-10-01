@@ -711,7 +711,7 @@ export default function ProjectDetailPageWithTabs({ project }: ProjectPageProps)
           {/* Sidebar */}
           <div className="space-y-8">
             {/* Project Links */}
-            {project.project_links && project.project_links.length > 0 && (
+            {Array.isArray(project.project_links) && project.project_links.length > 0 && (
               <div className="bg-white rounded-lg p-6 shadow-sm">
                 <h3 className="font-['Barlow'] font-bold text-[#101820] text-xl mb-4">
                   Project Resources
@@ -734,7 +734,7 @@ export default function ProjectDetailPageWithTabs({ project }: ProjectPageProps)
             )}
 
             {/* Project Leaders */}
-            {project.project_leaders && project.project_leaders.length > 0 && (
+            {Array.isArray(project.project_leaders) && project.project_leaders.length > 0 && (
               <div className="bg-white rounded-lg p-6 shadow-sm">
                 <h3 className="font-['Barlow'] font-bold text-[#101820] text-xl mb-4">
                   Leaders
@@ -752,7 +752,7 @@ export default function ProjectDetailPageWithTabs({ project }: ProjectPageProps)
             )}
 
             {/* Social Links */}
-            {project.social_links && project.social_links.length > 0 && (
+            {Array.isArray(project.social_links) && project.social_links.length > 0 && (
               <div className="bg-white rounded-lg p-6 shadow-sm">
                 <h3 className="font-['Barlow'] font-bold text-[#101820] text-xl mb-4">
                   Downloads or Social Links
@@ -780,45 +780,45 @@ export default function ProjectDetailPageWithTabs({ project }: ProjectPageProps)
                 Project Information
               </h3>
               <div className="space-y-4">
-                {project.language && (
+                {project.language ? (
                   <div>
                     <div className="font-['Poppins'] font-medium text-[#101820] text-sm mb-1">Language</div>
                     <div className="font-['Poppins'] text-[#757575] text-sm">{project.language}</div>
                   </div>
-                )}
+                ) : null}
                 
-                {project.license && (
+                {project.license ? (
                   <div>
                     <div className="font-['Poppins'] font-medium text-[#101820] text-sm mb-1">License</div>
                     <div className="font-['Poppins'] text-[#757575] text-sm">{project.license}</div>
                   </div>
-                )}
+                ) : null}
                 
-                {project.version && (
+                {project.version ? (
                   <div>
                     <div className="font-['Poppins'] font-medium text-[#101820] text-sm mb-1">Latest Version</div>
                     <div className="font-['Poppins'] text-[#757575] text-sm">{project.version}</div>
                   </div>
-                )}
+                ) : null}
                 
-                {project.contributors && (
+                {project.contributors !== undefined && project.contributors !== null ? (
                   <div>
                     <div className="font-['Poppins'] font-medium text-[#101820] text-sm mb-1">Contributors</div>
                     <div className="font-['Poppins'] text-[#757575] text-sm">{project.contributors}</div>
                   </div>
-                )}
+                ) : null}
                 
-                {project.github_stars && (
+                {project.github_stars !== undefined && project.github_stars !== null ? (
                   <div>
                     <div className="font-['Poppins'] font-medium text-[#101820] text-sm mb-1">GitHub Stars</div>
                     <div className="font-['Poppins'] text-[#757575] text-sm">{project.github_stars}</div>
                   </div>
-                )}
+                ) : null}
               </div>
             </div>
 
             {/* Requirements */}
-            {project.requirements && project.requirements.length > 0 && (
+            {Array.isArray(project.requirements) && project.requirements.length > 0 && (
               <div className="bg-white rounded-lg p-6 shadow-sm">
                 <h3 className="font-['Barlow'] font-bold text-[#101820] text-xl mb-4">
                   Requirements
