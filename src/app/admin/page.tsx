@@ -105,11 +105,11 @@ export default function AdminPage() {
         
         {/* Login Section */}
         <div className="bg-[#F1F6FE]">
-          <div className="max-w-[1440px] mx-auto px-[120px] pt-20 pb-[164px]">
+          <div className="max-w-[1440px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-[120px] pt-12 sm:pt-16 lg:pt-20 pb-16 sm:pb-24 lg:pb-[164px]">
             <div className="flex flex-col items-center justify-center w-full">
               <div className="max-w-md w-full">
                 <div className="text-center mb-12">
-                  <h1 className="font-['Barlow'] font-medium text-[#101820] text-[48px] leading-[48px] tracking-[-0.96px] mb-4">
+                  <h1 className="font-['Barlow'] font-medium text-[#101820] text-[28px] sm:text-[36px] md:text-[44px] lg:text-[48px] leading-tight tracking-[-0.6px] sm:tracking-[-0.8px] md:tracking-[-0.9px] lg:tracking-[-0.96px] mb-4">
                     Admin Sign In
                   </h1>
                   <p className="font-['Poppins'] text-[#757575] text-[16px] leading-[24px] tracking-[-0.32px]">
@@ -117,7 +117,7 @@ export default function AdminPage() {
                   </p>
                 </div>
 
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6 md:p-8">
                   <form onSubmit={handleSignIn} className="space-y-6">
                     <div>
                       <label htmlFor="email" className="block text-sm font-medium text-[#101820] mb-2">
