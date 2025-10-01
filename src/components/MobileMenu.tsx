@@ -255,7 +255,7 @@ export default function MobileMenu({ isOpen, onClose, navigationItems }: MobileM
         fixed inset-y-0 right-0 w-full max-w-sm bg-[#101820] border-l border-white/20 shadow-xl
         transform transition-transform duration-300 ease-in-out z-40
         ${isOpen ? 'translate-x-0' : 'translate-x-full'}
-        flex flex-col h-screen max-h-screen overflow-hidden
+        flex flex-col h-[100dvh] max-h-[100dvh] overflow-hidden
       `}>
         <div className="h-20 flex items-center justify-between px-4 border-b border-white/10">
           <div className="text-white/70 font-['Poppins'] text-sm">Menu</div>
@@ -273,7 +273,7 @@ export default function MobileMenu({ isOpen, onClose, navigationItems }: MobileM
           </button>
         </div>
 
-        <div className="p-4 bg-[#101820] flex-1 overflow-y-auto">
+        <div className="p-4 bg-[#101820] flex-1 overflow-y-auto pb-[max(env(safe-area-inset-bottom),16px)]">
           <div className="flex flex-wrap gap-2 mb-6">
             {quickFilters.map((f) => (
               <Link key={f.label} href={f.href} onClick={onClose} className="px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white text-xs font-medium">

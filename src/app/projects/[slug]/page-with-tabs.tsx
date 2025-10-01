@@ -329,14 +329,23 @@ export default function ProjectDetailPageWithTabs({ project }: ProjectPageProps)
   const [activeTab, setActiveTab] = useState(customTabsInit.length ? (customTabsInit[0]?.id || 'overview') : 'overview');
   // Force client-side hydration
   useEffect(() => {}, []);
-  // Hero image should come only from the explicit modern field
-  const heroImage = (project as any).image || ''
-  // Cache-busting: append a version query using updated_at or id so hero media reflects saves immediately
+  // Hero media
+  // Prefer modern fields, but fall back to legacy columns if present
+  // Also append a cache-busting version so changes reflect immediately
+  const version = ((project as any).updated_at || (project as any).id || '').toString()
+  const rawImage = (project as any).image || (project as any).hero_image || (project as any).image_url || ''
   const rawGif = (project as any).hero_gif_url || ''
   const rawVideo = (project as any).hero_video_url || ''
-  const version = ((project as any).updated_at || (project as any).id || '').toString()
-  const heroGifUrl = rawGif ? `${rawGif}${rawGif.includes('?') ? '&' : '?'}v=${encodeURIComponent(version)}` : ''
-  const heroVideoUrl = rawVideo ? `${rawVideo}${rawVideo.includes('?') ? '&' : '?'}v=${encodeURIComponent(version)}` : ''
+  const isSigned = (url: string) => url.includes('/storage/v1/object/sign/')
+  const heroImage = rawImage
+    ? (isSigned(rawImage) ? rawImage : `${rawImage}${rawImage.includes('?') ? '&' : '?'}v=${encodeURIComponent(version)}`)
+    : ''
+  const heroGifUrl = rawGif
+    ? (isSigned(rawGif) ? rawGif : `${rawGif}${rawGif.includes('?') ? '&' : '?'}v=${encodeURIComponent(version)}`)
+    : ''
+  const heroVideoUrl = rawVideo
+    ? (isSigned(rawVideo) ? rawVideo : `${rawVideo}${rawVideo.includes('?') ? '&' : '?'}v=${encodeURIComponent(version)}`)
+    : ''
 
   const getProjectTypeColor = (type: string) => {
     switch (type) {

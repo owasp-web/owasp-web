@@ -19,6 +19,11 @@ export async function GET(_req: NextRequest, context: { params: { slug: string }
       (data as any).image = legacyImage
     }
 
+    // If a GIF or video is explicitly set, prefer it: clear image in the response
+    if ((data as any)?.hero_gif_url || (data as any)?.hero_video_url) {
+      (data as any).image = (data as any).image ? (data as any).image : ''
+    }
+
     // Stop promoting screenshots; hero should be controlled explicitly by admins
     return NextResponse.json({ project: data }, { headers: { 'Cache-Control': 'no-store' } })
   } catch (e: any) {

@@ -1,6 +1,7 @@
 export const dynamic = 'force-dynamic'
 import { notFound } from 'next/navigation';
 import ProjectDetailPageWithTabs from './page-with-tabs';
+import { createServerComponentClient } from '@/lib/supabase'
 import { createServerComponentClient } from '@/lib/supabase';
 
 interface ProjectPageProps {
@@ -10,17 +11,14 @@ interface ProjectPageProps {
 }
 
 export default async function ProjectDetailPage({ params }: ProjectPageProps) {
-  const svc = createServerComponentClient();
-  const { data, error } = await svc
-    .from('projects')
-    .select('*')
-    .eq('slug', params.slug)
-    .eq('status', 'active')
-    .single();
-
-  if (error || !data) {
-    notFound();
+  try {
+    const base = process.env.NEXT_PUBLIC_BASE_URL || ''
+    const res = await fetch(`${base}/api/public/projects/${params.slug}`, { cache: 'no-store' })
+    if (!res.ok) throw new Error('not found')
+    const json = await res.json()
+    if (!json?.project) throw new Error('not found')
+    return <ProjectDetailPageWithTabs project={json.project as any} />
+  } catch {
+    notFound()
   }
-
-  return <ProjectDetailPageWithTabs project={data as any} />;
 }
