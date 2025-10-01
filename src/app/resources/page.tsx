@@ -9,6 +9,8 @@ import Button from '@/components/Button';
 
 export default function ResourcesPage() {
   const [selectedCategory, setSelectedCategory] = useState('All Resources');
+  const [resources, setResources] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
 
   const categories = [
     'All Resources',
@@ -19,58 +21,24 @@ export default function ResourcesPage() {
     'Code Libraries'
   ];
 
-  const resources = [
-    {
-      title: "OWASP Top 10",
-      description: "The most critical web application security risks",
-      category: "Documentation",
-      type: "Guide",
-      image: "/images/tools/owtf.png",
-      downloads: "2.5M+"
-    },
-    {
-      title: "OWASP ZAP",
-      description: "Free penetration testing tool for web applications",
-      category: "Security Tools",
-      type: "Tool",
-      image: "/images/tools/dependency-track.png",
-      downloads: "1.8M+"
-    },
-    {
-      title: "OWASP ASVS",
-      description: "Application Security Verification Standard",
-      category: "Guidelines",
-      type: "Standard",
-      image: "/images/tools/amass.png",
-      downloads: "850K+"
-    },
-    {
-      title: "WebGoat",
-      description: "Deliberately insecure web application for learning",
-      category: "Training Materials",
-      type: "Platform",
-      image: "/images/events/event-1.png",
-      downloads: "1.2M+"
-    },
-    {
-      title: "OWASP Cheat Sheets",
-      description: "Concise guides for specific security topics",
-      category: "Documentation",
-      type: "Reference",
-      image: "/images/tools/owtf.png",
-      downloads: "3.1M+"
-    },
-    {
-      title: "Dependency-Check",
-      description: "Identifies project dependencies with known vulnerabilities",
-      category: "Security Tools",
-      type: "Tool",
-      image: "/images/tools/dependency-track.png",
-      downloads: "950K+"
-    }
-  ];
+  // Load from public API
+  React.useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch('/api/public/resources/list', { next: { revalidate: 60 } })
+        if (res.ok) {
+          const json = await res.json()
+          setResources(Array.isArray(json.resources) ? json.resources : [])
+        } else {
+          setResources([])
+        }
+      } finally {
+        setLoading(false)
+      }
+    })()
+  }, [])
 
-  const filteredResources = resources.filter(resource => 
+  const filteredResources = resources.filter((resource) =>
     selectedCategory === 'All Resources' || resource.category === selectedCategory
   );
 
@@ -140,8 +108,11 @@ export default function ResourcesPage() {
           </p>
         </div>
 
+        {loading ? (
+          <div className="text-gray-500">Loading…</div>
+        ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 mb-12 sm:mb-14 lg:mb-16">
-          {filteredResources.map((resource, index) => (
+          {filteredResources.map((resource: any, index: number) => (
             <div key={index} className="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden group">
               <div className="relative h-48 overflow-hidden">
                 <Image src={resource.image} alt={resource.title} fill className="object-cover group-hover:scale-105 transition-transform duration-300" />
@@ -164,13 +135,14 @@ export default function ResourcesPage() {
                   {resource.description}
                 </p>
                 <div className="flex gap-3">
-                  <Button text="View Resource" variant="primary" size="40" />
-                  <Button text="Download" variant="ghost-dark" size="40" />
+                  {resource.url && <Link href={resource.url} target="_blank"><Button text="View Resource" variant="primary" size="40" /></Link>}
+                  {resource.download_url && <Link href={resource.download_url} target="_blank"><Button text="Download" variant="ghost-dark" size="40" /></Link>}
                 </div>
               </div>
             </div>
           ))}
         </div>
+        )}
 
         {/* Popular Downloads */}
         <div className="bg-white rounded-lg p-12">
