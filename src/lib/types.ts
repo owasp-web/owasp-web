@@ -46,6 +46,12 @@ export interface Project {
   key_features?: string[]
   installation_guide?: string
   
+  // Hero media and highlights
+  hero_video_url?: string
+  hero_image?: string
+  hero_gif_url?: string
+  hero_highlights?: Array<{ title: string; value?: string | number; url?: string }>
+  
   // Custom tabs - these will be the actual tab names from OWASP
   tabs?: ProjectTab[]
   

@@ -640,6 +640,101 @@ export default function ProjectEditPage({ params }: ProjectEditPageProps) {
                 )}
               </div>
 
+              {/* Hero Video / GIF */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Hero Video URL (autoplay, loop, muted)</label>
+                  <input
+                    type="url"
+                    value={(project as any).hero_video_url || ''}
+                    onChange={(e) => updateProject('hero_video_url' as any, e.target.value)}
+                    onBlur={(e) => persistPartial({ hero_video_url: e.target.value } as any)}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2"
+                    placeholder="https://.../intro.mp4"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Provide a short MP4/WebM URL; it will autoplay and loop silently.</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Hero GIF URL</label>
+                  <input
+                    type="url"
+                    value={(project as any).hero_gif_url || ''}
+                    onChange={(e) => updateProject('hero_gif_url' as any, e.target.value)}
+                    onBlur={(e) => persistPartial({ hero_gif_url: e.target.value } as any)}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2"
+                    placeholder="https://.../animated.gif"
+                  />
+                </div>
+              </div>
+
+              {/* Hero Highlights */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-medium text-gray-700">Hero Highlights</label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const current = Array.isArray((project as any).hero_highlights) ? [...(project as any).hero_highlights] : []
+                      current.push({ title: 'Docker Pulls', value: '506k', url: 'https://hub.docker.com/' })
+                      updateProject('hero_highlights' as any, current)
+                    }}
+                    className="px-2 py-1 border rounded"
+                  >
+                    Add Highlight
+                  </button>
+                </div>
+                <p className="text-xs text-gray-500 mb-3">Each highlight can have a title, value, and optional URL (e.g., Docker pulls → docker hub link).</p>
+                <div className="space-y-2">
+                  {(Array.isArray((project as any).hero_highlights) ? (project as any).hero_highlights : []).map((h: any, idx: number) => (
+                    <div key={idx} className="grid grid-cols-1 md:grid-cols-4 gap-2">
+                      <input
+                        value={h.title || ''}
+                        onChange={(e) => {
+                          const list = [...((project as any).hero_highlights || [])]
+                          list[idx] = { ...(list[idx] || {}), title: e.target.value }
+                          updateProject('hero_highlights' as any, list)
+                        }}
+                        placeholder="Title (e.g., Docker Pulls)"
+                        className="border rounded px-2 py-1"
+                      />
+                      <input
+                        value={h.value || ''}
+                        onChange={(e) => {
+                          const list = [...((project as any).hero_highlights || [])]
+                          list[idx] = { ...(list[idx] || {}), value: e.target.value }
+                          updateProject('hero_highlights' as any, list)
+                        }}
+                        placeholder="Value (e.g., 506k)"
+                        className="border rounded px-2 py-1"
+                      />
+                      <input
+                        value={h.url || ''}
+                        onChange={(e) => {
+                          const list = [...((project as any).hero_highlights || [])]
+                          list[idx] = { ...(list[idx] || {}), url: e.target.value }
+                          updateProject('hero_highlights' as any, list)
+                        }}
+                        placeholder="https://... (optional)"
+                        className="border rounded px-2 py-1"
+                      />
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const list = [...((project as any).hero_highlights || [])]
+                            list.splice(idx, 1)
+                            updateProject('hero_highlights' as any, list)
+                          }}
+                          className="px-2 py-1 border rounded text-red-600"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">

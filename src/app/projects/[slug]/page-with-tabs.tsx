@@ -330,7 +330,9 @@ export default function ProjectDetailPageWithTabs({ project }: ProjectPageProps)
   // Force client-side hydration
   useEffect(() => {}, []);
   // Hero image should come only from explicit fields set by admins
-  const heroUrl = (project as any).image || (project as any).hero_image || (project as any).image_url || ''
+  const heroImage = (project as any).hero_image || (project as any).image || (project as any).image_url || ''
+  const heroGifUrl = (project as any).hero_gif_url || ''
+  const heroVideoUrl = (project as any).hero_video_url || ''
 
   const getProjectTypeColor = (type: string) => {
     switch (type) {
@@ -493,17 +495,47 @@ export default function ProjectDetailPageWithTabs({ project }: ProjectPageProps)
               </div>
             </div>
 
-            {/* Project Image (optional). When absent, hero uses gradient background */}
-            {heroUrl && (
-              <div className="w-full lg:w-80 h-48 lg:h-80 relative bg-white/10 backdrop-blur-sm rounded-lg p-8 flex items-center justify-center">
-                <div
-                  className="w-full h-full bg-no-repeat bg-center bg-contain rounded"
-                  style={{
-                    backgroundImage: `url('${heroUrl}')`
-                  }}
-                />
+            {/* Hero Media: prefer video, then GIF, then image */}
+            {(heroVideoUrl || heroGifUrl || heroImage) && (
+              <div className="w-full lg:w-[28rem] h-48 lg:h-80 relative bg-white/10 backdrop-blur-sm rounded-lg p-4 lg:p-6 flex items-center justify-center overflow-hidden">
+                {heroVideoUrl ? (
+                  <video
+                    src={heroVideoUrl}
+                    className="w-full h-full object-contain rounded"
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                  />
+                ) : heroGifUrl ? (
+                  <img src={heroGifUrl} alt="Project hero" className="w-full h-full object-contain" />
+                ) : (
+                  <div
+                    className="w-full h-full bg-no-repeat bg-center bg-contain rounded"
+                    style={{ backgroundImage: `url('${heroImage}')` }}
+                  />
+                )}
               </div>
             )}
+          </div>
+
+          {/* Hero Highlights */}
+          {Array.isArray((project as any).hero_highlights) && (project as any).hero_highlights.length > 0 && (
+            <div className="mt-6 lg:mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {((project as any).hero_highlights as any[]).map((h: any, idx: number) => (
+                <div key={idx} className="bg-white/10 text-white rounded-lg px-4 py-3 flex items-center justify-between">
+                  <div className="font-['Poppins'] text-sm">{h.title}</div>
+                  {h.url ? (
+                    <a href={h.url} target="_blank" rel="noopener noreferrer" className="font-semibold underline">
+                      {h.value ?? 'View'}
+                    </a>
+                  ) : (
+                    <div className="font-semibold">{h.value}</div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
           </div>
         </div>
       </div>
