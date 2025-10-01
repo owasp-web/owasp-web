@@ -440,6 +440,29 @@ export default function ProjectEditPage({ params }: ProjectEditPageProps) {
     writeSections(tabId, sections);
   };
 
+  // Project-level links (for global resources shown on the project page sidebar)
+  const addProjectLink = () => {
+    if (!project) return;
+    const links = Array.isArray(project.project_links) ? [...project.project_links] : [];
+    links.push({ title: 'Official Site', url: 'https://example.com' } as any);
+    updateProject('project_links', links as any);
+  };
+
+  const updateProjectLink = (index: number, key: 'title' | 'url', value: string) => {
+    if (!project) return;
+    const links = Array.isArray(project.project_links) ? [...project.project_links] : [];
+    if (!links[index]) return;
+    (links[index] as any)[key] = value;
+    updateProject('project_links', links as any);
+  };
+
+  const removeProjectLink = (index: number) => {
+    if (!project) return;
+    const links = Array.isArray(project.project_links) ? [...project.project_links] : [];
+    links.splice(index, 1);
+    updateProject('project_links', links as any);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -1066,6 +1089,36 @@ export default function ProjectEditPage({ params }: ProjectEditPageProps) {
                   placeholder="Go runtime\nNetwork connectivity\n..."
                 />
                 <p className="text-xs text-gray-500 mt-1">Leave empty to hide the Requirements box on the public page.</p>
+              </div>
+
+              {/* Project Links (global) */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-medium text-gray-700">Project Links (global)</label>
+                  <button type="button" onClick={addProjectLink} className="px-2 py-1 border rounded">Add Link</button>
+                </div>
+                <p className="text-xs text-gray-500 mb-3">These appear as a Project Resources box on the project's page.</p>
+                <div className="space-y-2">
+                  {(project.project_links || []).map((lnk: any, idx: number) => (
+                    <div key={idx} className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                      <input
+                        value={lnk.title || ''}
+                        onChange={(e) => updateProjectLink(idx, 'title', e.target.value)}
+                        placeholder="Title"
+                        className="border rounded px-2 py-1"
+                      />
+                      <input
+                        value={lnk.url || ''}
+                        onChange={(e) => updateProjectLink(idx, 'url', e.target.value)}
+                        placeholder="https://..."
+                        className="border rounded px-2 py-1"
+                      />
+                      <div className="flex items-center">
+                        <button type="button" onClick={() => removeProjectLink(idx)} className="px-2 py-1 border rounded text-red-600">Remove</button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           )}
