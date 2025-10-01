@@ -490,7 +490,7 @@ export default function ProjectDetailPageWithTabs({ project }: ProjectPageProps)
                 {Array.isArray((project as any).hero_buttons) && (project as any).hero_buttons.length > 0 ? (
                   ((project as any).hero_buttons as any[]).map((btn: any, idx: number) => (
                     <Link key={idx} href={btn.url} target="_blank" rel="noopener noreferrer">
-                      <Button text={btn.label || 'Learn More'} variant={btn.style === 'secondary' ? 'outline-white' : btn.style === 'link' ? 'link-white' : 'ghost-white'} size="56" />
+                      <Button text={btn.label || 'Learn More'} variant={btn.style === 'primary' ? 'primary' : 'ghost-white'} size="56" />
                     </Link>
                   ))
                 ) : (
