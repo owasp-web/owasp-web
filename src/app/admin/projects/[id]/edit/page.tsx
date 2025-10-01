@@ -113,6 +113,34 @@ export default function ProjectEditPage({ params }: ProjectEditPageProps) {
     }
   };
 
+  // Overview Cards helpers
+  const ensureOverviewCards = () => {
+    if (!project) return;
+    if (!Array.isArray((project as any).overview_cards)) {
+      updateProject('overview_cards' as any, [] as any)
+    }
+  }
+  const addOverviewCard = () => {
+    if (!project) return; ensureOverviewCards()
+    const cards = ([...((project as any).overview_cards || [])] as any[])
+    cards.push({ id: `card-${Date.now()}`, title: 'Project Resources', type: 'links', items: [{ title: 'Link', url: '' }] })
+    updateProject('overview_cards' as any, cards as any)
+    persistPartial({ overview_cards: cards } as any)
+  }
+  const updateOverviewCard = (idx: number, next: any) => {
+    if (!project) return; ensureOverviewCards()
+    const cards = ([...((project as any).overview_cards || [])] as any[])
+    cards[idx] = next
+    updateProject('overview_cards' as any, cards as any)
+  }
+  const removeOverviewCard = (idx: number) => {
+    if (!project) return; ensureOverviewCards()
+    const cards = ([...((project as any).overview_cards || [])] as any[])
+    cards.splice(idx, 1)
+    updateProject('overview_cards' as any, cards as any)
+    persistPartial({ overview_cards: cards } as any)
+  }
+
   const addCustomTab = () => {
     if (!project) return;
     const nextOrder = ((project.tabs as any[])?.length || 0) + 1;
@@ -1362,45 +1390,86 @@ export default function ProjectEditPage({ params }: ProjectEditPageProps) {
                 </div>
               </div>
 
-              {/* Sidebar: Requirements list */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Requirements (one per line)</label>
-                <textarea
-                  rows={6}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2"
-                  value={(project.requirements || []).join('\n')}
-                  onChange={(e) => updateProject('requirements', e.target.value.split('\n').map(s => s.trim()).filter(Boolean))}
-                  onBlur={(e) => persistPartial({ requirements: e.target.value.split('\n').map(s => s.trim()).filter(Boolean) })}
-                  placeholder="Go runtime\nNetwork connectivity\n..."
-                />
-                <p className="text-xs text-gray-500 mt-1">Leave empty to hide the Requirements box on the public page.</p>
+              {/* Moved: Requirements/Resources to Overview Cards under Overview tab */}
+            </div>
+          )}
+
+          {activeTab === 'overview' && (
+            <div className="space-y-6">
+              {/* Overview Cards configurable row */}
+              <div className="bg-white border rounded p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <label className="block text-sm font-medium text-gray-700">Overview Cards (row)</label>
+                  <button type="button" onClick={addOverviewCard} className="px-2 py-1 border rounded">Add Box</button>
+                </div>
+                <p className="text-xs text-gray-500 mb-3">Add boxes that appear in the overview right column. Each box can be links, bullets, text, or title/subtitle.</p>
+                <div className="space-y-3">
+                  {(((project as any).overview_cards || []) as any[]).map((card: any, idx: number) => (
+                    <div key={card.id || idx} className="border rounded p-3">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mb-2">
+                        <input className="border rounded px-2 py-1" placeholder="Title" value={card.title || ''} onChange={(e) => updateOverviewCard(idx, { ...card, title: e.target.value })} />
+                        <select className="border rounded px-2 py-1" value={card.type || 'links'} onChange={(e) => updateOverviewCard(idx, { ...card, type: e.target.value })}>
+                          <option value="links">links</option>
+                          <option value="bullets">bullets</option>
+                          <option value="text">text</option>
+                          <option value="title_subtitle">title & subtitle</option>
+                        </select>
+                        <div className="flex items-center justify-end">
+                          <button type="button" onClick={() => removeOverviewCard(idx)} className="px-2 py-1 border rounded text-red-600">Remove</button>
+                        </div>
+                      </div>
+                      {/* Items editor */}
+                      <div className="space-y-2">
+                        {Array.isArray(card.items) && card.items.map((it: any, i: number) => (
+                          <div key={i} className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                            {card.type === 'links' && (
+                              <>
+                                <input className="border rounded px-2 py-1" placeholder="Label" value={it.title || ''} onChange={(e) => { const items = [...(card.items||[])]; items[i] = { ...it, title: e.target.value }; updateOverviewCard(idx, { ...card, items }) }} />
+                                <input className="border rounded px-2 py-1" placeholder="https://..." value={it.url || ''} onChange={(e) => { const items = [...(card.items||[])]; items[i] = { ...it, url: e.target.value }; updateOverviewCard(idx, { ...card, items }) }} />
+                              </>
+                            )}
+                            {card.type === 'bullets' && (
+                              <input className="border rounded px-2 py-1 md:col-span-2" placeholder="Bullet text" value={it.text || ''} onChange={(e) => { const items = [...(card.items||[])]; items[i] = { ...it, text: e.target.value }; updateOverviewCard(idx, { ...card, items }) }} />
+                            )}
+                            {card.type === 'text' && (
+                              <textarea className="border rounded px-2 py-1 md:col-span-2" placeholder="Paragraph" value={it.text || ''} onChange={(e) => { const items = [...(card.items||[])]; items[i] = { ...it, text: e.target.value }; updateOverviewCard(idx, { ...card, items }) }} />
+                            )}
+                            {card.type === 'title_subtitle' && (
+                              <>
+                                <input className="border rounded px-2 py-1" placeholder="Title" value={it.title || ''} onChange={(e) => { const items = [...(card.items||[])]; items[i] = { ...it, title: e.target.value }; updateOverviewCard(idx, { ...card, items }) }} />
+                                <input className="border rounded px-2 py-1" placeholder="Subtitle" value={it.subtitle || ''} onChange={(e) => { const items = [...(card.items||[])]; items[i] = { ...it, subtitle: e.target.value }; updateOverviewCard(idx, { ...card, items }) }} />
+                              </>
+                            )}
+                            <div className="flex items-center">
+                              <button type="button" onClick={() => { const items = [...(card.items||[])]; items.splice(i,1); updateOverviewCard(idx, { ...card, items }) }} className="px-2 py-1 border rounded text-red-600">Remove</button>
+                            </div>
+                          </div>
+                        ))}
+                        <button type="button" onClick={() => { const items = [...(card.items||[])]; items.push({}); updateOverviewCard(idx, { ...card, items }) }} className="px-2 py-1 border rounded">Add Item</button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
 
-              {/* Project Links (global) */}
+              {/* Legacy requirements editor (optional quick input) */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Requirements (one per line)</label>
+                <textarea rows={6} className="w-full border border-gray-300 rounded-md px-3 py-2" value={(project.requirements || []).join('\n')} onChange={(e) => updateProject('requirements', e.target.value.split('\n').map(s => s.trim()).filter(Boolean))} onBlur={(e) => persistPartial({ requirements: e.target.value.split('\n').map(s => s.trim()).filter(Boolean) })} placeholder="Go runtime\nNetwork connectivity\n..." />
+              </div>
+
+              {/* Legacy Project Links editor */}
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <label className="block text-sm font-medium text-gray-700">Project Links (global)</label>
+                  <label className="block text-sm font-medium text-gray-700">Project Links</label>
                   <button type="button" onClick={addProjectLink} className="px-2 py-1 border rounded">Add Link</button>
                 </div>
-                <p className="text-xs text-gray-500 mb-3">These appear as a Project Resources box on the project's page.</p>
                 <div className="space-y-2">
                   {(project.project_links || []).map((lnk: any, idx: number) => (
                     <div key={idx} className="grid grid-cols-1 md:grid-cols-3 gap-2">
-                      <input
-                        value={lnk.title || ''}
-                        onChange={(e) => updateProjectLink(idx, 'title', e.target.value)}
-                        placeholder="Title"
-                        className="border rounded px-2 py-1"
-                      />
-                      <input
-                        value={lnk.url || ''}
-                        onChange={(e) => updateProjectLink(idx, 'url', e.target.value)}
-                        placeholder="https://..."
-                        className="border rounded px-2 py-1"
-                      />
-                      <div className="flex items-center">
-                        <button type="button" onClick={() => removeProjectLink(idx)} className="px-2 py-1 border rounded text-red-600">Remove</button>
-                      </div>
+                      <input value={lnk.title || ''} onChange={(e) => updateProjectLink(idx, 'title', e.target.value)} placeholder="Title" className="border rounded px-2 py-1" />
+                      <input value={lnk.url || ''} onChange={(e) => updateProjectLink(idx, 'url', e.target.value)} placeholder="https://..." className="border rounded px-2 py-1" />
+                      <div className="flex items-center"><button type="button" onClick={() => removeProjectLink(idx)} className="px-2 py-1 border rounded text-red-600">Remove</button></div>
                     </div>
                   ))}
                 </div>

@@ -749,6 +749,55 @@ export default function ProjectDetailPageWithTabs({ project }: ProjectPageProps)
 
           {/* Sidebar */}
           <div className="space-y-8">
+            {/* Overview Cards Row */}
+            {Array.isArray((project as any).overview_cards) && (project as any).overview_cards.length > 0 && (
+              <div className="space-y-6">
+                {((project as any).overview_cards as any[]).map((card: any, index: number) => (
+                  <div key={card.id || index} className="bg-white rounded-lg p-6 shadow-sm">
+                    {card.title && (
+                      <h3 className="font-['Barlow'] font-bold text-[#101820] text-xl mb-4">{card.title}</h3>
+                    )}
+                    {/* Render by type */}
+                    {card.type === 'links' && Array.isArray(card.items) && (
+                      <div className="space-y-3">
+                        {card.items.map((it: any, i: number) => (
+                          <div key={i}>
+                            <a href={it.url} target="_blank" rel="noopener noreferrer" className="text-[#003594] hover:text-[#0056b3] font-medium text-sm underline">• {it.title || it.url}</a>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {card.type === 'bullets' && Array.isArray(card.items) && (
+                      <ul className="space-y-2">
+                        {card.items.map((it: any, i: number) => (
+                          <li key={i} className="flex items-start gap-2">
+                            <div className="w-2 h-2 bg-[#003594] rounded-full flex-shrink-0 mt-2"></div>
+                            <span className="font-['Poppins'] text-[#757575] text-sm">{it.text}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                    {card.type === 'text' && Array.isArray(card.items) && (
+                      <div className="space-y-3">
+                        {card.items.map((it: any, i: number) => (
+                          <p key={i} className="font-['Poppins'] text-[#757575] text-sm leading-6">{it.text}</p>
+                        ))}
+                      </div>
+                    )}
+                    {card.type === 'title_subtitle' && Array.isArray(card.items) && (
+                      <div className="space-y-3">
+                        {card.items.map((it: any, i: number) => (
+                          <div key={i}>
+                            <div className="font-['Poppins'] font-medium text-[#101820] text-sm">{it.title}</div>
+                            <div className="font-['Poppins'] text-[#757575] text-sm">{it.subtitle}</div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
             {/* Project Links */}
             {Array.isArray(project.project_links) && project.project_links.length > 0 && (
               <div className="bg-white rounded-lg p-6 shadow-sm">
