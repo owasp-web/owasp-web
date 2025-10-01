@@ -70,6 +70,13 @@ export async function PUT(req: NextRequest, context: { params: { id: string } })
     if (allowed.has(k) && v !== undefined) sanitized[k] = v
   }
 
+  // If tabs provided, ensure both columns are updated for compatibility
+  if (body.tabs !== undefined) {
+    sanitized.tabs = body.tabs
+    // Mirror to custom_tabs column when present
+    if (allowed.has('custom_tabs')) sanitized.custom_tabs = body.tabs
+  }
+
   const { data, error } = await svc
     .from('projects')
     .update(sanitized)

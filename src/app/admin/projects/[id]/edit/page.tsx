@@ -33,7 +33,17 @@ export default function ProjectEditPage({ params }: ProjectEditPageProps) {
           const res = await fetch(`/api/admin/projects/${params.id}`, { headers: { Authorization: `Bearer ${session.access_token}` } })
           if (res.ok) {
             const json = await res.json()
-            setProject(json.project)
+            let proj: any = json.project
+            // Normalize custom_tabs -> tabs for editor
+            if (!Array.isArray(proj.tabs)) {
+              const raw = proj.custom_tabs
+              if (Array.isArray(raw)) {
+                proj.tabs = raw
+              } else if (typeof raw === 'string') {
+                try { const parsed = JSON.parse(raw); if (Array.isArray(parsed)) proj.tabs = parsed } catch {}
+              }
+            }
+            setProject(proj)
             return
           }
         }
@@ -62,7 +72,7 @@ export default function ProjectEditPage({ params }: ProjectEditPageProps) {
       const res = await fetch(`/api/admin/projects/${project.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
-        body: JSON.stringify(project)
+        body: JSON.stringify({ ...project, tabs: (project as any).tabs, custom_tabs: (project as any).tabs })
       })
       if (!res.ok) throw new Error((await res.json()).error || 'Failed to save')
       alert('Project saved successfully.');
