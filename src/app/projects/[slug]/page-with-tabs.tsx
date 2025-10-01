@@ -794,6 +794,69 @@ export default function ProjectDetailPageWithTabs({ project }: ProjectPageProps)
                         ))}
                       </div>
                     )}
+                    {/* Built-in proxies rendered as customizable cards */}
+                    {card.type === 'builtin_project_info' && (
+                      <div className="space-y-4">
+                        {project.language ? (
+                          <div>
+                            <div className="font-['Poppins'] font-medium text-[#101820] text-sm mb-1">Language</div>
+                            <div className="font-['Poppins'] text-[#757575] text-sm">{(project as any).language}</div>
+                          </div>
+                        ) : null}
+                        {project.license ? (
+                          <div>
+                            <div className="font-['Poppins'] font-medium text-[#101820] text-sm mb-1">License</div>
+                            <div className="font-['Poppins'] text-[#757575] text-sm">{(project as any).license}</div>
+                          </div>
+                        ) : null}
+                        {(project as any).version ? (
+                          <div>
+                            <div className="font-['Poppins'] font-medium text-[#101820] text-sm mb-1">Latest Version</div>
+                            <div className="font-['Poppins'] text-[#757575] text-sm">{(project as any).version}</div>
+                          </div>
+                        ) : null}
+                        {(project as any).contributors !== undefined && (project as any).contributors !== null ? (
+                          <div>
+                            <div className="font-['Poppins'] font-medium text-[#101820] text-sm mb-1">Contributors</div>
+                            <div className="font-['Poppins'] text-[#757575] text-sm">{(project as any).contributors}</div>
+                          </div>
+                        ) : null}
+                        {(project as any).github_stars !== undefined && (project as any).github_stars !== null ? (
+                          <div>
+                            <div className="font-['Poppins'] font-medium text-[#101820] text-sm mb-1">GitHub Stars</div>
+                            <div className="font-['Poppins'] text-[#757575] text-sm">{(project as any).github_stars}</div>
+                          </div>
+                        ) : null}
+                      </div>
+                    )}
+                    {card.type === 'builtin_requirements' && Array.isArray((project as any).requirements) && (
+                      <ul className="space-y-2">
+                        {((project as any).requirements as any[]).map((requirement: any, i: number) => (
+                          <li key={i} className="flex items-start gap-2">
+                            <div className="w-2 h-2 bg-[#003594] rounded-full flex-shrink-0 mt-2"></div>
+                            <span className="font-['Poppins'] text-[#757575] text-sm">{requirement}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                    {card.type === 'builtin_project_links' && Array.isArray((project as any).project_links) && (
+                      <div className="space-y-3">
+                        {((project as any).project_links as any[]).map((link: any, i: number) => (
+                          <div key={i}>
+                            <a href={link.url} target="_blank" rel="noopener noreferrer" className="text-[#003594] hover:text-[#0056b3] font-medium text-sm underline">• {link.title}</a>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {card.type === 'builtin_social_links' && Array.isArray((project as any).social_links) && (
+                      <div className="space-y-3">
+                        {((project as any).social_links as any[]).map((link: any, i: number) => (
+                          <div key={i}>
+                            <a href={link.url} target="_blank" rel="noopener noreferrer" className="text-[#003594] hover:text-[#0056b3] font-medium text-sm underline">• {link.platform || link.title || link.url}</a>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

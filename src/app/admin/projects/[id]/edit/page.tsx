@@ -1413,6 +1413,10 @@ export default function ProjectEditPage({ params }: ProjectEditPageProps) {
                           <option value="bullets">bullets</option>
                           <option value="text">text</option>
                           <option value="title_subtitle">title & subtitle</option>
+                          <option value="builtin_project_info">built-in: Project Information</option>
+                          <option value="builtin_requirements">built-in: Requirements</option>
+                          <option value="builtin_project_links">built-in: Project Links</option>
+                          <option value="builtin_social_links">built-in: Social Links</option>
                         </select>
                         <div className="flex items-center justify-end">
                           <button type="button" onClick={() => removeOverviewCard(idx)} className="px-2 py-1 border rounded text-red-600">Remove</button>
