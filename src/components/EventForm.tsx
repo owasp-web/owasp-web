@@ -257,7 +257,7 @@ export default function EventForm({ initialData, onSubmit, loading }: EventFormP
           name="description"
           id="description"
           rows={4}
-          value={formData.description}
+          value={formData.description || ''}
           onChange={handleChange}
           className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-[#003594] focus:border-[#003594]"
         />
