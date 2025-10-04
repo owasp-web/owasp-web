@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClientComponentClient } from '@/lib/supabase';
+import LinkifyTextarea from '@/components/LinkifyTextarea';
 
 interface ProjectFormData {
   title: string;
@@ -263,11 +264,12 @@ export default function NewProjectPage() {
 
             <div className="mt-6">
               <label className="block text-sm font-medium text-gray-700 mb-2">Short Description *</label>
-              <textarea
-                required
+              <LinkifyTextarea
+                id="description"
+                name="description"
                 rows={3}
                 value={formData.description}
-                onChange={(e) => handleInputChange('description', e.target.value)}
+                onChange={(e) => handleInputChange('description', (e.target as any).value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#003594] focus:border-transparent"
                 placeholder="Brief description of the project"
               />
@@ -275,10 +277,12 @@ export default function NewProjectPage() {
 
             <div className="mt-6">
               <label className="block text-sm font-medium text-gray-700 mb-2">Detailed Description</label>
-              <textarea
+              <LinkifyTextarea
+                id="long_description"
+                name="long_description"
                 rows={5}
                 value={formData.long_description}
-                onChange={(e) => handleInputChange('long_description', e.target.value)}
+                onChange={(e) => handleInputChange('long_description', (e.target as any).value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#003594] focus:border-transparent"
                 placeholder="Detailed description of the project, its goals, and capabilities"
               />

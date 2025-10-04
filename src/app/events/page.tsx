@@ -7,6 +7,7 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import Button from '@/components/Button';
 import ResponsiveContainer from '@/components/ResponsiveContainer';
+import { renderTextWithLinks } from '@/lib/richText';
 import { createClientComponentClient } from '@/lib/supabase';
 import type { Event } from '@/lib/types';
 import Fuse from 'fuse.js';
@@ -227,7 +228,7 @@ export default function EventsPage() {
                     {featuredEvent.title}
                   </h2>
                   <p className="font-['Poppins'] text-white/90 text-sm sm:text-base lg:text-lg leading-6 sm:leading-7 mb-4 sm:mb-6">
-                    {featuredEvent.description || 'Join security professionals for learning, networking, and inspiration.'}
+                    {featuredEvent.description ? renderTextWithLinks(featuredEvent.description) : 'Join security professionals for learning, networking, and inspiration.'}
                   </p>
                   <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6 mb-6 sm:mb-8">
                     <div className="flex items-center gap-2 text-white">

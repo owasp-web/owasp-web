@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { createClientComponentClient } from '@/lib/supabase';
+import LinkifyTextarea from '@/components/LinkifyTextarea';
 import { ChapterFormData } from '@/lib/types';
 
 export default function NewChapterPage() {
@@ -245,7 +246,7 @@ export default function NewChapterPage() {
                   <label htmlFor="hero_description" className="block text-sm font-medium text-gray-700 mb-2">
                     Hero Description
                   </label>
-                  <textarea
+                  <LinkifyTextarea
                     id="hero_description"
                     name="hero_description"
                     rows={4}
@@ -254,6 +255,7 @@ export default function NewChapterPage() {
                     placeholder="Detailed description for the hero section..."
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#003594] focus:border-transparent"
                   />
+                  <p className="mt-1 text-xs text-gray-500">Tip: Use [text](https://url) to create links. Bare URLs auto-link.</p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -298,7 +300,7 @@ export default function NewChapterPage() {
                   <label htmlFor="about_content" className="block text-sm font-medium text-gray-700 mb-2">
                     About Content
                   </label>
-                  <textarea
+                  <LinkifyTextarea
                     id="about_content"
                     name="about_content"
                     rows={6}
@@ -307,6 +309,7 @@ export default function NewChapterPage() {
                     placeholder="Detailed information about the chapter, its location, and mission. Use double line breaks for paragraphs."
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#003594] focus:border-transparent"
                   />
+                  <p className="mt-1 text-xs text-gray-500">Tip: Use [text](https://url) to create links. Bare URLs auto-link.</p>
                 </div>
 
                 <div>

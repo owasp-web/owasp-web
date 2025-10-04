@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { createClientComponentClient } from '@/lib/supabase'
 import type { Event, EventFormData } from '@/lib/types'
 import Button from './Button'
+import LinkifyTextarea from '@/components/LinkifyTextarea'
 
 interface EventFormProps {
   initialData?: Event
@@ -252,7 +253,7 @@ export default function EventForm({ initialData, onSubmit, loading }: EventFormP
         <label htmlFor="description" className="block text-sm font-medium text-gray-700">
           Description
         </label>
-        <textarea
+        <LinkifyTextarea
           name="description"
           id="description"
           rows={4}
@@ -260,6 +261,7 @@ export default function EventForm({ initialData, onSubmit, loading }: EventFormP
           onChange={handleChange}
           className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-[#003594] focus:border-[#003594]"
         />
+        <p className="mt-1 text-xs text-gray-500">Tip: Use [text](https://url) to create links. Bare URLs auto-link.</p>
       </div>
 
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">

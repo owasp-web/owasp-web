@@ -62,6 +62,12 @@ function TabContent({ content }: TabContentProps) {
       return match;
     });
 
+    // Then handle markdown links [text](url)
+    const mdLinkRegex = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g
+    processedText = processedText.replace(mdLinkRegex, (match, label, url) => {
+      return `<MDLINK>${label}|${url}</MDLINK>`
+    })
+
     // Then handle regular URLs
     const urlRegex = /(https?:\/\/[^\s<>"']+)/g;
     processedText = processedText.replace(urlRegex, (match) => {
@@ -69,7 +75,7 @@ function TabContent({ content }: TabContentProps) {
     });
 
     // Split and render
-    const parts = processedText.split(/(<YOUTUBEEMBED>.*?<\/YOUTUBEEMBED>|<IMAGEEMBED>.*?<\/IMAGEEMBED>|<OWASPLINK>.*?<\/OWASPLINK>|<HTTPLINK>.*?<\/HTTPLINK>)/);
+    const parts = processedText.split(/(<YOUTUBEEMBED>.*?<\/YOUTUBEEMBED>|<IMAGEEMBED>.*?<\/IMAGEEMBED>|<OWASPLINK>.*?<\/OWASPLINK>|<MDLINK>.*?<\/MDLINK>|<HTTPLINK>.*?<\/HTTPLINK>)/);
     
     return parts.map((part, partIndex) => {
       if (part.startsWith('<YOUTUBEEMBED>')) {
@@ -116,6 +122,20 @@ function TabContent({ content }: TabContentProps) {
             className="text-[#003594] hover:text-[#0056b3] underline font-medium"
           >
             {text}
+          </a>
+        );
+      } else if (part.startsWith('<MDLINK>')) {
+        const content = part.replace(/<\/?MDLINK>/g, '');
+        const [label, url] = content.split('|');
+        return (
+          <a 
+            key={partIndex}
+            href={url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[#003594] hover:text-[#0056b3] underline font-medium"
+          >
+            {label}
           </a>
         );
       } else if (part.startsWith('<HTTPLINK>')) {
