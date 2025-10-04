@@ -7,7 +7,7 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import Button from '@/components/Button';
 import ResponsiveContainer from '@/components/ResponsiveContainer';
-import { renderTextWithLinks } from '@/lib/richText';
+import { renderMarkdownWithLinks } from '@/lib/richText';
 import { createClientComponentClient } from '@/lib/supabase';
 import type { Event } from '@/lib/types';
 import Fuse from 'fuse.js';
@@ -227,9 +227,11 @@ export default function EventsPage() {
                   <h2 className="font-['Barlow'] font-medium text-lg sm:text-xl md:text-2xl lg:text-3xl xl:text-[40px] text-white leading-tight xl:leading-[44px] tracking-[-0.36px] md:tracking-[-0.4px] xl:tracking-[-0.8px] mb-3 sm:mb-4">
                     {featuredEvent.title}
                   </h2>
-                  <p className="font-['Poppins'] text-white/90 text-sm sm:text-base lg:text-lg leading-6 sm:leading-7 mb-4 sm:mb-6">
-                    {featuredEvent.description ? renderTextWithLinks(featuredEvent.description) : 'Join security professionals for learning, networking, and inspiration.'}
-                  </p>
+                  <div className="font-['Poppins'] text-white/90 text-sm sm:text-base lg:text-lg leading-6 sm:leading-7 mb-4 sm:mb-6">
+                    {featuredEvent.description ? featuredEvent.description.split('\n\n').map((b, i) => (
+                      <div key={i}>{renderMarkdownWithLinks(b)}</div>
+                    )) : 'Join security professionals for learning, networking, and inspiration.'}
+                  </div>
                   <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6 mb-6 sm:mb-8">
                     <div className="flex items-center gap-2 text-white">
                       <Image src="/images/icons/marker.svg" alt="" width={16} height={16} className="filter brightness-0 invert" />

@@ -7,7 +7,7 @@ import Footer from '@/components/Footer'
 import Button from '@/components/Button'
 import { createClientComponentClient } from '@/lib/supabase'
 import type { Event } from '@/lib/types'
-import { renderTextWithLinks } from '@/lib/richText'
+import { renderMarkdownWithLinks } from '@/lib/richText'
 
 export default function PublicEventPage({ params }: { params: { id: string } }) {
   const [event, setEvent] = useState<Event | null>(null)
@@ -78,7 +78,9 @@ export default function PublicEventPage({ params }: { params: { id: string } }) 
 
         {event.description && (
           <div className="prose max-w-none mb-8">
-            <p className="text-gray-800 whitespace-pre-line">{renderTextWithLinks(event.description)}</p>
+            {event.description.split('\n\n').map((block, i) => (
+              <div key={i}>{renderMarkdownWithLinks(block)}</div>
+            ))}
           </div>
         )}
 

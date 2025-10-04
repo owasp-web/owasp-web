@@ -7,7 +7,7 @@ import Footer from '@/components/Footer';
 import { Chapter, ChapterTab } from '@/lib/types';
 import { useEffect, useState } from 'react';
 import { createClientComponentClient } from '@/lib/supabase';
-import { renderTextWithLinks } from '@/lib/richText';
+import { renderTextWithLinks, renderMarkdownWithLinks } from '@/lib/richText';
 import type { Event } from '@/lib/types';
 
 interface ChapterPageLayoutProps {
@@ -175,8 +175,8 @@ export default function ChapterPageLayout({ chapter }: ChapterPageLayoutProps) {
 
                         {sec.content && (
                           <div className="space-y-4 text-gray-700">
-                            {sec.content.split('\n\n').map((p, i) => (
-                              <p key={i}>{p}</p>
+                            {sec.content.split('\n\n').map((block: string, bi: number) => (
+                              <div key={bi}>{renderMarkdownWithLinks(block)}</div>
                             ))}
                           </div>
                         )}
@@ -247,9 +247,9 @@ export default function ChapterPageLayout({ chapter }: ChapterPageLayoutProps) {
                 {chapter.about_content && (
                   <div className="space-y-6">
                     {chapter.about_content.split('\n\n').map((paragraph, index) => (
-                      <p key={index} className="text-lg text-gray-700">
-                        {renderTextWithLinks(paragraph)}
-                      </p>
+                      <div key={index} className="text-lg text-gray-700">
+                        {renderMarkdownWithLinks(paragraph)}
+                      </div>
                     ))}
                   </div>
                 )}
