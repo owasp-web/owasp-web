@@ -63,13 +63,15 @@ export default function NewChapterPage() {
     setLoading(true);
 
     try {
-      // TODO: Implement chapter creation
-      console.log('Creating chapter:', formData);
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      alert('Chapter created successfully!');
+      const supabase = createClientComponentClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) throw new Error('Not authenticated')
+      const res = await fetch('/api/admin/chapters/new', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify(formData)
+      })
+      if (!res.ok) throw new Error((await res.json()).error || 'Failed to create chapter')
       router.push('/admin/chapters');
     } catch (error) {
       console.error('Error creating chapter:', error);

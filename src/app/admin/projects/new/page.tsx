@@ -127,7 +127,9 @@ export default function NewProjectPage() {
 
     try {
       const supabase = createClientComponentClient();
-      
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) throw new Error('Not authenticated')
+
       // Filter out empty strings from arrays
       const cleanedData = {
         ...formData,
@@ -138,11 +140,12 @@ export default function NewProjectPage() {
         contributors: formData.contributors || null
       };
 
-      const { error } = await supabase
-        .from('projects')
-        .insert([cleanedData]);
-
-      if (error) throw error;
+      const res = await fetch('/api/admin/projects/new', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify(cleanedData)
+      })
+      if (!res.ok) throw new Error((await res.json()).error || 'Failed to create project')
 
       router.push('/admin/projects');
     } catch (err: any) {
