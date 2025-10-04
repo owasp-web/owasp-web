@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Link from '@tiptap/extension-link'
@@ -18,14 +18,21 @@ interface MarkdownEditorProps {
 }
 
 export default function MarkdownEditor({ id, name, value, placeholder, className = '', disabled, onChange }: MarkdownEditorProps) {
+  const [linkMode, setLinkMode] = useState(false)
+  const [urlInput, setUrlInput] = useState('')
   const editor = useEditor({
     editable: !disabled,
     extensions: [
       StarterKit.configure({
         heading: { levels: [2, 3] },
+        bulletList: { HTMLAttributes: { class: 'list-disc ml-6' } },
+        orderedList: { HTMLAttributes: { class: 'list-decimal ml-6' } },
+        blockquote: { HTMLAttributes: { class: 'border-l-4 pl-3 italic text-gray-700' } },
+        paragraph: { HTMLAttributes: { class: "leading-relaxed" } },
+        code: { HTMLAttributes: { class: 'bg-gray-100 rounded px-1 py-0.5' } },
       }),
       Underline,
-      Link.configure({ openOnClick: false })
+      Link.configure({ openOnClick: false, HTMLAttributes: { class: 'text-[#003594] underline' } })
     ],
     content: value || '',
     onUpdate: ({ editor }) => {
@@ -50,14 +57,19 @@ export default function MarkdownEditor({ id, name, value, placeholder, className
   if (!editor) return null
 
   const setLink = () => {
-    const previousUrl = editor.getAttributes('link').href
-    const url = window.prompt('URL', previousUrl || 'https://')
-    if (url === null) return
-    if (url === '') {
-      editor.chain().focus().extendMarkRange('link').unsetLink().run()
-      return
-    }
+    const previousUrl = editor.getAttributes('link').href as string | undefined
+    setUrlInput(previousUrl || 'https://')
+    setLinkMode(true)
+  }
+  const insertLink = () => {
+    const url = (urlInput || '').trim()
+    if (!url) { setLinkMode(false); return }
     editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run()
+    setLinkMode(false)
+  }
+  const removeLink = () => {
+    editor.chain().focus().extendMarkRange('link').unsetLink().run()
+    setLinkMode(false)
   }
 
   return (
@@ -72,8 +84,20 @@ export default function MarkdownEditor({ id, name, value, placeholder, className
         <button type="button" className="px-2 py-1 text-sm border border-gray-300 rounded" onClick={() => editor.chain().focus().toggleCode().run()}>Code</button>
         <button type="button" className="px-2 py-1 text-sm border border-gray-300 rounded" onClick={setLink}>Link</button>
       </div>
+      <div className="flex flex-wrap items-center gap-2 mb-2" hidden={!linkMode}>
+        <input
+          type="url"
+          value={urlInput}
+          onChange={(e) => setUrlInput(e.target.value)}
+          placeholder="https://example.com"
+          className="px-2 py-1 border border-gray-300 rounded text-sm w-64"
+        />
+        <button type="button" className="px-2 py-1 text-sm bg-[#003594] text-white rounded" onClick={insertLink}>Insert</button>
+        <button type="button" className="px-2 py-1 text-sm border border-gray-300 rounded" onClick={removeLink}>Remove</button>
+        <button type="button" className="px-2 py-1 text-sm border border-gray-300 rounded" onClick={() => setLinkMode(false)}>Cancel</button>
+      </div>
       <div id={id} className={`min-h-[120px] border border-gray-300 rounded ${className}`}>
-        <EditorContent editor={editor} />
+        <EditorContent editor={editor} className="prose prose-sm max-w-none p-3" />
       </div>
       {placeholder && !value && (
         <div className="text-gray-400 text-sm mt-1">{placeholder}</div>
