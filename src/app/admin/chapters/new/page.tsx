@@ -250,7 +250,7 @@ export default function NewChapterPage() {
                     id="hero_description"
                     name="hero_description"
                     rows={4}
-                    value={formData.hero_description}
+                    value={formData.hero_description || ''}
                     onChange={handleInputChange}
                     placeholder="Detailed description for the hero section..."
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#003594] focus:border-transparent"
@@ -304,7 +304,7 @@ export default function NewChapterPage() {
                     id="about_content"
                     name="about_content"
                     rows={6}
-                    value={formData.about_content}
+                    value={formData.about_content || ''}
                     onChange={handleInputChange}
                     placeholder="Detailed information about the chapter, its location, and mission. Use double line breaks for paragraphs."
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#003594] focus:border-transparent"
