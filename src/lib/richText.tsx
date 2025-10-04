@@ -59,6 +59,15 @@ export function renderTextWithLinks(input: string): Array<React.ReactNode> {
 export function renderMarkdownWithLinks(input: string): React.ReactNode {
   if (!input) return null
 
+  // If HTML content (from rich editor), render as-is with safe link attributes
+  const isHtml = /<\/?[a-z][\s\S]*>/i.test(input)
+  if (isHtml) {
+    // Enhance anchor tags for styling and safety
+    const enhanced = input
+      .replace(/<a\s+/gi, '<a target="_blank" rel="noopener noreferrer" class="text-[#003594] underline" ')
+    return <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: enhanced }} />
+  }
+
   // Tables: markdown pipe format
   const isMarkdownTable = (txt: string) => {
     const lines = txt.trim().split(/\n/)
