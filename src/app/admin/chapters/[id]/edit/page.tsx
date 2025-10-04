@@ -9,7 +9,7 @@ import Footer from '@/components/Footer';
 import { adminService } from '@/lib/admin';
 import { createClientComponentClient } from '@/lib/supabase';
 import type { Event } from '@/lib/types';
-import LinkifyTextarea from '@/components/LinkifyTextarea';
+import MarkdownEditor from '@/components/MarkdownEditor';
 
 interface EditChapterPageProps {
   params: {
@@ -784,7 +784,7 @@ export default function EditChapterPage({ params }: EditChapterPageProps) {
                   <label htmlFor="hero_description" className="block text-sm font-medium text-gray-700 mb-2">
                     Hero Description
                   </label>
-                  <LinkifyTextarea
+                  <MarkdownEditor
                     id="hero_description"
                     name="hero_description"
                     rows={4}
@@ -834,7 +834,7 @@ export default function EditChapterPage({ params }: EditChapterPageProps) {
                   <label htmlFor="about_content" className="block text-sm font-medium text-gray-700 mb-2">
                     About Content
                   </label>
-                  <LinkifyTextarea
+                  <MarkdownEditor
                     id="about_content"
                     name="about_content"
                     rows={6}

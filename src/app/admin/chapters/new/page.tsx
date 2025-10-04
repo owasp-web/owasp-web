@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { createClientComponentClient } from '@/lib/supabase';
-import LinkifyTextarea from '@/components/LinkifyTextarea';
+import MarkdownEditor from '@/components/MarkdownEditor';
 import { ChapterFormData } from '@/lib/types';
 
 export default function NewChapterPage() {
@@ -246,7 +246,7 @@ export default function NewChapterPage() {
                   <label htmlFor="hero_description" className="block text-sm font-medium text-gray-700 mb-2">
                     Hero Description
                   </label>
-                  <LinkifyTextarea
+                  <MarkdownEditor
                     id="hero_description"
                     name="hero_description"
                     rows={4}
@@ -300,7 +300,7 @@ export default function NewChapterPage() {
                   <label htmlFor="about_content" className="block text-sm font-medium text-gray-700 mb-2">
                     About Content
                   </label>
-                  <LinkifyTextarea
+                  <MarkdownEditor
                     id="about_content"
                     name="about_content"
                     rows={6}

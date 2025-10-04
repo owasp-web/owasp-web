@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClientComponentClient } from '@/lib/supabase';
-import LinkifyTextarea from '@/components/LinkifyTextarea';
+import MarkdownEditor from '@/components/MarkdownEditor';
 
 interface ProjectFormData {
   title: string;
@@ -264,7 +264,7 @@ export default function NewProjectPage() {
 
             <div className="mt-6">
               <label className="block text-sm font-medium text-gray-700 mb-2">Short Description *</label>
-              <LinkifyTextarea
+              <MarkdownEditor
                 id="description"
                 name="description"
                 rows={3}
@@ -277,7 +277,7 @@ export default function NewProjectPage() {
 
             <div className="mt-6">
               <label className="block text-sm font-medium text-gray-700 mb-2">Detailed Description</label>
-              <LinkifyTextarea
+              <MarkdownEditor
                 id="long_description"
                 name="long_description"
                 rows={5}

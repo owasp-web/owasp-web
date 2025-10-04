@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import LinkifyTextarea from '@/components/LinkifyTextarea';
+import MarkdownEditor from '@/components/MarkdownEditor';
 import { useRouter } from 'next/navigation';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -606,7 +606,7 @@ export default function ProjectEditPage({ params }: ProjectEditPageProps) {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Description
                 </label>
-                <LinkifyTextarea
+                <MarkdownEditor
                   value={project.description}
                   onChange={(e) => updateProject('description', (e.target as any).value)}
                   rows={3}
@@ -618,7 +618,7 @@ export default function ProjectEditPage({ params }: ProjectEditPageProps) {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Project Overview
                 </label>
-                <LinkifyTextarea
+                <MarkdownEditor
                   value={project.project_overview || ''}
                   onChange={(e) => updateProject('project_overview', (e.target as any).value)}
                   rows={10}

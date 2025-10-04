@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { createClientComponentClient } from '@/lib/supabase'
 import type { Event, EventFormData } from '@/lib/types'
 import Button from './Button'
-import LinkifyTextarea from '@/components/LinkifyTextarea'
+import MarkdownEditor from '@/components/MarkdownEditor'
 
 interface EventFormProps {
   initialData?: Event
@@ -253,7 +253,7 @@ export default function EventForm({ initialData, onSubmit, loading }: EventFormP
         <label htmlFor="description" className="block text-sm font-medium text-gray-700">
           Description
         </label>
-        <LinkifyTextarea
+        <MarkdownEditor
           name="description"
           id="description"
           rows={4}
