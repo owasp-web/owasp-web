@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import { createClientComponentClient } from '@/lib/supabase';
 import { ChapterFormData } from '@/lib/types';
 
 export default function NewChapterPage() {
