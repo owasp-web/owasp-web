@@ -8,6 +8,7 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import Button from '@/components/Button';
 import { Project } from '@/lib/types';
+import { renderMarkdownWithLinks } from '@/lib/richText'
 
 interface ProjectPageProps {
   project: Project;
@@ -208,7 +209,10 @@ function TabContent({ content }: TabContentProps) {
               )}
               {section.content && (
                 <div className="font-['Poppins'] text-[#757575] leading-relaxed">
-                  {renderRichContent(section.content)}
+                  {/\||\t/.test(section.content)
+                    ? renderMarkdownWithLinks(section.content)
+                    : renderRichContent(section.content)
+                  }
                 </div>
               )}
               {/* Optional links list */}
@@ -324,11 +328,12 @@ function TabContent({ content }: TabContentProps) {
             </ul>
           );
         } else {
-          // Regular paragraph
+          // Regular paragraph or table block
+          const maybeTable = /\||\t/.test(paragraph)
           return (
-            <p key={index} className="font-['Poppins'] text-[#757575] leading-relaxed">
-              {renderRichContent(paragraph)}
-            </p>
+            <div key={index} className="font-['Poppins'] text-[#757575] leading-relaxed">
+              {maybeTable ? renderMarkdownWithLinks(paragraph) : renderRichContent(paragraph)}
+            </div>
           );
         }
       })}
