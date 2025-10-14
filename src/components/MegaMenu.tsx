@@ -21,6 +21,7 @@ export default function MegaMenu({ isOpen, onClose, menuType }: MegaMenuProps) {
   const [projectQuery, setProjectQuery] = useState('')
   const [chapterQuery, setChapterQuery] = useState('')
   const [eventQuery, setEventQuery] = useState('')
+  const [expandedRegion, setExpandedRegion] = useState<string | null>(null)
 
   // Fetch data when menu opens
   useEffect(() => {
@@ -71,20 +72,14 @@ export default function MegaMenu({ isOpen, onClose, menuType }: MegaMenuProps) {
 
   const fetchChapters = async () => {
     try {
-      const res = await fetch('/api/public/chapters/list?limit=6', { next: { revalidate: 60 } })
-      if (res.ok) {
-        const json = await res.json()
-        setChapters((json.chapters as Chapter[]) || [])
-      } else {
-        const supabase = createClientComponentClient()
-        const { data } = await supabase
-          .from('chapters')
-          .select('*')
-          .eq('is_active', true)
-          .order('name', { ascending: true })
-          .limit(6)
-        setChapters((data as unknown as Chapter[]) || [])
-      }
+      const supabase = createClientComponentClient()
+      const { data } = await supabase
+        .from('chapters')
+        .select('*')
+        .eq('is_active', true)
+        .order('region', { ascending: true })
+        .order('name', { ascending: true })
+      setChapters((data as unknown as Chapter[]) || [])
     } catch (err) {
       console.error('Failed to fetch chapters:', err)
       setChapters([])
@@ -362,103 +357,158 @@ export default function MegaMenu({ isOpen, onClose, menuType }: MegaMenuProps) {
     </div>
   )
 
-  const renderChaptersMenu = () => (
-    <div className="w-full max-w-6xl mx-auto p-4 sm:p-6 md:p-7 lg:p-8">
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-6 lg:gap-8">
-        {/* Dynamic Chapters */}
-        <div className="md:col-span-8">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="font-['Barlow'] font-medium text-lg text-white">Chapters</h3>
-            <div className="hidden md:block">
-              <input
-                type="text"
-                placeholder="Search chapters..."
-                value={chapterQuery}
-                onChange={(e) => setChapterQuery(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key !== 'Enter') return
-                  const q = (e.currentTarget as HTMLInputElement).value.trim()
-                  const url = q ? `/chapters?query=${encodeURIComponent(q)}` : '/chapters'
-                  window.location.href = url
-                }}
-                className="px-3 py-2 rounded-lg bg-white/10 placeholder-white/70 text-white text-sm outline-none border border-white/20 focus:border-[#00A7E1]"
-              />
+  const renderChaptersMenu = () => {
+    const regions = [
+      "Africa",
+      "Asia",
+      "Central America",
+      "Europe",
+      "North America",
+      "Oceania",
+      "South America"
+    ];
+
+    const filteredChapters = chapters.filter((c) => {
+      const q = chapterQuery.trim().toLowerCase();
+      if (!q) return true;
+      return (
+        c.name?.toLowerCase().includes(q) ||
+        c.city?.toLowerCase().includes(q) ||
+        c.country?.toLowerCase().includes(q)
+      );
+    });
+
+    const groupedByRegion: Record<string, Chapter[]> = {};
+    regions.forEach(region => {
+      groupedByRegion[region] = filteredChapters.filter(c => c.region === region);
+    });
+
+    return (
+      <div className="w-full max-w-6xl mx-auto p-4 sm:p-6 md:p-7 lg:p-8">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-6 lg:gap-8">
+          {/* Dynamic Chapters by Region */}
+          <div className="md:col-span-8">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="font-['Barlow'] font-medium text-lg text-white">Chapters by Region</h3>
+              <div className="hidden md:block">
+                <input
+                  type="text"
+                  placeholder="Search chapters..."
+                  value={chapterQuery}
+                  onChange={(e) => setChapterQuery(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key !== 'Enter') return;
+                    const q = (e.currentTarget as HTMLInputElement).value.trim();
+                    const url = q ? `/chapters?query=${encodeURIComponent(q)}` : '/chapters';
+                    window.location.href = url;
+                  }}
+                  className="px-3 py-2 rounded-lg bg-white/10 placeholder-white/70 text-white text-sm outline-none border border-white/20 focus:border-[#00A7E1]"
+                />
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              {chapters.length === 0 ? (
+                <div className="text-white/70 text-sm">No chapters available.</div>
+              ) : (
+                regions.map((region) => {
+                  const regionChapters = groupedByRegion[region] || [];
+                  const isExpanded = expandedRegion === region;
+                  
+                  if (regionChapters.length === 0) return null;
+
+                  return (
+                    <div key={region} className="border-b border-white/10 pb-2">
+                      <button
+                        onClick={() => setExpandedRegion(isExpanded ? null : region)}
+                        className="w-full flex items-center justify-between py-2 px-3 rounded-lg hover:bg-white/5 transition-all duration-200 group"
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="text-white font-medium text-sm">{region}</span>
+                          <span className="text-white/50 text-xs">({regionChapters.length})</span>
+                        </div>
+                        <svg
+                          className={`w-4 h-4 text-white/70 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </button>
+                      
+                      {isExpanded && (
+                        <div className="mt-2 pl-6 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          {regionChapters.map((c) => (
+                            <Link
+                              key={c.id}
+                              href={`/chapters/${c.slug}`}
+                              onClick={onClose}
+                              className="block text-white/80 hover:text-[#00A7E1] text-sm py-1 transition-colors"
+                            >
+                              {c.name}
+                            </Link>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
+              )}
             </div>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-            {chapters.length === 0 ? (
-              <div className="text-white/70 text-sm">No chapters available.</div>
-            ) : (
-              chapters
-                .filter((c) => {
-                  const q = chapterQuery.trim().toLowerCase()
-                  if (!q) return true
-                  return (
-                    c.name?.toLowerCase().includes(q) ||
-                    (c as any).city?.toLowerCase?.().includes(q) ||
-                    (c as any).country?.toLowerCase?.().includes(q)
-                  )
-                })
-                .slice(0, 6)
-                .map((c) => (
-                  <Link key={c.id} href={`/chapters/${c.slug}`} onClick={onClose} className="block text-white/80 hover:text-white text-sm transition-colors">
-                    {c.name}
-                  </Link>
-                ))
-            )}
-          </div>
-        </div>
 
-        {/* Chapter Resources */}
-        <div className="md:col-span-4">
-          <h3 className="font-['Barlow'] font-medium text-lg text-white mb-6">Chapter Resources</h3>
-          <div className="space-y-4">
-            <Link 
-              href="/chapters" 
-              onClick={onClose}
-              className="flex items-center gap-3 p-3 rounded-lg hover:bg-white/10 transition-all duration-200 group"
-            >
-              <div className="w-8 h-8 bg-[#003594] rounded-lg flex items-center justify-center">
-                <Image src="/images/icons/globe.svg" alt="" width={16} height={16} className="filter brightness-0 invert" />
-              </div>
-              <div>
-                <div className="text-white font-medium text-sm">All Chapters</div>
-                <div className="text-white/70 text-xs">Global directory</div>
-              </div>
-            </Link>
+          {/* Chapter Resources */}
+          <div className="md:col-span-4">
+            <h3 className="font-['Barlow'] font-medium text-lg text-white mb-6">Chapter Resources</h3>
+            <div className="space-y-4">
+              <Link 
+                href="/chapters" 
+                onClick={onClose}
+                className="flex items-center gap-3 p-3 rounded-lg hover:bg-white/10 transition-all duration-200 group"
+              >
+                <div className="w-8 h-8 bg-[#003594] rounded-lg flex items-center justify-center">
+                  <Image src="/images/icons/globe.svg" alt="" width={16} height={16} className="filter brightness-0 invert" />
+                </div>
+                <div>
+                  <div className="text-white font-medium text-sm">All Chapters</div>
+                  <div className="text-white/70 text-xs">Global directory</div>
+                </div>
+              </Link>
 
-            <Link 
-              href="/chapter-starter-kit" 
-              onClick={onClose}
-              className="flex items-center gap-3 p-3 rounded-lg hover:bg-white/10 transition-all duration-200 group"
-            >
-              <div className="w-8 h-8 bg-[#28a745] rounded-lg flex items-center justify-center">
-                <Image src="/images/icons/flag.svg" alt="" width={16} height={16} className="filter brightness-0 invert" />
-              </div>
-              <div>
-                <div className="text-white font-medium text-sm">Start a Chapter</div>
-                <div className="text-white/70 text-xs">Chapter starter kit</div>
-              </div>
-            </Link>
+              <Link 
+                href="/chapter-starter-kit" 
+                onClick={onClose}
+                className="flex items-center gap-3 p-3 rounded-lg hover:bg-white/10 transition-all duration-200 group"
+              >
+                <div className="w-8 h-8 bg-[#28a745] rounded-lg flex items-center justify-center">
+                  <Image src="/images/icons/flag.svg" alt="" width={16} height={16} className="filter brightness-0 invert" />
+                </div>
+                <div>
+                  <div className="text-white font-medium text-sm">Start a Chapter</div>
+                  <div className="text-white/70 text-xs">Chapter starter kit</div>
+                </div>
+              </Link>
 
-            <Link 
-              href="/events?type=chapter" 
-              onClick={onClose}
-              className="flex items-center gap-3 p-3 rounded-lg hover:bg-white/10 transition-all duration-200 group"
-            >
-              <div className="w-8 h-8 bg-[#ffc107] rounded-lg flex items-center justify-center">
-                <Image src="/images/icons/users.svg" alt="" width={16} height={16} className="filter brightness-0" />
-              </div>
-              <div>
-                <div className="text-white font-medium text-sm">Chapter Events</div>
-                <div className="text-white/70 text-xs">Local meetups</div>
-              </div>
-            </Link>
+              <Link 
+                href="/events?type=chapter" 
+                onClick={onClose}
+                className="flex items-center gap-3 p-3 rounded-lg hover:bg-white/10 transition-all duration-200 group"
+              >
+                <div className="w-8 h-8 bg-[#ffc107] rounded-lg flex items-center justify-center">
+                  <Image src="/images/icons/users.svg" alt="" width={16} height={16} className="filter brightness-0" />
+                </div>
+                <div>
+                  <div className="text-white font-medium text-sm">Chapter Events</div>
+                  <div className="text-white/70 text-xs">Local meetups</div>
+                </div>
+              </Link>
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  )
+    );
+  }
 
   const renderAboutMenu = () => (
     <div className="w-full max-w-6xl mx-auto p-4 sm:p-6 md:p-7 lg:p-8">

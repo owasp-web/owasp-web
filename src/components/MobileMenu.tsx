@@ -78,8 +78,9 @@ export default function MobileMenu({ isOpen, onClose, navigationItems }: MobileM
   // Chapters search state
   const [chapterQuery, setChapterQuery] = useState('')
   const [chapterLoading, setChapterLoading] = useState(false)
-  const [chapterResults, setChapterResults] = useState<Array<{ id: string; name: string; slug: string }>>([])
+  const [chapterResults, setChapterResults] = useState<Array<{ id: string; name: string; slug: string; region?: string }>>([])
   const [chaptersPrefetched, setChaptersPrefetched] = useState(false)
+  const [expandedMobileRegion, setExpandedMobileRegion] = useState<string | null>(null)
 
   // Events search state (endpoint has no search param, so client-filter)
   const [eventQuery, setEventQuery] = useState('')
@@ -147,7 +148,7 @@ export default function MobileMenu({ isOpen, onClose, navigationItems }: MobileM
   // Debounced chapters search (server-side)
   const fetchChapters = useDebouncedCallback(async (term: string) => {
     const params = new URLSearchParams()
-    params.set('limit', '30')
+    params.set('limit', '100')
     if (term.trim()) params.set('search', term.trim())
     try {
       setChapterLoading(true)
@@ -155,7 +156,7 @@ export default function MobileMenu({ isOpen, onClose, navigationItems }: MobileM
       if (!res.ok) throw new Error('Failed to fetch chapters')
       const json = await res.json()
       const list = (json.chapters as any[]) || []
-      setChapterResults(list.map(c => ({ id: c.id, name: c.name, slug: c.slug })))
+      setChapterResults(list.map(c => ({ id: c.id, name: c.name, slug: c.slug, region: c.region })))
     } catch {
       setChapterResults([])
     } finally {
@@ -360,14 +361,64 @@ export default function MobileMenu({ isOpen, onClose, navigationItems }: MobileM
                             </div>
                             <div className="max-h-56 overflow-y-auto">
                               {chapterLoading && <div className="p-2 text-white/70">Loading…</div>}
-                              {!chapterLoading && chapterResults.length === 0 && chapterQuery.trim() && (
+                              {!chapterLoading && chapterQuery.trim() && chapterResults.length === 0 && (
                                 <div className="p-2 text-white/70">No chapters found</div>
                               )}
-                              {!chapterLoading && chapterResults.map((c) => (
-                                <Link key={c.id} href={`/chapters/${c.slug}`} onClick={onClose} className="block px-3 py-2 rounded-md text-white/80 hover:text-white hover:bg-white/5">
-                                  {c.name}
-                                </Link>
-                              ))}
+                              {!chapterLoading && chapterQuery.trim() ? (
+                                chapterResults.map((c) => (
+                                  <Link key={c.id} href={`/chapters/${c.slug}`} onClick={onClose} className="block px-3 py-2 rounded-md text-white/80 hover:text-white hover:bg-white/5">
+                                    {c.name}
+                                  </Link>
+                                ))
+                              ) : (
+                                !chapterLoading && (() => {
+                                  const regions = ["Africa", "Asia", "Central America", "Europe", "North America", "Oceania", "South America"];
+                                  const groupedByRegion: Record<string, typeof chapterResults> = {};
+                                  regions.forEach(region => {
+                                    groupedByRegion[region] = chapterResults.filter(c => c.region === region);
+                                  });
+                                  return regions.map((region) => {
+                                    const regionChapters = groupedByRegion[region] || [];
+                                    if (regionChapters.length === 0) return null;
+                                    const isExpanded = expandedMobileRegion === region;
+                                    return (
+                                      <div key={region} className="border-b border-white/10 pb-2 mb-2">
+                                        <button
+                                          onClick={() => setExpandedMobileRegion(isExpanded ? null : region)}
+                                          className="w-full flex items-center justify-between py-2 px-2 rounded-md hover:bg-white/5"
+                                        >
+                                          <div className="flex items-center gap-2">
+                                            <span className="text-white font-medium text-sm">{region}</span>
+                                            <span className="text-white/50 text-xs">({regionChapters.length})</span>
+                                          </div>
+                                          <svg
+                                            className={`w-4 h-4 text-white/70 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
+                                            fill="none"
+                                            stroke="currentColor"
+                                            viewBox="0 0 24 24"
+                                          >
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                          </svg>
+                                        </button>
+                                        {isExpanded && (
+                                          <div className="pl-4 space-y-1 mt-1">
+                                            {regionChapters.map((c) => (
+                                              <Link
+                                                key={c.id}
+                                                href={`/chapters/${c.slug}`}
+                                                onClick={onClose}
+                                                className="block px-3 py-2 rounded-md text-white/80 hover:text-[#00A7E1] text-sm"
+                                              >
+                                                {c.name}
+                                              </Link>
+                                            ))}
+                                          </div>
+                                        )}
+                                      </div>
+                                    );
+                                  });
+                                })()
+                              )}
                             </div>
                             <div className="border-t border-white/10 mt-2 pt-2">
                               <Link href={`/chapters${chapterQuery.trim() ? `?query=${encodeURIComponent(chapterQuery.trim())}` : ''}`} onClick={onClose} className="block text-center p-2 rounded-md text-[#00A7E1] hover:text-white text-xs font-medium">
