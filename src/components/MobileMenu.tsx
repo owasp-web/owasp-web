@@ -409,6 +409,7 @@ export default function MobileMenu({ isOpen, onClose, navigationItems }: MobileM
                                                 onClick={onClose}
                                                 className="block px-3 py-2 rounded-md text-white/80 hover:text-[#00A7E1] text-sm"
                                               >
+                                                {(c as any).country_flag && <span className="mr-2">{(c as any).country_flag}</span>}
                                                 {c.name}
                                               </Link>
                                             ))}

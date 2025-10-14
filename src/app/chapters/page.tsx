@@ -211,6 +211,7 @@ function ChaptersPageContent() {
                             href={`/chapters/${c.slug}`}
                             className="font-['Poppins'] text-[14px] text-[#003594] hover:text-[#00A7E1] transition-colors duration-200 hover:underline"
                           >
+                            {c.country_flag && <span className="mr-2">{c.country_flag}</span>}
                             {c.name}
                           </Link>
                         ))}

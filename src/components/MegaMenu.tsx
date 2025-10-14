@@ -446,6 +446,7 @@ export default function MegaMenu({ isOpen, onClose, menuType }: MegaMenuProps) {
                               onClick={onClose}
                               className="block text-white/80 hover:text-[#00A7E1] text-sm py-1 transition-colors"
                             >
+                              {c.country_flag && <span className="mr-2">{c.country_flag}</span>}
                               {c.name}
                             </Link>
                           ))}
