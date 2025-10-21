@@ -91,11 +91,7 @@ export default function ChapterPageLayout({ chapter }: ChapterPageLayoutProps) {
                     Join Our Meetup
                   </a>
                 )}
-                {chapter.website_url && (
-                  <a href={chapter.website_url} className="border-2 border-white text-white px-6 py-3 rounded-lg font-semibold hover:bg-white hover:text-[#003594] transition-colors">
-                    Official Chapter Page
-                  </a>
-                )}
+                {/* Official Chapter Page button removed - never link to old OWASP site */}
                 {chapter.contact_email && (
                   <a href={`mailto:${chapter.contact_email}`} className="border-2 border-white text-white px-6 py-3 rounded-lg font-semibold hover:bg-white hover:text-[#003594] transition-colors">
                     Contact Chapter
