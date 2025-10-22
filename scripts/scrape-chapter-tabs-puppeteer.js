@@ -280,36 +280,46 @@ async function detectAndExtractTabs(page, chapterId, supabase) {
       try {
         console.log(`   🖱️  Clicking tab: ${tabInfo.text}`);
         
-        // Click the tab using a more robust method
+        // Click the tab using a simpler, more direct method
         try {
-          // Get the current content hash to detect changes
-          const beforeContent = await page.evaluate(() => {
-            const mainContent = document.querySelector('#div-main, #div-meetings, #div-archive, #div-sponsors, .main-content, .content');
-            return mainContent ? mainContent.innerHTML.substring(0, 100) : '';
-          });
+          console.log(`   🔍 Attempting to click tab with href: ${href}`);
           
-          await page.evaluate((targetHref) => {
-            const elements = document.querySelectorAll('a[href*="#div-main"], a[href*="#div-meetings"], a[href*="#div-archive"], a[href*="#div-sponsors"]');
-            const element = Array.from(elements).find(el => el.href === targetHref);
+          // Try multiple click methods
+          const clicked = await page.evaluate((targetHref) => {
+            // Method 1: Direct href match
+            let element = document.querySelector(`a[href="${targetHref}"]`);
             if (element) {
               element.click();
+              return true;
             }
+            
+            // Method 2: Partial href match
+            element = document.querySelector(`a[href*="${targetHref.split('#')[1]}"]`);
+            if (element) {
+              element.click();
+              return true;
+            }
+            
+            // Method 3: Find by text content
+            const links = Array.from(document.querySelectorAll('a'));
+            element = links.find(link => link.href === targetHref);
+            if (element) {
+              element.click();
+              return true;
+            }
+            
+            return false;
           }, href);
           
-          // Wait for content to actually change
-          await page.waitForFunction((beforeContent) => {
-            const mainContent = document.querySelector('#div-main, #div-meetings, #div-archive, #div-sponsors, .main-content, .content');
-            const currentContent = mainContent ? mainContent.innerHTML.substring(0, 100) : '';
-            return currentContent !== beforeContent;
-          }, { timeout: 5000 }, beforeContent);
-          
-          // Additional wait for any animations
-          await new Promise(resolve => setTimeout(resolve, 1000));
-          
-          console.log(`   ✅ Tab clicked and content loaded: ${normalizedTabName}`);
+          if (clicked) {
+            console.log(`   ✅ Tab clicked successfully`);
+            // Wait for any JavaScript to execute
+            await new Promise(resolve => setTimeout(resolve, 2000));
+          } else {
+            console.log(`   ⚠️  Could not find tab element to click`);
+          }
         } catch (error) {
           console.log(`   ⚠️  Error clicking tab: ${error.message}`);
-          // Still try to extract content even if clicking failed
         }
         
         // Normalize tab name for better organization
@@ -363,6 +373,8 @@ async function extractTabContent(page, tabName, chapterId, supabase) {
   try {
     // Get the current page content - look for tab-specific content
     const content = await page.evaluate((tabName) => {
+      console.log(`   🔍 Extracting content for tab: ${tabName}`);
+      
       // Remove navigation, header, footer elements
       const elementsToRemove = document.querySelectorAll('nav, header, footer, .navbar, .sidebar, #sidebar, .toc, #toc, .cookie-banner, .cookie-consent');
       elementsToRemove.forEach(el => el.remove());
@@ -373,18 +385,26 @@ async function extractTabContent(page, tabName, chapterId, supabase) {
       // Try to find content specific to the current tab
       if (tabName.toLowerCase().includes('main')) {
         mainContent = document.querySelector('#div-main, .main-content, main, #main');
+        console.log(`   📍 Looking for main content, found:`, mainContent ? 'Yes' : 'No');
       } else if (tabName.toLowerCase().includes('meeting')) {
         mainContent = document.querySelector('#div-meetings, .meetings-content, .chapter-meetings');
+        console.log(`   📍 Looking for meetings content, found:`, mainContent ? 'Yes' : 'No');
       } else if (tabName.toLowerCase().includes('archive')) {
         mainContent = document.querySelector('#div-archive, .archive-content, .archived-meetings');
+        console.log(`   📍 Looking for archive content, found:`, mainContent ? 'Yes' : 'No');
       } else if (tabName.toLowerCase().includes('sponsor')) {
         mainContent = document.querySelector('#div-sponsors, .sponsors-content, .chapter-sponsors');
+        console.log(`   📍 Looking for sponsors content, found:`, mainContent ? 'Yes' : 'No');
       }
       
       // Fallback to general content areas
       if (!mainContent) {
         mainContent = document.querySelector('.main-content, main, #main, .content, #content, article, .chapter-content') || document.body;
+        console.log(`   📍 Using fallback content area`);
       }
+      
+      const contentLength = mainContent ? mainContent.innerHTML.length : 0;
+      console.log(`   📊 Content length: ${contentLength} characters`);
       
       return mainContent ? mainContent.innerHTML : '';
     }, tabName);
