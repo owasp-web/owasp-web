@@ -66,112 +66,118 @@ async function scrapeChapterTabsWithPuppeteer(chapterId, chapterUrl, chapterName
     const sidebar = parseSidebarContent(html);
     const cleanedSidebar = cleanSidebarData(sidebar);
     
-    // Get all tab content by clicking through each tab and extracting content
+    // Get all tab content by mapping href attributes to content divs
     const tabContentDivs = await page.evaluate(() => {
       const found = [];
       
-      // Look for tab navigation elements
-      const tabElements = document.querySelectorAll('a, button, span');
-      const chapterTabs = [];
+      // Look for tab navigation elements with href attributes pointing to content divs
+      const tabElements = document.querySelectorAll('a[href^="#div-"], a[href^="#main"], a[href^="#futureevents"], a[href^="#pastevents"], a[href*="#div"], a[href*="div-"]');
       
-      tabElements.forEach(el => {
+      console.log(`   🔍 Found ${tabElements.length} tab elements with selectors`);
+      
+      // Also try a broader search
+      const allTabElements = document.querySelectorAll('a[href*="#"]');
+      console.log(`   🔍 Found ${allTabElements.length} total elements with href="#..."`);
+      
+      // Log all tab elements for debugging
+      Array.from(allTabElements).forEach((el, i) => {
         const text = el.textContent?.trim();
-        // Focus on main navigation tabs, not year-specific ones
-        if (text && (
-          text.toLowerCase() === 'main' ||
-          text.toLowerCase() === 'chapter events' ||
-          text.toLowerCase() === 'previous chapter events' ||
-          text.toLowerCase() === 'chapter meetings' ||
-          text.toLowerCase() === 'archived meetings' ||
-          text.toLowerCase() === 'chapter sponsors' ||
-          text.toLowerCase() === 'upcoming chapter events'
-        ) && text.length < 50) {
-          chapterTabs.push({
-            element: el,
-            text: text,
-            href: el.getAttribute('href'),
-            classes: el.className
-          });
+        const href = el.getAttribute('href');
+        if (text && href && (text.includes('Main') || text.includes('Chapter') || text.includes('Events'))) {
+          console.log(`   🔍 Tab ${i}: "${text}" -> ${href}`);
         }
       });
       
-      return chapterTabs;
+      tabElements.forEach(el => {
+        const text = el.textContent?.trim();
+        const href = el.getAttribute('href');
+        
+        if (text && href && text.length < 100) {
+          console.log(`   🔍 Processing tab: "${text}" -> ${href}`);
+          // Map href to content div ID
+          const contentDivId = href.replace('#', '');
+          let contentDiv = document.getElementById(contentDivId);
+          
+          // If direct ID lookup fails, try alternative selectors
+          if (!contentDiv) {
+            // Try different variations of the ID
+            const alternativeIds = [
+              contentDivId,
+              contentDivId.replace('div-', ''),
+              contentDivId.replace('div-', 'div-'),
+              contentDivId + '-content',
+              contentDivId + '-panel'
+            ];
+            
+            for (const altId of alternativeIds) {
+              contentDiv = document.getElementById(altId);
+              if (contentDiv) break;
+            }
+          }
+          
+          // If still no content div found, try to find by class or other attributes
+          if (!contentDiv) {
+            const possibleSelectors = [
+              `div[class*="${contentDivId}"]`,
+              `div[class*="${contentDivId.replace('div-', '')}"]`,
+              `div[data-tab="${contentDivId}"]`,
+              `div[aria-labelledby="${contentDivId}"]`
+            ];
+            
+            for (const selector of possibleSelectors) {
+              contentDiv = document.querySelector(selector);
+              if (contentDiv) break;
+            }
+          }
+          
+          if (contentDiv) {
+            found.push({
+              name: text,
+              href: href,
+              contentDivId: contentDivId,
+              content: contentDiv.innerHTML,
+              textLength: contentDiv.textContent?.trim().length || 0
+            });
+          } else {
+            console.log(`   ⚠️  Could not find content div for: ${contentDivId}`);
+            // Debug: check what divs actually exist
+            const allDivs = Array.from(document.querySelectorAll('div[id]')).map(div => div.id);
+            console.log(`   🔍 Available div IDs: ${allDivs.slice(0, 10).join(', ')}...`);
+          }
+        }
+      });
+      
+      return found;
     });
     
-    console.log(`   📋 Found ${tabContentDivs.length} potential tab elements`);
+    console.log(`   📋 Found ${tabContentDivs.length} tab content divs`);
     
-    // Try to click each tab and extract content
+    // Debug: log what we found
+    if (tabContentDivs.length === 0) {
+      console.log(`   🔍 Debug: No tab divs found, checking for any tab elements...`);
+      const debugInfo = await page.evaluate(() => {
+        const allTabs = document.querySelectorAll('a[href*="#"]');
+        return Array.from(allTabs).map(el => ({
+          text: el.textContent?.trim(),
+          href: el.getAttribute('href'),
+          classes: el.className
+        })).filter(tab => tab.text && tab.href);
+      });
+      console.log(`   🔍 Debug: Found ${debugInfo.length} tab elements:`, debugInfo);
+    }
+    
+    // Process each tab's content directly
     const extractedTabs = [];
     
     for (const tabInfo of tabContentDivs) {
-      try {
-        console.log(`   🔍 Trying to click tab: ${tabInfo.text}`);
-        
-        // Try to click the tab element
-        await page.evaluate((tabText) => {
-          const elements = document.querySelectorAll('a, button, span');
-          for (const el of elements) {
-            if (el.textContent?.trim() === tabText) {
-              el.click();
-              return true;
-            }
-          }
-          return false;
-        }, tabInfo.text);
-        
-        // Wait for content to load
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        // Extract content from the current tab
-        const tabContent = await page.evaluate(() => {
-          // Look for main content area - be more specific
-          const contentSelectors = [
-            'div[class*="content"]:not([class*="sidebar"])',
-            'div[class*="main"]:not([class*="sidebar"])',
-            'div[class*="tab"]:not([class*="nav"])',
-            'div[class*="panel"]',
-            'div[id*="content"]',
-            'div[id*="main"]',
-            'main',
-            'article',
-            '.content',
-            '.main-content'
-          ];
-          
-          for (const selector of contentSelectors) {
-            const element = document.querySelector(selector);
-            if (element && element.textContent?.trim().length > 200) {
-              // Check if this content is different from sidebar
-              const text = element.textContent?.trim();
-              if (text && !text.includes('The OWASP Foundation') && !text.includes('Social Links')) {
-                return {
-                  content: element.innerHTML,
-                  selector: selector,
-                  textLength: text.length
-                };
-              }
-            }
-          }
-          
-          // Fallback to body content but filter out sidebar
-          const bodyContent = document.body.innerHTML;
-          return {
-            content: bodyContent,
-            selector: 'body',
-            textLength: document.body.textContent?.trim().length || 0
-          };
+      console.log(`   🔍 Processing tab: ${tabInfo.name} (${tabInfo.contentDivId})`);
+      
+      if (tabInfo.content && tabInfo.textLength > 50) {
+        extractedTabs.push({
+          name: tabInfo.name,
+          content: tabInfo.content,
+          contentDivId: tabInfo.contentDivId
         });
-        
-        if (tabContent) {
-          extractedTabs.push({
-            name: tabInfo.text,
-            content: tabContent.content,
-            selector: tabContent.selector
-          });
-        }
-        
-      } catch (error) {
-        console.log(`   ⚠️  Could not click tab: ${tabInfo.text}`);
       }
     }
     
@@ -592,17 +598,35 @@ async function extractTabContentFromHTML(htmlContent, tabName, chapterId, supaba
       });
     }
     
-    // If no sections found, create a general content section
+    // If no sections found, create a general content section with better link parsing
     if (sections.length === 0) {
       const paragraphs = [];
-      $('p').each((i, p) => {
-        const text = $(p).text().trim();
-        if (text && text.length > 20) {
+      const allLinks = [];
+      
+      // Extract all links from the content
+      $('a').each((i, link) => {
+        const href = $(link).attr('href');
+        const linkText = $(link).text().trim();
+        if (href && linkText && !href.startsWith('#')) {
+          // Skip "Official Chapter Page" button - never link to old OWASP site
+          if (linkText === 'Official Chapter Page') {
+            console.log(`   🚫 Skipping "Official Chapter Page" button in general content`);
+            return;
+          }
+          const fullUrl = href.startsWith('http') ? href : `https://owasp.org${href}`;
+          allLinks.push({ label: linkText, url: fullUrl });
+        }
+      });
+      
+      // Extract text content
+      $('p, div, span').each((i, el) => {
+        const text = $(el).text().trim();
+        if (text && text.length > 20 && !$(el).find('a').length) {
           paragraphs.push(text);
         }
       });
       
-      if (paragraphs.length > 0) {
+      if (paragraphs.length > 0 || allLinks.length > 0) {
         sections.push({
           title: 'Content',
           content: paragraphs.join('\n\n'),
@@ -611,7 +635,11 @@ async function extractTabContentFromHTML(htmlContent, tabName, chapterId, supaba
           imageCaption: null,
           imageSize: 'medium',
           videoUrl: null,
-          buttons: []
+          buttons: allLinks.slice(0, 10).map(link => ({
+            label: link.label,
+            url: link.url,
+            style: 'link'
+          }))
         });
       }
     }
