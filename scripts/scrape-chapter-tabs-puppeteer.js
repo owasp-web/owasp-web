@@ -66,9 +66,59 @@ async function scrapeChapterTabsWithPuppeteer(chapterId, chapterUrl, chapterName
     const sidebar = parseSidebarContent(html);
     const cleanedSidebar = cleanSidebarData(sidebar);
     
-    // Detect and extract tabs
-    console.log(`   🔍 Detecting navigation tabs...`);
-    const tabs = await detectAndExtractTabs(page, chapterId, supabase);
+    // Get all tab content divs that are already in the DOM
+    const tabContentDivs = await page.evaluate(() => {
+      const found = [];
+      
+      // Look for any div with id containing 'div-'
+      const allDivs = document.querySelectorAll('div[id*="div-"]');
+      allDivs.forEach(div => {
+        const id = div.id;
+        let name = 'Unknown';
+        
+        // Map common patterns to tab names
+        if (id.includes('main')) name = 'Main';
+        else if (id.includes('meeting')) name = 'Chapter Meetings';
+        else if (id.includes('archive')) name = 'Archived meetings';
+        else if (id.includes('sponsor')) name = 'Chapter sponsors';
+        else if (id.includes('event')) name = 'Events';
+        else if (id.includes('news')) name = 'News';
+        
+        found.push({
+          selector: `#${id}`,
+          name,
+          content: div.innerHTML,
+          visible: div.offsetParent !== null,
+          classes: div.className
+        });
+      });
+      
+      return found;
+    });
+    
+    console.log(`   📋 Found ${tabContentDivs.length} tab content divs`);
+    
+    const tabs = [];
+    
+    // Extract content from each div directly
+    for (const tabDiv of tabContentDivs) {
+      console.log(`   🔍 Processing tab: ${tabDiv.name}`);
+      
+      // Extract content for this tab
+      const tabContent = await extractTabContentFromHTML(tabDiv.content, tabDiv.name, chapterId, supabase);
+      if (tabContent) {
+        tabs.push(tabContent);
+      }
+    }
+    
+    // If no specific tabs found, create a default "Main" tab
+    if (tabs.length === 0) {
+      console.log(`   📄 No specific tab divs found, creating default "Main" tab`);
+      const defaultContent = await extractTabContent(page, 'Main', chapterId, supabase);
+      if (defaultContent) {
+        tabs.push(defaultContent);
+      }
+    }
     
     return {
       tabs,
@@ -363,6 +413,144 @@ async function detectAndExtractTabs(page, chapterId, supabase) {
   } catch (error) {
     console.error(`   ❌ Error detecting tabs:`, error.message);
     return [];
+  }
+}
+
+/**
+ * Extract content from HTML directly (for CSS show/hide tabs)
+ */
+async function extractTabContentFromHTML(htmlContent, tabName, chapterId, supabase) {
+  try {
+    // Parse content with Cheerio
+    const $ = cheerio.load(htmlContent);
+    
+    // Extract sections from the content
+    const sections = [];
+    
+    // Look for major headings (h1, h2, h3) and their content
+    const headings = $('h1, h2, h3').filter(function() {
+      const text = $(this).text().trim();
+      return text && text.length > 0 && !text.toLowerCase().includes('owasp') && !text.toLowerCase().includes('chapter');
+    });
+    
+    if (headings.length > 0) {
+      headings.each((i, heading) => {
+        const $heading = $(heading);
+        const title = $heading.text().trim();
+        
+        if (!title) return;
+        
+        // Get content until next heading
+        const content = [];
+        const links = [];
+        
+        let $next = $heading.next();
+        while ($next.length && !$next.is('h1, h2, h3')) {
+          const tagName = $next.prop('tagName')?.toLowerCase();
+          
+          if (tagName === 'p') {
+            const text = $next.text().trim();
+            if (text) content.push(text);
+            
+            // Extract links from paragraph
+            $next.find('a').each((j, link) => {
+              const href = $(link).attr('href');
+              const linkText = $(link).text().trim();
+              if (href && linkText && !href.startsWith('#')) {
+                // Skip "Official Chapter Page" button - never link to old OWASP site
+                if (linkText === 'Official Chapter Page') {
+                  console.log(`   🚫 Skipping "Official Chapter Page" button in tab content`);
+                  return;
+                }
+                const fullUrl = href.startsWith('http') ? href : `https://owasp.org${href}`;
+                links.push({ label: linkText, url: fullUrl });
+              }
+            });
+          } else if (tagName === 'ul' || tagName === 'ol') {
+            $next.find('li').each((j, li) => {
+              const text = $(li).text().trim();
+              if (text) content.push(`• ${text}`);
+              
+              // Extract links from list items, but skip "Official Chapter Page"
+              $(li).find('a').each((k, link) => {
+                const href = $(link).attr('href');
+                const linkText = $(link).text().trim();
+                if (href && linkText && !href.startsWith('#')) {
+                  // Skip "Official Chapter Page" button - never link to old OWASP site
+                  if (linkText === 'Official Chapter Page') {
+                    console.log(`   🚫 Skipping "Official Chapter Page" button in list item`);
+                    return;
+                  }
+                  const fullUrl = href.startsWith('http') ? href : `https://owasp.org${href}`;
+                  links.push({ label: linkText, url: fullUrl });
+                }
+              });
+            });
+          } else if (tagName === 'img') {
+            // Skip images for now
+            console.log(`   🖼️  Skipping image: ${$next.attr('src')}`);
+          }
+          
+          $next = $next.next();
+        }
+        
+        if (content.length > 0 || links.length > 0) {
+          sections.push({
+            title,
+            content: content.join('\n\n'),
+            imageUrl: null, // Ignore images for now
+            imageAlt: null,
+            imageCaption: null,
+            imageSize: 'medium',
+            videoUrl: null,
+            buttons: links.slice(0, 5).map(link => ({
+              label: link.label,
+              url: link.url,
+              style: 'link'
+            }))
+          });
+        }
+      });
+    }
+    
+    // If no sections found, create a general content section
+    if (sections.length === 0) {
+      const paragraphs = [];
+      $('p').each((i, p) => {
+        const text = $(p).text().trim();
+        if (text && text.length > 20) {
+          paragraphs.push(text);
+        }
+      });
+      
+      if (paragraphs.length > 0) {
+        sections.push({
+          title: 'Content',
+          content: paragraphs.join('\n\n'),
+          imageUrl: null,
+          imageAlt: null,
+          imageCaption: null,
+          imageSize: 'medium',
+          videoUrl: null,
+          buttons: []
+        });
+      }
+    }
+    
+    if (sections.length > 0) {
+      return {
+        id: `tab-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        name: tabName,
+        order: getTabOrder(tabName),
+        sections
+      };
+    }
+    
+    return null;
+    
+  } catch (error) {
+    console.error(`   ❌ Error extracting tab content from HTML:`, error.message);
+    return null;
   }
 }
 
