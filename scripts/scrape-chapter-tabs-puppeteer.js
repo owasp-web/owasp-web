@@ -66,42 +66,121 @@ async function scrapeChapterTabsWithPuppeteer(chapterId, chapterUrl, chapterName
     const sidebar = parseSidebarContent(html);
     const cleanedSidebar = cleanSidebarData(sidebar);
     
-    // Get all tab content divs that are already in the DOM
+    // Get all tab content by clicking through each tab and extracting content
     const tabContentDivs = await page.evaluate(() => {
       const found = [];
       
-      // Look for any div with id containing 'div-'
-      const allDivs = document.querySelectorAll('div[id*="div-"]');
-      allDivs.forEach(div => {
-        const id = div.id;
-        let name = 'Unknown';
-        
-        // Map common patterns to tab names
-        if (id.includes('main')) name = 'Main';
-        else if (id.includes('meeting')) name = 'Chapter Meetings';
-        else if (id.includes('archive')) name = 'Archived meetings';
-        else if (id.includes('sponsor')) name = 'Chapter sponsors';
-        else if (id.includes('event')) name = 'Events';
-        else if (id.includes('news')) name = 'News';
-        
-        found.push({
-          selector: `#${id}`,
-          name,
-          content: div.innerHTML,
-          visible: div.offsetParent !== null,
-          classes: div.className
-        });
+      // Look for tab navigation elements
+      const tabElements = document.querySelectorAll('a, button, span');
+      const chapterTabs = [];
+      
+      tabElements.forEach(el => {
+        const text = el.textContent?.trim();
+        // Focus on main navigation tabs, not year-specific ones
+        if (text && (
+          text.toLowerCase() === 'main' ||
+          text.toLowerCase() === 'chapter events' ||
+          text.toLowerCase() === 'previous chapter events' ||
+          text.toLowerCase() === 'chapter meetings' ||
+          text.toLowerCase() === 'archived meetings' ||
+          text.toLowerCase() === 'chapter sponsors' ||
+          text.toLowerCase() === 'upcoming chapter events'
+        ) && text.length < 50) {
+          chapterTabs.push({
+            element: el,
+            text: text,
+            href: el.getAttribute('href'),
+            classes: el.className
+          });
+        }
       });
       
-      return found;
+      return chapterTabs;
     });
     
-    console.log(`   📋 Found ${tabContentDivs.length} tab content divs`);
+    console.log(`   📋 Found ${tabContentDivs.length} potential tab elements`);
+    
+    // Try to click each tab and extract content
+    const extractedTabs = [];
+    
+    for (const tabInfo of tabContentDivs) {
+      try {
+        console.log(`   🔍 Trying to click tab: ${tabInfo.text}`);
+        
+        // Try to click the tab element
+        await page.evaluate((tabText) => {
+          const elements = document.querySelectorAll('a, button, span');
+          for (const el of elements) {
+            if (el.textContent?.trim() === tabText) {
+              el.click();
+              return true;
+            }
+          }
+          return false;
+        }, tabInfo.text);
+        
+        // Wait for content to load
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Extract content from the current tab
+        const tabContent = await page.evaluate(() => {
+          // Look for main content area - be more specific
+          const contentSelectors = [
+            'div[class*="content"]:not([class*="sidebar"])',
+            'div[class*="main"]:not([class*="sidebar"])',
+            'div[class*="tab"]:not([class*="nav"])',
+            'div[class*="panel"]',
+            'div[id*="content"]',
+            'div[id*="main"]',
+            'main',
+            'article',
+            '.content',
+            '.main-content'
+          ];
+          
+          for (const selector of contentSelectors) {
+            const element = document.querySelector(selector);
+            if (element && element.textContent?.trim().length > 200) {
+              // Check if this content is different from sidebar
+              const text = element.textContent?.trim();
+              if (text && !text.includes('The OWASP Foundation') && !text.includes('Social Links')) {
+                return {
+                  content: element.innerHTML,
+                  selector: selector,
+                  textLength: text.length
+                };
+              }
+            }
+          }
+          
+          // Fallback to body content but filter out sidebar
+          const bodyContent = document.body.innerHTML;
+          return {
+            content: bodyContent,
+            selector: 'body',
+            textLength: document.body.textContent?.trim().length || 0
+          };
+        });
+        
+        if (tabContent) {
+          extractedTabs.push({
+            name: tabInfo.text,
+            content: tabContent.content,
+            selector: tabContent.selector
+          });
+        }
+        
+      } catch (error) {
+        console.log(`   ⚠️  Could not click tab: ${tabInfo.text}`);
+      }
+    }
+    
+    console.log(`   📋 Successfully extracted ${extractedTabs.length} tabs`);
     
     const tabs = [];
     
-    // Extract content from each div directly
-    for (const tabDiv of tabContentDivs) {
+    // Extract content from each extracted tab
+    for (const tabDiv of extractedTabs) {
       console.log(`   🔍 Processing tab: ${tabDiv.name}`);
       
       // Extract content for this tab
