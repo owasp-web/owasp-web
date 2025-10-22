@@ -23,7 +23,7 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 async function testSingleChapter() {
   const args = process.argv.slice(2);
   const slugArg = args.find(arg => arg.startsWith('--slug='));
-  const slug = slugArg ? slugArg.split('=')[1] : 'cambridge';
+  const slug = slugArg ? slugArg.split('=')[1] : 'belgium';
   const dryRun = args.includes('--dry-run');
   const saveOutput = args.includes('--save-output');
   

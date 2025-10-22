@@ -55,8 +55,14 @@ async function scrapeChapterTabsWithPuppeteer(chapterId, chapterUrl, chapterName
       timeout: 30000 
     });
     
-    // Wait a bit for any dynamic content to load
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    // Wait a bit for any dynamic content to load and set up console logging
+    await page.on('console', msg => {
+      if (msg.type() === 'log') {
+        console.log(`   📋 Browser: ${msg.text()}`);
+      }
+    });
+    
+    await new Promise(resolve => setTimeout(resolve, 3000));
     
     // Get the full HTML after JavaScript execution
     const html = await page.content();
@@ -70,7 +76,41 @@ async function scrapeChapterTabsWithPuppeteer(chapterId, chapterUrl, chapterName
     const tabContentDivs = await page.evaluate(() => {
       const found = [];
       
-      // Look for tab navigation elements with href attributes pointing to content divs
+      
+      // Comprehensive debugging of the page structure
+      console.log('=== PAGE STRUCTURE DEBUG ===');
+      
+      // 1. Check for tab navigation structure
+      const navElements = document.querySelectorAll('nav, .nav, .tabs, .tab-nav, [role="tablist"]');
+      console.log(`Found ${navElements.length} navigation elements`);
+      
+      // 2. Check for tab links
+      const tabLinks = document.querySelectorAll('a[role="tab"], .tab-link, a[href*="#"]');
+      console.log(`Found ${tabLinks.length} tab links`);
+      
+      // 3. Check for content areas
+      const contentAreas = document.querySelectorAll('div[id*="div"], div[class*="content"], div[class*="tab"], div[class*="panel"]');
+      console.log(`Found ${contentAreas.length} potential content areas`);
+      
+      // 4. Log all elements with IDs containing "div"
+      const divElements = Array.from(document.querySelectorAll('div[id*="div"]')).map(el => ({
+        id: el.id,
+        classes: el.className,
+        visible: el.offsetParent !== null,
+        textLength: el.textContent?.trim().length || 0
+      }));
+      console.log('Div elements with "div" in ID:', divElements);
+      
+      // 5. Log all elements with classes containing "tab" or "content"
+      const tabContentElements = Array.from(document.querySelectorAll('div[class*="tab"], div[class*="content"]')).map(el => ({
+        id: el.id,
+        classes: el.className,
+        visible: el.offsetParent !== null,
+        textLength: el.textContent?.trim().length || 0
+      }));
+      console.log('Tab/Content elements:', tabContentElements);
+      
+      // 6. Look for tab navigation elements with href attributes pointing to content divs
       const tabElements = document.querySelectorAll('a[href^="#div-"], a[href^="#main"], a[href^="#futureevents"], a[href^="#pastevents"], a[href*="#div"], a[href*="div-"]');
       
       console.log(`   🔍 Found ${tabElements.length} tab elements with selectors`);
@@ -130,9 +170,104 @@ async function scrapeChapterTabsWithPuppeteer(chapterId, chapterUrl, chapterName
             }
           }
           
+          // If still no content div found, try common patterns for OWASP chapters
+          if (!contentDiv) {
+            const commonPatterns = [
+              'div[id*="events"]',
+              'div[id*="future"]',
+              'div[id*="past"]',
+              'div[id*="ch_events"]',
+              'div[class*="events"]',
+              'div[class*="future"]',
+              'div[class*="past"]'
+            ];
+            
+            for (const pattern of commonPatterns) {
+              contentDiv = document.querySelector(pattern);
+              if (contentDiv && contentDiv.textContent?.trim().length > 100) {
+                console.log(`   ✅ Found content using pattern: ${pattern}`);
+                break;
+              }
+            }
+          }
+          
+          // Special handling for specific tab types
+          if (!contentDiv) {
+            if (text.toLowerCase().includes('events') || text.toLowerCase().includes('chapter events')) {
+              // Look for events-related content
+              const eventsDiv = document.querySelector('div[id*="ch_events"], div[id*="events"], div[class*="events"]');
+              if (eventsDiv && eventsDiv.textContent?.trim().length > 100) {
+                contentDiv = eventsDiv;
+                console.log(`   ✅ Found events content for: ${text}`);
+              }
+            } else if (text.toLowerCase().includes('previous') || text.toLowerCase().includes('past')) {
+              // Look for past events content
+              const pastDiv = document.querySelector('div[id*="past"], div[class*="past"], div[id*="archive"]');
+              if (pastDiv && pastDiv.textContent?.trim().length > 100) {
+                contentDiv = pastDiv;
+                console.log(`   ✅ Found past events content for: ${text}`);
+              }
+            }
+          }
+          
+          // Final fallback: try to find any content div with substantial text
+          if (!contentDiv) {
+            const allDivs = document.querySelectorAll('div');
+            for (const div of allDivs) {
+              const divText = div.textContent?.trim();
+              if (divText && divText.length > 200) {
+                // Check if this div contains content related to the tab
+                const isRelevant = (
+                  (text.toLowerCase().includes('events') && (divText.toLowerCase().includes('event') || divText.toLowerCase().includes('meeting'))) ||
+                  (text.toLowerCase().includes('previous') && (divText.toLowerCase().includes('past') || divText.toLowerCase().includes('archive'))) ||
+                  (text.toLowerCase().includes('main') && !divText.toLowerCase().includes('event'))
+                );
+                
+                if (isRelevant) {
+                  contentDiv = div;
+                  console.log(`   ✅ Found relevant content for: ${text} (${div.id || 'no-id'})`);
+                  break;
+                }
+              }
+            }
+          }
+          
+          // If still no content div found, try to find content based on original tab name patterns
+          if (!contentDiv) {
+            const allDivs = document.querySelectorAll('div');
+            for (const div of allDivs) {
+              const divText = div.textContent?.trim();
+              if (divText && divText.length > 200) {
+                // Check if this div contains content related to the original tab name
+                const isRelevant = (
+                  (text.toLowerCase().includes('events') && (divText.toLowerCase().includes('event') || divText.toLowerCase().includes('meeting'))) ||
+                  (text.toLowerCase().includes('meetings') && (divText.toLowerCase().includes('meeting') || divText.toLowerCase().includes('event'))) ||
+                  (text.toLowerCase().includes('sponsor') && (divText.toLowerCase().includes('sponsor') || divText.toLowerCase().includes('support'))) ||
+                  (text.toLowerCase().includes('member') && (divText.toLowerCase().includes('member') || divText.toLowerCase().includes('join'))) ||
+                  (text.toLowerCase().includes('conduct') && (divText.toLowerCase().includes('conduct') || divText.toLowerCase().includes('code'))) ||
+                  (text.toLowerCase().includes('leadership') && (divText.toLowerCase().includes('leadership') || divText.toLowerCase().includes('team'))) ||
+                  (text.toLowerCase().includes('about') && (divText.toLowerCase().includes('about') || divText.toLowerCase().includes('mission'))) ||
+                  (text.toLowerCase().includes('contact') && (divText.toLowerCase().includes('contact') || divText.toLowerCase().includes('reach'))) ||
+                  (text.toLowerCase().includes('resource') && (divText.toLowerCase().includes('resource') || divText.toLowerCase().includes('material'))) ||
+                  (text.toLowerCase().includes('news') && (divText.toLowerCase().includes('news') || divText.toLowerCase().includes('update'))) ||
+                  (text.toLowerCase().includes('archive') && (divText.toLowerCase().includes('archive') || divText.toLowerCase().includes('past'))) ||
+                  (text.toLowerCase().includes('previous') && (divText.toLowerCase().includes('previous') || divText.toLowerCase().includes('past'))) ||
+                  (text.toLowerCase().includes('future') && (divText.toLowerCase().includes('future') || divText.toLowerCase().includes('upcoming')))
+                );
+                
+                if (isRelevant) {
+                  contentDiv = div;
+                  console.log(`   ✅ Found content for original tab: ${text} (${div.id || 'no-id'})`);
+                  break;
+                }
+              }
+            }
+          }
+          
           if (contentDiv) {
+            // Keep original tab names to preserve OWASP site naming convention
             found.push({
-              name: text,
+              name: text, // Keep original name
               href: href,
               contentDivId: contentDivId,
               content: contentDiv.innerHTML,
@@ -500,6 +635,7 @@ async function detectAndExtractTabs(page, chapterId, supabase) {
     return [];
   }
 }
+
 
 /**
  * Extract content from HTML directly (for CSS show/hide tabs)
