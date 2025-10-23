@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 
 const stripeSecret = process.env.STRIPE_SECRET_KEY || ''
-const stripe = new Stripe(stripeSecret, { apiVersion: '2024-06-20' })
+// Match installed Stripe SDK types (avoid build error on mismatched apiVersion)
+const stripe = new Stripe(stripeSecret, { apiVersion: '2023-10-16' })
 
 export async function POST(req: NextRequest) {
   try {
