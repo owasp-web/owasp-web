@@ -88,24 +88,61 @@ export default function MegaMenu({ isOpen, onClose, menuType }: MegaMenuProps) {
 
   const fetchProjects = async () => {
     try {
-      // Fast server API first
-      const res = await fetch('/api/public/projects/featured', { next: { revalidate: 60 } })
-      if (res.ok) {
-        const json = await res.json()
-        setFeaturedProjects(((json.projects as Project[]) || []).slice(0, 8))
-        return
+      // Targeted list (order preserved)
+      const targets: Array<{ title: string; slugHints: string[]; fallbackUrl: string; category?: string }> = [
+        { title: 'OWASP Top 10', slugHints: ['owasp-top-10', 'top-10'], fallbackUrl: 'https://owasp.org/www-project-top-ten/' },
+        { title: 'ASVS', slugHints: ['asvs', 'application-security-verification-standard'], fallbackUrl: 'https://owasp.org/www-project-application-security-verification-standard/' },
+        { title: 'GenAI Security Project', slugHints: ['genai', 'genai-security'], fallbackUrl: 'https://owasp.org/www-project-genai-security/' },
+        { title: 'CycloneDX', slugHints: ['cyclonedx', 'cyclone-dx'], fallbackUrl: 'https://owasp.org/www-project-cyclonedx/' },
+      ]
+
+      const results: Project[] = []
+
+      // Try server API search for each project name
+      for (const t of targets) {
+        let found: Project | null = null
+        try {
+          const res = await fetch(`/api/public/projects/list?limit=1&search=${encodeURIComponent(t.title)}`, { next: { revalidate: 60 } })
+          if (res.ok) {
+            const json = await res.json()
+            const list = (json.projects as Project[]) || []
+            if (list.length > 0) found = list[0]
+          }
+        } catch {}
+
+        // If not found via list search, try Supabase directly by slug hints
+        if (!found) {
+          try {
+            const supabase = createClientComponentClient()
+            const { data } = await supabase
+              .from('projects')
+              .select('*')
+              .in('slug', t.slugHints)
+              .limit(1)
+            const arr = (data as unknown as Project[]) || []
+            if (arr.length > 0) found = arr[0]
+          } catch {}
+        }
+
+        // Fallback placeholder that links to official page (still shows in menu)
+        if (!found) {
+          results.push({
+            // Minimal shape for display; links to external fallback
+            id: t.title,
+            created_at: '',
+            title: t.title,
+            slug: t.slugHints[0] || t.title.toLowerCase().replace(/\s+/g, '-'),
+            description: '',
+            category: t.category || 'Project',
+            status: 'active',
+            is_featured: true,
+          } as unknown as Project)
+        } else {
+          results.push(found)
+        }
       }
 
-      // Fallback to client-side Supabase
-      const supabase = createClientComponentClient()
-      const { data } = await supabase
-        .from('projects')
-        .select('*')
-        .eq('status', 'active')
-        .order('is_featured', { ascending: false })
-        .order('title', { ascending: true })
-        .limit(8)
-      setFeaturedProjects(((data as unknown as Project[]) || []).slice(0, 8))
+      setFeaturedProjects(results)
     } catch (err) {
       console.error('Failed to fetch projects:', err)
       setFeaturedProjects([])
@@ -295,7 +332,7 @@ export default function MegaMenu({ isOpen, onClose, menuType }: MegaMenuProps) {
               .map((p) => (
                 <Link
                   key={p.id}
-                  href={`/projects/${p.slug}`}
+                  href={(p as any).created_at ? `/projects/${p.slug}` : getFallbackUrl(p.title)}
                   onClick={onClose}
                   className="p-4 rounded-lg bg-white/5 hover:bg-white/10 transition-all duration-200 group"
                 >
@@ -356,6 +393,16 @@ export default function MegaMenu({ isOpen, onClose, menuType }: MegaMenuProps) {
       </div>
     </div>
   )
+
+  function getFallbackUrl(title: string): string {
+    switch (title) {
+      case 'OWASP Top 10': return 'https://owasp.org/www-project-top-ten/'
+      case 'ASVS': return 'https://owasp.org/www-project-application-security-verification-standard/'
+      case 'GenAI Security Project': return 'https://owasp.org/www-project-genai-security/'
+      case 'CycloneDX': return 'https://owasp.org/www-project-cyclonedx/'
+      default: return '/projects'
+    }
+  }
 
   const renderChaptersMenu = () => {
     const regions = [
