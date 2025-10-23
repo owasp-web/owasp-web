@@ -25,6 +25,7 @@
     "@tailwindcss/line-clamp": "^0.4.4",
     "@tiptap/extension-link": "^2.8.0",
     "@tiptap/extension-underline": "^2.8.0",
+    "stripe": "^14.15.0",
     "@tiptap/react": "^2.8.0",
     "@tiptap/starter-kit": "^2.8.0",
     "clsx": "^2.1.1",
