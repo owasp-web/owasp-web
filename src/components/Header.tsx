@@ -368,14 +368,14 @@ export default function Header() {
                                translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
                 </button>
               </Link>
-              <Link href="/secure-my-app">
+              <Link href="/donate">
                 <button className="
                   bg-gradient-to-r from-[#003594] to-[#004bbb] h-9 md:h-10 px-3 md:px-4 text-white font-['Poppins'] font-semibold text-xs md:text-sm 
                   hover:from-[#004bbb] hover:to-[#0056cc] hover:shadow-lg hover:shadow-[#003594]/30
                   transition-all duration-300 rounded-lg
                   relative overflow-hidden group
                 ">
-                  <span className="relative z-10 whitespace-nowrap">Secure My App</span>
+                  <span className="relative z-10 whitespace-nowrap">Donate</span>
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent 
                                translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
                 </button>

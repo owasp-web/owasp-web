@@ -140,12 +140,16 @@ export default function Footer() {
 
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
-              <button className="bg-[#ffb81b] h-10 sm:h-12 px-4 sm:px-6 font-['Poppins'] font-semibold text-[#101820] text-[12px] sm:text-[14px] tracking-[-0.24px] sm:tracking-[-0.28px] leading-[18px] sm:leading-[20px] hover:bg-[#ffc947] transition-colors rounded-sm w-full sm:w-auto">
-                Make a Donation
-              </button>
-              <button className="border-2 border-[#ffffff] h-10 sm:h-12 px-4 sm:px-6 font-['Poppins'] font-semibold text-[#ffffff] text-[12px] sm:text-[14px] tracking-[-0.24px] sm:tracking-[-0.28px] leading-[18px] sm:leading-[20px] hover:bg-white/10 transition-colors rounded-sm w-full sm:w-auto">
-                Join Now
-              </button>
+              <Link href="/donate">
+                <button className="bg-[#ffb81b] h-10 sm:h-12 px-4 sm:px-6 font-['Poppins'] font-semibold text-[#101820] text-[12px] sm:text-[14px] tracking-[-0.24px] sm:tracking-[-0.28px] leading-[18px] sm:leading-[20px] hover:bg-[#ffc947] transition-colors rounded-sm w-full sm:w-auto">
+                  Make a Donation
+                </button>
+              </Link>
+              <Link href="/join-community">
+                <button className="border-2 border-[#ffffff] h-10 sm:h-12 px-4 sm:px-6 font-['Poppins'] font-semibold text-[#ffffff] text-[12px] sm:text-[14px] tracking-[-0.24px] sm:tracking-[-0.28px] leading-[18px] sm:leading-[20px] hover:bg-white/10 transition-colors rounded-sm w-full sm:w-auto">
+                  Join Now
+                </button>
+              </Link>
             </div>
           </div>
         </div>

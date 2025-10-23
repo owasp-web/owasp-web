@@ -483,11 +483,11 @@ export default function MobileMenu({ isOpen, onClose, navigationItems }: MobileM
                 Join the Community
               </button>
             </Link>
-            <Link href="/secure-my-app" onClick={onClose}>
+            <Link href="/donate" onClick={onClose}>
               <button className="w-full bg-gradient-to-r from-[#003594] to-[#004bbb] h-11 sm:h-12 px-4 text-white font-['Poppins'] font-semibold text-sm 
                 hover:from-[#004bbb] hover:to-[#0056cc] hover:shadow-lg
                 transition-all duration-300 rounded-lg">
-                Secure My App
+                Donate
               </button>
             </Link>
           </div>
